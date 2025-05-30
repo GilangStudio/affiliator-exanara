@@ -242,7 +242,7 @@
                                 <div class="flex-fill">
                                     <div class="fw-bold">{{ $assignedProject->name }}</div>
                                     <div class="text-secondary small">
-                                        <span class="badge bg-{{ $assignedProject->is_active ? 'success' : 'secondary' }} text-white">
+                                        <span class="badge bg-{{ $assignedProject->is_active ? 'success' : 'secondary' }}-lt">
                                             {{ $assignedProject->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                         </span>
                                         {{-- @if($assignedProject->id == $project->id)

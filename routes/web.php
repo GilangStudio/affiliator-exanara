@@ -15,10 +15,12 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
+use App\Http\Controllers\SuperAdmin\SettingsController as SuperAdminSettingsController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
 use App\Http\Controllers\SuperAdmin\ProjectAdminController as SuperAdminProjectAdminController;
 use App\Http\Controllers\SuperAdmin\AffiliatorController as SuperAdminAffiliatorController;
+use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 
 /*
@@ -61,7 +63,7 @@ Route::middleware(['guest'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -98,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
     //     Route::get('/faq', [SupportTicketController::class, 'faq'])->name('faq');
     // });
 
+
     /*
     |--------------------------------------------------------------------------
     | Affiliator Routes (Role: affiliator)
@@ -106,69 +109,160 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:affiliator'])->group(function () {
         
-        Route::prefix('affiliator')->name('affiliator.')->group(function () {
+        // Route::prefix('affiliator')->name('affiliator.')->group(function () {
             
-            // Affiliator Dashboard
-            Route::get('/dashboard', [DashboardController::class, 'affiliator'])->name('dashboard');
+        //     // Affiliator Dashboard
+        //     Route::get('/dashboard', [DashboardController::class, 'affiliator'])->name('dashboard');
             
-            // Project Management
-            Route::prefix('projects')->name('projects.')->group(function () {
-                Route::get('/', [ProjectController::class, 'affiliatorProjects'])->name('index');
-                Route::get('/{project}', [ProjectController::class, 'affiliatorProjectDetail'])->name('show');
-                Route::post('/{project}/join', [ProjectController::class, 'joinProject'])->name('join');
+        //     // Project Management
+        //     Route::prefix('projects')->name('projects.')->group(function () {
+        //         Route::get('/', [ProjectController::class, 'affiliatorProjects'])->name('index');
+        //         Route::get('/{project}', [ProjectController::class, 'affiliatorProjectDetail'])->name('show');
+        //         Route::post('/{project}/join', [ProjectController::class, 'joinProject'])->name('join');
                 
-                // KTP Verification
-                Route::get('/{affiliatorProject}/ktp', [ProjectController::class, 'ktpForm'])->name('ktp.form');
-                Route::post('/{affiliatorProject}/ktp', [ProjectController::class, 'uploadKtp'])->name('ktp.upload');
+        //         // KTP Verification
+        //         Route::get('/{affiliatorProject}/ktp', [ProjectController::class, 'ktpForm'])->name('ktp.form');
+        //         Route::post('/{affiliatorProject}/ktp', [ProjectController::class, 'uploadKtp'])->name('ktp.upload');
                 
-                // Terms & Conditions
-                Route::get('/{affiliatorProject}/terms', [ProjectController::class, 'termsForm'])->name('terms.form');
-                Route::post('/{affiliatorProject}/terms', [ProjectController::class, 'acceptTerms'])->name('terms.accept');
+        //         // Terms & Conditions
+        //         Route::get('/{affiliatorProject}/terms', [ProjectController::class, 'termsForm'])->name('terms.form');
+        //         Route::post('/{affiliatorProject}/terms', [ProjectController::class, 'acceptTerms'])->name('terms.accept');
                 
-                // Digital Signature
-                Route::get('/{affiliatorProject}/signature', [ProjectController::class, 'signatureForm'])->name('signature.form');
-                Route::post('/{affiliatorProject}/signature', [ProjectController::class, 'saveSignature'])->name('signature.save');
-            });
+        //         // Digital Signature
+        //         Route::get('/{affiliatorProject}/signature', [ProjectController::class, 'signatureForm'])->name('signature.form');
+        //         Route::post('/{affiliatorProject}/signature', [ProjectController::class, 'saveSignature'])->name('signature.save');
+        //     });
             
-            // Lead Management
-            Route::prefix('leads')->name('leads.')->group(function () {
-                Route::get('/', [LeadController::class, 'index'])->name('index');
-                Route::get('/create', [LeadController::class, 'create'])->name('create');
-                Route::post('/', [LeadController::class, 'store'])->name('store');
-                Route::get('/{lead}', [LeadController::class, 'show'])->name('show');
-                Route::get('/{lead}/edit', [LeadController::class, 'edit'])->name('edit');
-                Route::put('/{lead}', [LeadController::class, 'update'])->name('update');
+        //     // Lead Management
+        //     Route::prefix('leads')->name('leads.')->group(function () {
+        //         Route::get('/', [LeadController::class, 'index'])->name('index');
+        //         Route::get('/create', [LeadController::class, 'create'])->name('create');
+        //         Route::post('/', [LeadController::class, 'store'])->name('store');
+        //         Route::get('/{lead}', [LeadController::class, 'show'])->name('show');
+        //         Route::get('/{lead}/edit', [LeadController::class, 'edit'])->name('edit');
+        //         Route::put('/{lead}', [LeadController::class, 'update'])->name('update');
                 
-                // Lead Status & History
-                Route::get('/{lead}/history', [LeadController::class, 'history'])->name('history');
-                Route::get('/statistics', [LeadController::class, 'statistics'])->name('statistics');
-            });
+        //         // Lead Status & History
+        //         Route::get('/{lead}/history', [LeadController::class, 'history'])->name('history');
+        //         Route::get('/statistics', [LeadController::class, 'statistics'])->name('statistics');
+        //     });
             
-            // Commission Management
-            Route::prefix('commission')->name('commission.')->group(function () {
-                Route::get('/', [CommissionController::class, 'index'])->name('index');
-                Route::get('/history', [CommissionController::class, 'history'])->name('history');
-                Route::get('/withdraw', [CommissionController::class, 'withdrawForm'])->name('withdraw.form');
-                Route::post('/withdraw', [CommissionController::class, 'withdraw'])->name('withdraw');
-                Route::get('/withdrawals', [CommissionController::class, 'withdrawals'])->name('withdrawals');
-                Route::delete('/withdrawals/{withdrawal}', [CommissionController::class, 'cancelWithdrawal'])->name('withdrawals.cancel');
+        //     // Commission Management
+        //     Route::prefix('commission')->name('commission.')->group(function () {
+        //         Route::get('/', [CommissionController::class, 'index'])->name('index');
+        //         Route::get('/history', [CommissionController::class, 'history'])->name('history');
+        //         Route::get('/withdraw', [CommissionController::class, 'withdrawForm'])->name('withdraw.form');
+        //         Route::post('/withdraw', [CommissionController::class, 'withdraw'])->name('withdraw');
+        //         Route::get('/withdrawals', [CommissionController::class, 'withdrawals'])->name('withdrawals');
+        //         Route::delete('/withdrawals/{withdrawal}', [CommissionController::class, 'cancelWithdrawal'])->name('withdrawals.cancel');
                 
-                // Reports
-                Route::get('/report', [CommissionController::class, 'report'])->name('report');
-                Route::get('/leaderboard', [CommissionController::class, 'leaderboard'])->name('leaderboard');
-            });
+        //         // Reports
+        //         Route::get('/report', [CommissionController::class, 'report'])->name('report');
+        //         Route::get('/leaderboard', [CommissionController::class, 'leaderboard'])->name('leaderboard');
+        //     });
             
-            // Bank Account Management
-            Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
-                Route::get('/', [BankAccountController::class, 'index'])->name('index');
-                Route::get('/create', [BankAccountController::class, 'create'])->name('create');
-                Route::post('/', [BankAccountController::class, 'store'])->name('store');
-                Route::get('/{bankAccount}/edit', [BankAccountController::class, 'edit'])->name('edit');
-                Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
-                Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
-            });
+        //     // Bank Account Management
+        //     Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+        //         Route::get('/', [BankAccountController::class, 'index'])->name('index');
+        //         Route::get('/create', [BankAccountController::class, 'create'])->name('create');
+        //         Route::post('/', [BankAccountController::class, 'store'])->name('store');
+        //         Route::get('/{bankAccount}/edit', [BankAccountController::class, 'edit'])->name('edit');
+        //         Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
+        //         Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
+        //     });
             
-        });
+        // });
+        
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Routes (Role: admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware(['role:admin'])->group(function () {
+        
+        // Route::prefix('admin')->name('admin.')->group(function () {
+            
+        //     // Admin Dashboard
+        //     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            
+        //     // Project Management
+        //     Route::resource('projects', ProjectManagementController::class);
+        //     Route::prefix('projects/{project}')->name('projects.')->group(function () {
+        //         Route::post('/activate', [ProjectManagementController::class, 'activate'])->name('activate');
+        //         Route::post('/deactivate', [ProjectManagementController::class, 'deactivate'])->name('deactivate');
+                
+        //         // Project Admins
+        //         Route::get('/admins', [ProjectManagementController::class, 'admins'])->name('admins');
+        //         Route::post('/admins', [ProjectManagementController::class, 'addAdmin'])->name('admins.add');
+        //         Route::delete('/admins/{user}', [ProjectManagementController::class, 'removeAdmin'])->name('admins.remove');
+                
+        //         // Project Statistics
+        //         Route::get('/statistics', [ProjectManagementController::class, 'statistics'])->name('statistics');
+        //         Route::get('/affiliators', [ProjectManagementController::class, 'affiliators'])->name('affiliators');
+        //         Route::get('/leads', [ProjectManagementController::class, 'leads'])->name('leads');
+        //     });
+            
+        //     // User Management
+        //     Route::resource('users', UserManagementController::class);
+        //     Route::prefix('users/{user}')->name('users.')->group(function () {
+        //         Route::post('/activate', [UserManagementController::class, 'activate'])->name('activate');
+        //         Route::post('/deactivate', [UserManagementController::class, 'deactivate'])->name('deactivate');
+        //         Route::post('/change-role', [UserManagementController::class, 'changeRole'])->name('change-role');
+        //         Route::get('/activity', [UserManagementController::class, 'activity'])->name('activity');
+        //     });
+            
+        //     // Commission Withdrawal Management
+        //     Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
+        //         Route::get('/', [WithdrawalManagementController::class, 'index'])->name('index');
+        //         Route::get('/pending', [WithdrawalManagementController::class, 'pending'])->name('pending');
+        //         Route::get('/{withdrawal}', [WithdrawalManagementController::class, 'show'])->name('show');
+        //         Route::post('/{withdrawal}/approve', [WithdrawalManagementController::class, 'approve'])->name('approve');
+        //         Route::post('/{withdrawal}/reject', [WithdrawalManagementController::class, 'reject'])->name('reject');
+        //         Route::post('/{withdrawal}/process', [WithdrawalManagementController::class, 'process'])->name('process');
+                
+        //         // Bulk actions
+        //         Route::post('/bulk-approve', [WithdrawalManagementController::class, 'bulkApprove'])->name('bulk-approve');
+        //         Route::post('/bulk-reject', [WithdrawalManagementController::class, 'bulkReject'])->name('bulk-reject');
+        //     });
+            
+        //     // Bank Account Verification
+        //     Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+        //         Route::get('/', [BankAccountController::class, 'adminIndex'])->name('index');
+        //         Route::get('/pending', [BankAccountController::class, 'pendingVerification'])->name('pending');
+        //         Route::post('/{bankAccount}/verify', [BankAccountController::class, 'verify'])->name('verify');
+        //         Route::post('/{bankAccount}/reject', [BankAccountController::class, 'reject'])->name('reject');
+        //     });
+            
+        //     // Support Ticket Management
+        //     Route::prefix('support')->name('support.')->group(function () {
+        //         Route::get('/', [SupportTicketController::class, 'adminIndex'])->name('index');
+        //         Route::get('/open', [SupportTicketController::class, 'openTickets'])->name('open');
+        //         Route::get('/{ticket}', [SupportTicketController::class, 'adminShow'])->name('show');
+        //         Route::post('/{ticket}/assign', [SupportTicketController::class, 'assign'])->name('assign');
+        //         Route::post('/{ticket}/resolve', [SupportTicketController::class, 'resolve'])->name('resolve');
+        //         Route::post('/{ticket}/close', [SupportTicketController::class, 'adminClose'])->name('close');
+                
+        //         // FAQ Management
+        //         Route::resource('faq', FaqController::class);
+        //     });
+            
+        //     // Reports & Analytics
+        //     Route::prefix('reports')->name('reports.')->group(function () {
+        //         Route::get('/', [AdminDashboardController::class, 'reports'])->name('index');
+        //         Route::get('/commission', [AdminDashboardController::class, 'commissionReport'])->name('commission');
+        //         Route::get('/leads', [AdminDashboardController::class, 'leadsReport'])->name('leads');
+        //         Route::get('/affiliators', [AdminDashboardController::class, 'affiliatorsReport'])->name('affiliators');
+        //         Route::get('/activity', [AdminDashboardController::class, 'activityReport'])->name('activity');
+                
+        //         // Export
+        //         Route::post('/export/{type}', [AdminDashboardController::class, 'exportReport'])->name('export');
+        //     });
+            
+        // });
         
     });
 
@@ -216,121 +310,40 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/{project}/admins/{admin}/reset-password', [SuperAdminProjectAdminController::class, 'resetPassword'])->name('admins.reset-password');
             });
 
+            Route::resource('faqs', SuperAdminFaqController::class);
+            Route::post('faqs/reorder', [SuperAdminFaqController::class, 'reorder'])->name('faqs.reorder');
+            Route::patch('faqs/{faq}/toggle-status', [SuperAdminFaqController::class, 'toggleStatus'])->name('faqs.toggle-status');
+
             
             // System Settings
             Route::prefix('settings')->name('settings.')->group(function () {
-                Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
-                Route::put('/', [SystemSettingsController::class, 'update'])->name('update');
-                Route::post('/cache-clear', [SystemSettingsController::class, 'clearCache'])->name('cache-clear');
-            });
-            
-            // System Maintenance
-            Route::prefix('maintenance')->name('maintenance.')->group(function () {
-                Route::get('/', [MaintenanceController::class, 'index'])->name('index');
-                Route::post('/cleanup', [MaintenanceController::class, 'cleanup'])->name('cleanup');
-                Route::get('/logs', [MaintenanceController::class, 'logs'])->name('logs');
-                Route::get('/system-info', [MaintenanceController::class, 'systemInfo'])->name('system-info');
-            });
-            
-            // Activity Monitoring
-            Route::prefix('activity')->name('activity.')->group(function () {
-                Route::get('/', [ActivityController::class, 'index'])->name('index');
-                Route::get('/suspicious', [ActivityController::class, 'suspicious'])->name('suspicious');
-                Route::get('/export', [ActivityController::class, 'export'])->name('export');
+                Route::get('/', [SuperAdminSettingsController::class, 'index'])->name('index');
+                
+                // General Settings
+                Route::put('/general', [SuperAdminSettingsController::class, 'updateGeneral'])->name('general.update');
+                
+                // Commission Settings
+                Route::put('/commission', [SuperAdminSettingsController::class, 'updateCommission'])->name('commission.update');
+                
+                // Notification Settings
+                Route::put('/notification', [SuperAdminSettingsController::class, 'updateNotification'])->name('notification.update');
+                
+                // Security Settings
+                Route::put('/security', [SuperAdminSettingsController::class, 'updateSecurity'])->name('security.update');
+                
+                // Profile Settings
+                Route::put('/profile', [SuperAdminSettingsController::class, 'updateProfile'])->name('profile.update');
+                Route::put('/password', [SuperAdminSettingsController::class, 'changePassword'])->name('password.change');
+                Route::delete('/photo', [SuperAdminSettingsController::class, 'deleteProfilePhoto'])->name('photo.delete');
+                
+                // Maintenance Settings
+                Route::post('/maintenance/toggle', [SuperAdminSettingsController::class, 'toggleMaintenance'])->name('maintenance.toggle');
+                Route::post('/cache/clear', [SuperAdminSettingsController::class, 'clearCache'])->name('cache.clear');
+                Route::post('/backup/create', [SuperAdminSettingsController::class, 'createBackup'])->name('backup.create');
             });
             
         });
-        
-    });
-    
-});
 
-/*
-|--------------------------------------------------------------------------
-| Admin Routes (Role: admin)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['admin'])->group(function () {
-    
-    Route::prefix('admin')->name('admin.')->group(function () {
-        
-        // Admin Dashboard
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
-        // Project Management
-        Route::resource('projects', ProjectManagementController::class);
-        Route::prefix('projects/{project}')->name('projects.')->group(function () {
-            Route::post('/activate', [ProjectManagementController::class, 'activate'])->name('activate');
-            Route::post('/deactivate', [ProjectManagementController::class, 'deactivate'])->name('deactivate');
-            
-            // Project Admins
-            Route::get('/admins', [ProjectManagementController::class, 'admins'])->name('admins');
-            Route::post('/admins', [ProjectManagementController::class, 'addAdmin'])->name('admins.add');
-            Route::delete('/admins/{user}', [ProjectManagementController::class, 'removeAdmin'])->name('admins.remove');
-            
-            // Project Statistics
-            Route::get('/statistics', [ProjectManagementController::class, 'statistics'])->name('statistics');
-            Route::get('/affiliators', [ProjectManagementController::class, 'affiliators'])->name('affiliators');
-            Route::get('/leads', [ProjectManagementController::class, 'leads'])->name('leads');
-        });
-        
-        // User Management
-        Route::resource('users', UserManagementController::class);
-        Route::prefix('users/{user}')->name('users.')->group(function () {
-            Route::post('/activate', [UserManagementController::class, 'activate'])->name('activate');
-            Route::post('/deactivate', [UserManagementController::class, 'deactivate'])->name('deactivate');
-            Route::post('/change-role', [UserManagementController::class, 'changeRole'])->name('change-role');
-            Route::get('/activity', [UserManagementController::class, 'activity'])->name('activity');
-        });
-        
-        // Commission Withdrawal Management
-        Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
-            Route::get('/', [WithdrawalManagementController::class, 'index'])->name('index');
-            Route::get('/pending', [WithdrawalManagementController::class, 'pending'])->name('pending');
-            Route::get('/{withdrawal}', [WithdrawalManagementController::class, 'show'])->name('show');
-            Route::post('/{withdrawal}/approve', [WithdrawalManagementController::class, 'approve'])->name('approve');
-            Route::post('/{withdrawal}/reject', [WithdrawalManagementController::class, 'reject'])->name('reject');
-            Route::post('/{withdrawal}/process', [WithdrawalManagementController::class, 'process'])->name('process');
-            
-            // Bulk actions
-            Route::post('/bulk-approve', [WithdrawalManagementController::class, 'bulkApprove'])->name('bulk-approve');
-            Route::post('/bulk-reject', [WithdrawalManagementController::class, 'bulkReject'])->name('bulk-reject');
-        });
-        
-        // Bank Account Verification
-        Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
-            Route::get('/', [BankAccountController::class, 'adminIndex'])->name('index');
-            Route::get('/pending', [BankAccountController::class, 'pendingVerification'])->name('pending');
-            Route::post('/{bankAccount}/verify', [BankAccountController::class, 'verify'])->name('verify');
-            Route::post('/{bankAccount}/reject', [BankAccountController::class, 'reject'])->name('reject');
-        });
-        
-        // Support Ticket Management
-        Route::prefix('support')->name('support.')->group(function () {
-            Route::get('/', [SupportTicketController::class, 'adminIndex'])->name('index');
-            Route::get('/open', [SupportTicketController::class, 'openTickets'])->name('open');
-            Route::get('/{ticket}', [SupportTicketController::class, 'adminShow'])->name('show');
-            Route::post('/{ticket}/assign', [SupportTicketController::class, 'assign'])->name('assign');
-            Route::post('/{ticket}/resolve', [SupportTicketController::class, 'resolve'])->name('resolve');
-            Route::post('/{ticket}/close', [SupportTicketController::class, 'adminClose'])->name('close');
-            
-            // FAQ Management
-            Route::resource('faq', FaqController::class);
-        });
-        
-        // Reports & Analytics
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/', [AdminDashboardController::class, 'reports'])->name('index');
-            Route::get('/commission', [AdminDashboardController::class, 'commissionReport'])->name('commission');
-            Route::get('/leads', [AdminDashboardController::class, 'leadsReport'])->name('leads');
-            Route::get('/affiliators', [AdminDashboardController::class, 'affiliatorsReport'])->name('affiliators');
-            Route::get('/activity', [AdminDashboardController::class, 'activityReport'])->name('activity');
-            
-            // Export
-            Route::post('/export/{type}', [AdminDashboardController::class, 'exportReport'])->name('export');
-        });
-        
     });
     
 });
@@ -341,45 +354,25 @@ Route::middleware(['admin'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->prefix('ajax')->name('ajax.')->group(function () {
+// Route::middleware(['auth'])->prefix('ajax')->name('ajax.')->group(function () {
     
-    // General AJAX endpoints
-    Route::get('/notifications/unread', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+//     // General AJAX endpoints
+//     Route::get('/notifications/unread', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+//     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     
-    // Lead-related AJAX
-    Route::prefix('leads')->name('leads.')->group(function () {
-        Route::get('/search', [LeadController::class, 'search'])->name('search');
-        Route::get('/{lead}/status-history', [LeadController::class, 'statusHistory'])->name('status-history');
-        Route::post('/{lead}/send-to-crm', [LeadController::class, 'sendToCrm'])->name('send-to-crm');
-    });
+//     // Commission-related AJAX
+//     Route::prefix('commission')->name('commission.')->group(function () {
+//         Route::get('/stats', [CommissionController::class, 'ajaxStats'])->name('stats');
+//         Route::get('/validate-withdrawal', [CommissionController::class, 'validateWithdrawal'])->name('validate-withdrawal');
+//     });
     
-    // Commission-related AJAX
-    Route::prefix('commission')->name('commission.')->group(function () {
-        Route::get('/stats', [CommissionController::class, 'ajaxStats'])->name('stats');
-        Route::get('/validate-withdrawal', [CommissionController::class, 'validateWithdrawal'])->name('validate-withdrawal');
-    });
+//     // Project-related AJAX
+//     Route::prefix('projects')->name('projects.')->group(function () {
+//         Route::get('/{project}/can-join', [ProjectController::class, 'canJoin'])->name('can-join');
+//         Route::get('/available', [ProjectController::class, 'availableProjects'])->name('available');
+//     });
     
-    // Project-related AJAX
-    Route::prefix('projects')->name('projects.')->group(function () {
-        Route::get('/{project}/can-join', [ProjectController::class, 'canJoin'])->name('can-join');
-        Route::get('/available', [ProjectController::class, 'availableProjects'])->name('available');
-    });
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| File Upload Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth'])->prefix('upload')->name('upload.')->group(function () {
-    Route::post('/profile-photo', [UserController::class, 'uploadProfilePhoto'])->name('profile-photo');
-    Route::post('/ktp-photo', [ProjectController::class, 'uploadKtpPhoto'])->name('ktp-photo');
-    Route::post('/project-logo', [ProjectManagementController::class, 'uploadLogo'])->name('project-logo');
-    Route::post('/signature', [ProjectController::class, 'uploadSignature'])->name('signature');
-});
+// });
 
 /*
 |--------------------------------------------------------------------------

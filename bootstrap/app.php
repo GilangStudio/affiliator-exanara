@@ -11,25 +11,31 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // $middleware->use([
-        //     \Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks::class,
-        //     // \Illuminate\Http\Middleware\TrustHosts::class,
-        //     \Illuminate\Http\Middleware\TrustProxies::class,
-        //     \Illuminate\Http\Middleware\HandleCors::class,
-        //     \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        //     \Illuminate\Http\Middleware\ValidatePostSize::class,
-        //     \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
-        //     \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        // ]);
+        // Global Middleware
+        $middleware->web(append: [
+            \App\Http\Middleware\MaintenanceMiddleware::class,
+        ]);
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'active.user' => \App\Http\Middleware\ActiveUserMiddleware::class,
+            'maintenance' => \App\Http\Middleware\MaintenanceMiddleware::class,
         ]);
 
         $middleware->group('affiliator', [
             'active.user',
             'role:affiliator',
+        ]);
+
+        // Middleware Groups
+        $middleware->group('web', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\MaintenanceMiddleware::class, // Tambahkan di sini
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

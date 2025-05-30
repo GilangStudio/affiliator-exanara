@@ -96,7 +96,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $project->is_active ? 'success text-white' : 'secondary text-white' }}">
+                                <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt">
                                     {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                 </span>
                             </td>
@@ -121,13 +121,13 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-gray">{{ $project->affiliatorProjects()->count() }}</span>
+                                <span class="badge bg-secondary-lt">{{ $project->affiliatorProjects()->count() }}</span>
                             </td>
                             <td>
                                 <div>
-                                    <span class="badge bg-green text-white">{{ $project->leads()->verified()->count() }}</span>
+                                    <span class="badge bg-success-lt">{{ $project->leads()->verified()->count() }}</span>
                                     /
-                                    <span class="badge bg-gray">{{ $project->leads()->count() }}</span>
+                                    <span class="badge bg-secondary-lt">{{ $project->leads()->count() }}</span>
                                 </div>
                                 <div class="text-secondary small">Verified/Total</div>
                             </td>
@@ -137,7 +137,7 @@
                             </td>
                             <td>
                                 <div class="dropdown">
-                                    <button class="btn btn-ghost-secondary btn-sm py-2" 
+                                    <button class="btn btn-icon bg-light" 
                                             data-bs-toggle="dropdown">
                                         <i class="ti ti-dots-vertical"></i>
                                     </button>

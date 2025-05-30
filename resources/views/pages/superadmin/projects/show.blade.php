@@ -25,12 +25,12 @@
                 @endif --}}
                 <div class="row">
                     <div class="col-auto">
-                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }} text-white me-2">
+                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt me-2">
                             {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
-                        <span class="badge bg-secondary text-white me-2">{{ $project->commission_display }}</span>
+                        <span class="badge bg-blue-lt me-2">{{ $project->commission_display }}</span>
                         @if($project->require_digital_signature)
-                            <span class="badge bg-secondary text-white">Tanda Tangan Digital Wajib</span>
+                            <span class="badge bg-blue-lt">Tanda Tangan Digital Wajib</span>
                         @endif
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                         Edit Project
                     </a>
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary h-100 px-2" data-bs-toggle="dropdown">
+                        <button class="btn btn-icon" data-bs-toggle="dropdown">
                             <i class="ti ti-dots-vertical"></i>
                         </button>
                         <div class="dropdown-menu">
@@ -159,7 +159,7 @@
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <span class="badge bg-{{ $admin->is_active ? 'success' : 'secondary' }} text-white">
+                                    <span class="badge bg-{{ $admin->is_active ? 'success' : 'secondary' }}-lt">
                                         {{ $admin->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </div>
@@ -230,7 +230,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $lead->verification_status == 'verified' ? 'success' : ($lead->verification_status == 'rejected' ? 'danger' : 'warning') }}">
+                                        <span class="badge bg-{{ $lead->verification_status == 'verified' ? 'success' : ($lead->verification_status == 'rejected' ? 'danger' : 'warning') }}-lt">
                                             {{ $lead->verification_status_label }}
                                         </span>
                                     </td>

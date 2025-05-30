@@ -94,7 +94,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $affiliator->is_active ? 'success text-white' : 'secondary text-white' }}">
+                                <span class="badge bg-{{ $affiliator->is_active ? 'success text-white' : 'secondary text-white' }}-lt">
                                     {{ $affiliator->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                 </span>
                             </td>
@@ -126,9 +126,9 @@
                                 @endphp
                                 @if($totalLeads > 0)
                                     <div>
-                                        <span class="badge bg-green text-white">{{ $verifiedLeads }}</span>
+                                        <span class="badge bg-success-lt">{{ $verifiedLeads }}</span>
                                         /
-                                        <span class="badge bg-gray">{{ $totalLeads }}</span>
+                                        <span class="badge bg-secondary-lt">{{ $totalLeads }}</span>
                                     </div>
                                     <div class="text-secondary small">Verified/Total</div>
                                 @else

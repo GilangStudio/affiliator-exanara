@@ -129,7 +129,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-green">{{ $project->verified_leads_count }}</span>
+                                <span class="badge bg-green-lt">{{ $project->verified_leads_count }}</span>
                             </td>
                             <td>
                                 <div class="fw-bold">Rp {{ number_format($project->total_commission ?? 0, 0, ',', '.') }}</div>
@@ -176,7 +176,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-green">{{ $affiliator->total_leads }}</span>
+                                <span class="badge bg-green-lt">{{ $affiliator->total_leads }}</span>
                             </td>
                             <td>
                                 <div class="fw-bold">Rp {{ number_format($affiliator->total_commission ?? 0, 0, ',', '.') }}</div>
@@ -250,7 +250,7 @@
                             </div>
                         </div>
                         <div class="col-auto">
-                            <span class="badge bg-{{ $withdrawal->status_color }}">{{ $withdrawal->status_label }}</span>
+                            <span class="badge bg-{{ $withdrawal->status_color }}-lt">{{ $withdrawal->status_label }}</span>
                         </div>
                     </div>
                 </div>

@@ -210,10 +210,10 @@
                                 <div class="flex-fill">
                                     <div class="fw-bold">{{ $affiliatorProject->project->name }}</div>
                                     <div class="text-secondary small">
-                                        <span class="badge bg-{{ $affiliatorProject->status == 'active' ? 'success' : 'secondary' }}">
+                                        <span class="badge bg-{{ $affiliatorProject->status == 'active' ? 'success' : 'secondary' }}-lt">
                                             {{ $affiliatorProject->status_label }}
                                         </span>
-                                        <span class="badge bg-{{ $affiliatorProject->verification_status == 'verified' ? 'success' : ($affiliatorProject->verification_status == 'rejected' ? 'danger' : 'warning') }} ms-1">
+                                        <span class="badge bg-{{ $affiliatorProject->verification_status == 'verified' ? 'success' : ($affiliatorProject->verification_status == 'rejected' ? 'danger' : 'warning') }}-lt ms-1">
                                             @if($affiliatorProject->verification_status == 'verified')
                                                 Terverifikasi
                                             @elseif($affiliatorProject->verification_status == 'rejected')

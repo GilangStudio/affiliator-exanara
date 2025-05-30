@@ -82,7 +82,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $admin->is_active ? 'success text-white' : 'secondary text-white' }}">
+                                        <span class="badge bg-{{ $admin->is_active ? 'success' : 'secondary' }}-lt">
                                             {{ $admin->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                         </span>
                                     </td>
@@ -110,7 +110,7 @@
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <button class="btn btn-ghost-secondary btn-sm py-2" 
+                                            <button class="btn btn-icon bg-light" 
                                                     data-bs-toggle="dropdown">
                                                 <i class="ti ti-dots-vertical"></i>
                                             </button>

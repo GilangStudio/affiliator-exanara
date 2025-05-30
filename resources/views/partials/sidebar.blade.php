@@ -8,9 +8,21 @@
         </button>
         <!-- END NAVBAR TOGGLER -->
         <!-- BEGIN NAVBAR LOGO -->
-        <div class="navbar-brand navbar-brand-autodark">
-            <a href="." aria-label="Tabler">Logo</a>
-        </div>
+        <h1 class="navbar-brand navbar-brand-autodark">
+            <a href="{{ route('dashboard') }}">
+                @php
+                $siteLogo = \App\Models\SystemSetting::getValue('site_logo');
+                $siteName = \App\Models\SystemSetting::getValue('site_name', 'Affiliator System');
+                @endphp
+
+                @if($siteLogo)
+                <img src="{{ asset('storage/' . $siteLogo) }}" width="110" height="32" alt="{{ $siteName }}"
+                    class="navbar-brand-image">
+                @else
+                {{ $siteName }}
+                @endif
+            </a>
+        </h1>
         <!-- END NAVBAR LOGO -->
         <div class="navbar-nav flex-row d-lg-none">
             <div class="d-none d-lg-flex">
@@ -129,14 +141,14 @@
 
                 @if(auth()->user()->role === 'superadmin')
                 <!-- User Management -->
-                <li class="nav-item {{ Route::is('superadmin.users.*') ? 'active' : '' }}">
+                {{-- <li class="nav-item {{ Route::is('superadmin.users.*') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('superadmin.users.index') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-users icon icon-1"></i>
                         </span>
                         <span class="nav-link-title"> Users </span>
                     </a>
-                </li>
+                </li> --}}
 
                 <!-- Affiliator Management -->
                 <li class="nav-item {{ Route::is('superadmin.affiliators.*')? 'active' : '' }}">
@@ -158,34 +170,85 @@
                     </a>
                 </li>
 
-                <!-- System Management -->
-                <li
-                    class="nav-item dropdown {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'active' : '' }}">
-                    <a class="nav-link dropdown-toggle" href="#navbar-system" data-bs-toggle="dropdown"
-                        data-bs-auto-close="false" role="button" aria-expanded="false">
+                <!-- Support & FAQ -->
+                <li class="nav-item dropdown {{ request()->routeIs('superadmin.faqs.*') || request()->routeIs('superadmin.support.*') ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('superadmin.faqs.*') || request()->routeIs('superadmin.support.*') ? 'show' : '' }}" 
+                       href="#navbar-support" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" 
+                       aria-expanded="{{ request()->routeIs('superadmin.faqs.*') || request()->routeIs('superadmin.support.*') ? 'true' : 'false' }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
-                            <i class="ti ti-settings icon icon-1"></i>
+                            <i class="ti ti-help-circle"></i>
                         </span>
-                        <span class="nav-link-title">System</span>
+                        <span class="nav-link-title">Support & FAQ</span>
                     </a>
-                    <div
-                        class="dropdown-menu {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'show' : '' }}">
+                    <div class="dropdown-menu {{ request()->routeIs('superadmin.faqs.*') || request()->routeIs('superadmin.support.*') ? 'show' : '' }}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ Route::is('superadmin.settings.*') ? 'active' : '' }}"
-                                    href="{{ route('superadmin.settings.index') }}">
-                                    <i class="ti ti-settings me-2"></i>
-                                    Pengaturan
+                                <a class="dropdown-item {{ request()->routeIs('superadmin.faqs.*') ? 'active' : '' }}" 
+                                   href="{{ route('superadmin.faqs.index') }}">
+                                    <i class="ti ti-help me-2"></i>
+                                    Kelola FAQ
                                 </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.maintenance.*') ? 'active' : '' }}"
-                                    href="{{ route('superadmin.maintenance.index') }}">
-                                    <i class="ti ti-tool me-2"></i>
+                                {{-- <a class="dropdown-item {{ request()->routeIs('superadmin.support.*') ? 'active' : '' }}" 
+                                   href="{{ route('superadmin.support.index') }}">
+                                    <i class="ti ti-headset me-2"></i>
+                                    Support Tickets
+                                    @php
+                                        $openTickets = \App\Models\SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
+                                    @endphp
+                                    @if($openTickets > 0)
+                                        <span class="badge badge-sm bg-red text-white ms-1">{{ $openTickets }}</span>
+                                    @endif
+                                </a> --}}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Settings Menu - MENU UTAMA SETTINGS -->
+                <li class="nav-item dropdown {{ request()->routeIs('superadmin.settings.*') ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('superadmin.settings.*') ? 'show' : '' }}"
+                        href="#navbar-settings" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
+                        aria-expanded="{{ request()->routeIs('superadmin.settings.*') ? 'true' : 'false' }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-settings"></i>
+                        </span>
+                        <span class="nav-link-title">Pengaturan Sistem</span>
+                    </a>
+                    <div class="dropdown-menu {{ request()->routeIs('superadmin.settings.*') ? 'show' : '' }}">
+                        <div class="dropdown-menu-columns">
+                            <div class="dropdown-menu-column">
+                                <a class="dropdown-item {{ request()->get('tab') == 'general' || (request()->routeIs('superadmin.settings.index') && !request()->get('tab')) ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'general']) }}">
+                                    <i class="ti ti-home me-2"></i>
+                                    Pengaturan Umum
+                                </a>
+                                <a class="dropdown-item {{ request()->get('tab') == 'commission' ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'commission']) }}">
+                                    <i class="ti ti-percentage me-2"></i>
+                                    Komisi
+                                </a>
+                                <a class="dropdown-item {{ request()->get('tab') == 'notification' ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'notification']) }}">
+                                    <i class="ti ti-bell me-2"></i>
+                                    Notifikasi
+                                </a>
+                                {{-- <a class="dropdown-item {{ request()->get('tab') == 'security' ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'security']) }}">
+                                    <i class="ti ti-shield me-2"></i>
+                                    Keamanan
+                                </a> --}}
+                                <a class="dropdown-item {{ request()->get('tab') == 'profile' ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'profile']) }}">
+                                    <i class="ti ti-user me-2"></i>
+                                    Profil Saya
+                                </a>
+                                <a class="dropdown-item {{ request()->get('tab') == 'maintenance' ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index', ['tab' => 'maintenance']) }}">
+                                    <i class="ti ti-tools me-2"></i>
                                     Maintenance
-                                </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.activity.*') ? 'active' : '' }}"
-                                    href="{{ route('superadmin.activity.index') }}">
-                                    <i class="ti ti-activity me-2"></i>
-                                    Activity Log
+                                    @if(\App\Models\SystemSetting::getValue('maintenance_mode', false))
+                                    <span class="badge badge-sm bg-orange text-white ms-1">ON</span>
+                                    @endif
                                 </a>
                             </div>
                         </div>
