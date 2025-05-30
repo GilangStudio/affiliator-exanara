@@ -20,9 +20,11 @@ class DashboardService
     public function getSuperAdminStats()
     {
         return [
-            'total_users' => User::count(),
+            'total_users' => User::where('role', '!=', 'superadmin')->count(),
+            'total_admins' => User::admins()->count(),
+            'active_admins' => User::admins()->active()->count(),
             'total_affiliators' => User::affiliators()->count(),
-            'active_affiliators' => User::affiliators()->where('is_active', true)->count(),
+            'active_affiliators' => User::affiliators()->active()->count(),
             'total_projects' => Project::count(),
             'active_projects' => Project::active()->count(),
             'total_leads' => Lead::count(),

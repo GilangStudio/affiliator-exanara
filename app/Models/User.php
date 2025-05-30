@@ -110,14 +110,14 @@ class User extends Authenticatable
         return $query->where('is_active', true);
     }
 
-    public function scopeByRole($query, $role)
-    {
-        return $query->where('role', $role);
-    }
-
     public function scopeAffiliators($query)
     {
         return $query->where('role', 'affiliator');
+    }
+
+    public function scopeAdmins($query)
+    {
+        return $query->where('role', 'admin');
     }
 
     // Accessors

@@ -95,7 +95,7 @@
                         </div>
                     </div>
                 </div>
-                
+
             </div>
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
@@ -126,86 +126,64 @@
                         <span class="nav-link-title"> Dashboard </span>
                     </a>
                 </li>
-                
+
                 @if(auth()->user()->role === 'superadmin')
                 <!-- User Management -->
-                <li class="nav-item dropdown {{ Route::is('superadmin.admins.*') ? 'active' : '' }}">
-                    <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" 
-                       data-bs-auto-close="false" role="button" aria-expanded="false">
+                <li class="nav-item {{ Route::is('superadmin.users.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('superadmin.users.index') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-users icon icon-1"></i>
                         </span>
-                        <span class="nav-link-title">Users</span>
+                        <span class="nav-link-title"> Users </span>
                     </a>
-                    <div class="dropdown-menu {{ Route::is('superadmin.admins.*') ? 'show' : '' }}">
-                        <div class="dropdown-menu-columns">
-                            <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ Route::is('superadmin.admins.index') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.admins.index') }}">
-                                    <i class="ti ti-shield me-2"></i>
-                                    Kelola Admin
-                                </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.admins.create') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.admins.create') }}">
-                                    <i class="ti ti-user-plus me-2"></i>
-                                    Tambah Admin
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                </li>
+
+                <!-- Admin Management -->
+                <li class="nav-item {{ Route::is('superadmin.admins.*')? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('superadmin.admins.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-user-shield icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Admins</span>
+                    </a>
                 </li>
 
                 <!-- Projects Management -->
-                <li class="nav-item dropdown {{ Route::is('superadmin.projects.*') ? 'active' : '' }}">
-                    <a class="nav-link dropdown-toggle" href="#navbar-projects" data-bs-toggle="dropdown" 
-                       data-bs-auto-close="false" role="button" aria-expanded="false">
+                <li class="nav-item {{ Route::is('superadmin.projects.*')? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('superadmin.projects.index') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-folder icon icon-1"></i>
                         </span>
                         <span class="nav-link-title">Projects</span>
                     </a>
-                    <div class="dropdown-menu {{ Route::is('superadmin.projects.*') ? 'show' : '' }}">
-                        <div class="dropdown-menu-columns">
-                            <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ Route::is('superadmin.projects.index') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.projects.index') }}">
-                                    <i class="ti ti-list me-2"></i>
-                                    Daftar Project
-                                </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.projects.create') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.projects.create') }}">
-                                    <i class="ti ti-plus me-2"></i>
-                                    Tambah Project
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </li>
 
                 <!-- System Management -->
-                <li class="nav-item dropdown {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'active' : '' }}">
-                    <a class="nav-link dropdown-toggle" href="#navbar-system" data-bs-toggle="dropdown" 
-                       data-bs-auto-close="false" role="button" aria-expanded="false">
+                <li
+                    class="nav-item dropdown {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle" href="#navbar-system" data-bs-toggle="dropdown"
+                        data-bs-auto-close="false" role="button" aria-expanded="false">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-settings icon icon-1"></i>
                         </span>
                         <span class="nav-link-title">System</span>
                     </a>
-                    <div class="dropdown-menu {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'show' : '' }}">
+                    <div
+                        class="dropdown-menu {{ Route::is('superadmin.settings.*', 'superadmin.maintenance.*', 'superadmin.activity.*') ? 'show' : '' }}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ Route::is('superadmin.settings.*') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.settings.index') }}">
+                                <a class="dropdown-item {{ Route::is('superadmin.settings.*') ? 'active' : '' }}"
+                                    href="{{ route('superadmin.settings.index') }}">
                                     <i class="ti ti-settings me-2"></i>
                                     Pengaturan
                                 </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.maintenance.*') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.maintenance.index') }}">
+                                <a class="dropdown-item {{ Route::is('superadmin.maintenance.*') ? 'active' : '' }}"
+                                    href="{{ route('superadmin.maintenance.index') }}">
                                     <i class="ti ti-tool me-2"></i>
                                     Maintenance
                                 </a>
-                                <a class="dropdown-item {{ Route::is('superadmin.activity.*') ? 'active' : '' }}" 
-                                   href="{{ route('superadmin.activity.index') }}">
+                                <a class="dropdown-item {{ Route::is('superadmin.activity.*') ? 'active' : '' }}"
+                                    href="{{ route('superadmin.activity.index') }}">
                                     <i class="ti ti-activity me-2"></i>
                                     Activity Log
                                 </a>

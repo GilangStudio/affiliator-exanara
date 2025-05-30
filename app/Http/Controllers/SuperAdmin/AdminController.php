@@ -33,7 +33,7 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::where('role', 'admin');
+        $query = User::admins();
 
         // Filter by status
         if ($request->filled('status')) {

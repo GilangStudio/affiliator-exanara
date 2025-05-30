@@ -11,11 +11,12 @@ use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
-use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
+use App\Http\Controllers\SuperAdmin\AdminController as SuperAdminAdminController;
+use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 
@@ -183,28 +184,24 @@ Route::middleware(['auth'])->group(function () {
 
         Route::name('superadmin.')->group(function () {
 
+            // User Management
+            Route::resource('users', SuperAdminUserController::class);
+            Route::prefix('users')->name('users.')->group(function () {
+                Route::patch('/{user}/toggle-status', [SuperAdminUserController::class, 'toggleStatus'])->name('toggle-status');
+                Route::post('/{user}/reset-password', [SuperAdminUserController::class,'resetPassword'])->name('reset-password');
+            });
+
             // Admins Management
+            Route::resource('admins', SuperAdminAdminController::class);
             Route::prefix('admins')->name('admins.')->group(function () {
-                Route::get('/', [AdminController::class, 'index'])->name('index');
-                Route::get('/create', [AdminController::class, 'create'])->name('create');
-                Route::post('/', [AdminController::class, 'store'])->name('store');
-                Route::get('/{admin}/edit', [AdminController::class, 'edit'])->name('edit');
-                Route::put('/{admin}', [AdminController::class, 'update'])->name('update');
-                Route::delete('/{admin}', [AdminController::class, 'destroy'])->name('destroy');
-                Route::patch('/{admin}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggle-status');
-                Route::post('/{admin}/reset-password', [AdminController::class, 'resetPassword'])->name('reset-password');
-                Route::delete('/{admin}/remove-photo', [AdminController::class, 'removePhoto'])->name('remove-photo');
+                Route::patch('/{admin}/toggle-status', [SuperAdminAdminController::class, 'toggleStatus'])->name('toggle-status');
+                Route::post('/{admin}/reset-password', [SuperAdminAdminController::class, 'resetPassword'])->name('reset-password');
+                Route::delete('/{admin}/remove-photo', [SuperAdminAdminController::class, 'removePhoto'])->name('remove-photo');
             });
 
             // Projects Management
+            Route::resource('projects', SuperAdminProjectController::class);
             Route::prefix('projects')->name('projects.')->group(function () {
-                Route::get('/', [SuperAdminProjectController::class, 'index'])->name('index');
-                Route::get('/create', [SuperAdminProjectController::class, 'create'])->name('create');
-                Route::post('/', [SuperAdminProjectController::class, 'store'])->name('store');
-                Route::get('/{project}', [SuperAdminProjectController::class, 'show'])->name('show');
-                Route::get('/{project}/edit', [SuperAdminProjectController::class, 'edit'])->name('edit');
-                Route::put('/{project}', [SuperAdminProjectController::class, 'update'])->name('update');
-                Route::delete('/{project}', [SuperAdminProjectController::class, 'destroy'])->name('destroy');
                 Route::patch('/{project}/toggle-status', [SuperAdminProjectController::class, 'toggleStatus'])->name('toggle-status');
                 Route::delete('/{project}/admin/{admin}', [SuperAdminProjectController::class, 'removeAdmin'])->name('remove-admin');
                 Route::post('/{project}/admin', [SuperAdminProjectController::class, 'addAdmin'])->name('add-admin');
@@ -222,7 +219,6 @@ Route::middleware(['auth'])->group(function () {
             Route::prefix('maintenance')->name('maintenance.')->group(function () {
                 Route::get('/', [MaintenanceController::class, 'index'])->name('index');
                 Route::post('/cleanup', [MaintenanceController::class, 'cleanup'])->name('cleanup');
-                Route::post('/sync-crm', [MaintenanceController::class, 'syncCrm'])->name('sync-crm');
                 Route::get('/logs', [MaintenanceController::class, 'logs'])->name('logs');
                 Route::get('/system-info', [MaintenanceController::class, 'systemInfo'])->name('system-info');
             });
