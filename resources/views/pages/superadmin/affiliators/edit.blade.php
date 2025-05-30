@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('title', 'Edit Affiliator')
+@section('title', 'Edit Affiliator - ' . $affiliator->name)
 
 @push('styles')
 
@@ -40,7 +40,7 @@
                                        name="name" value="{{ old('name', $affiliator->name) }}" required
                                        placeholder="Masukkan nama lengkap">
                                 @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">
                                     <span id="name-count">{{ strlen($affiliator->name) }}</span>/255 karakter
@@ -54,54 +54,43 @@
                                        name="email" value="{{ old('email', $affiliator->email) }}" required
                                        placeholder="affiliator@example.com">
                                 @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">Email akan digunakan untuk login</small>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Kode Negara <span class="text-danger">*</span></label>
-                                <select class="form-select @error('country_code') is-invalid @enderror" 
-                                        name="country_code" required>
-                                    <option value="">Pilih</option>
-                                    <option value="+62" {{ old('country_code', $affiliator->country_code) == '+62' ? 'selected' : '' }}>+62 (Indonesia)</option>
-                                    <option value="+1" {{ old('country_code', $affiliator->country_code) == '+1' ? 'selected' : '' }}>+1 (US/Canada)</option>
-                                    <option value="+44" {{ old('country_code', $affiliator->country_code) == '+44' ? 'selected' : '' }}>+44 (UK)</option>
-                                    <option value="+65" {{ old('country_code', $affiliator->country_code) == '+65' ? 'selected' : '' }}>+65 (Singapore)</option>
-                                    <option value="+60" {{ old('country_code', $affiliator->country_code) == '+60' ? 'selected' : '' }}>+60 (Malaysia)</option>
-                                </select>
-                                @error('country_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomor Whatsapp <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">+62</span>
+                            <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" 
+                                   placeholder="8123456789" value="{{ old('phone', $affiliator->phone) }}" required>
                         </div>
-                        <div class="col-md-9">
-                            <div class="mb-3">
-                                <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                       name="phone" value="{{ old('phone', $affiliator->phone) }}" required
-                                       placeholder="8123456789">
-                                @error('phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="form-hint">Nomor tanpa kode negara (contoh: 8123456789)</small>
-                            </div>
-                        </div>
+                        @error('phone')
+                            <small class="text-danger">{{ $message }}</div>
+                        @enderror
+                        <small class="form-hint">Nomor tanpa kode negara dan tanpa 0 di depan (contoh: 8123456789)</small>
+                        <input type="hidden" name="country_code" value="+62">
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Password Baru</label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                       name="password" minlength="8"
-                                       placeholder="Kosongkan jika tidak ingin mengubah">
+                                <div class="input-group input-group-flat">
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                           name="password" minlength="8" id="passwordInput"
+                                           placeholder="Kosongkan jika tidak ingin mengubah" autocomplete="off">
+                                    <span class="input-group-text">
+                                        <a href="#" class="link-secondary" id="togglePassword" title="Tampilkan password">
+                                            <i class="ti ti-eye icon icon-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
                                 @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">Minimal 8 karakter. Kosongkan jika tidak ingin mengubah.</small>
                             </div>
@@ -109,11 +98,18 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Konfirmasi Password</label>
-                                <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                       name="password_confirmation"
-                                       placeholder="Ulangi password baru">
+                                <div class="input-group input-group-flat">
+                                    <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                           name="password_confirmation" id="passwordConfirmationInput"
+                                           placeholder="Ulangi password baru" autocomplete="off">
+                                    <span class="input-group-text">
+                                        <a href="#" class="link-secondary" id="togglePasswordConfirmation" title="Tampilkan password">
+                                            <i class="ti ti-eye icon icon-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
                                 @error('password_confirmation')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">Harus sama dengan password baru</small>
                             </div>
@@ -144,7 +140,7 @@
                         <input type="file" class="form-control @error('profile_photo') is-invalid @enderror" 
                                name="profile_photo" accept="image/*" id="photo-input">
                         @error('profile_photo')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <small class="form-hint">
                             <i class="ti ti-info-circle me-1"></i>
@@ -193,7 +189,7 @@
                 </div>
             </div>
 
-            <!-- Projects -->
+            <!-- Joined Projects -->
             <div class="card mt-3">
                 <div class="card-header">
                     <h3 class="card-title"><i class="ti ti-folder me-2"></i>Project yang Diikuti</h3>
@@ -214,11 +210,17 @@
                                 <div class="flex-fill">
                                     <div class="fw-bold">{{ $affiliatorProject->project->name }}</div>
                                     <div class="text-secondary small">
-                                        <span class="badge bg-{{ $affiliatorProject->status == 'active' ? 'success' : 'warning' }}">
+                                        <span class="badge bg-{{ $affiliatorProject->status == 'active' ? 'success' : 'secondary' }}">
                                             {{ $affiliatorProject->status_label }}
                                         </span>
-                                        <span class="badge bg-{{ $affiliatorProject->verification_status == 'verified' ? 'success' : ($affiliatorProject->verification_status == 'rejected' ? 'danger' : 'warning') }}">
-                                            {{ $affiliatorProject->verification_status == 'verified' ? 'Verified' : ($affiliatorProject->verification_status == 'rejected' ? 'Rejected' : 'Pending') }}
+                                        <span class="badge bg-{{ $affiliatorProject->verification_status == 'verified' ? 'success' : ($affiliatorProject->verification_status == 'rejected' ? 'danger' : 'warning') }} ms-1">
+                                            @if($affiliatorProject->verification_status == 'verified')
+                                                Terverifikasi
+                                            @elseif($affiliatorProject->verification_status == 'rejected')
+                                                Ditolak
+                                            @else
+                                                Pending
+                                            @endif
                                         </span>
                                     </div>
                                 </div>
@@ -228,7 +230,7 @@
                     @else
                         <div class="text-center text-secondary">
                             <i class="ti ti-folder-off icon icon-lg mb-2"></i>
-                            <div>Belum ada project</div>
+                            <div>Belum bergabung project</div>
                         </div>
                     @endif
                 </div>
@@ -271,8 +273,6 @@
             </div>
         </div>
 
-        
-
         <!-- Submit Buttons -->
         <div class="col-12">
             <div class="card">
@@ -314,6 +314,35 @@ document.addEventListener('DOMContentLoaded', function() {
             nameCount.parentElement.classList.remove('text-warning', 'text-danger');
         }
     });
+    
+    // Password toggle functionality
+    function setupPasswordToggle(inputId, toggleId) {
+        const passwordInput = document.getElementById(inputId);
+        const togglePassword = document.getElementById(toggleId);
+        const eyeIcon = togglePassword.querySelector('i');
+
+        togglePassword.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle the icon
+            if (type === 'password') {
+                eyeIcon.classList.remove('ti-eye-off');
+                eyeIcon.classList.add('ti-eye');
+                togglePassword.setAttribute('title', 'Tampilkan password');
+            } else {
+                eyeIcon.classList.remove('ti-eye');
+                eyeIcon.classList.add('ti-eye-off');
+                togglePassword.setAttribute('title', 'Sembunyikan password');
+            }
+        });
+    }
+
+    // Setup password toggles
+    setupPasswordToggle('passwordInput', 'togglePassword');
+    setupPasswordToggle('passwordConfirmationInput', 'togglePasswordConfirmation');
     
     // Photo preview functionality
     const photoInput = document.getElementById('photo-input');
@@ -377,8 +406,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Password confirmation validation
-    const passwordInput = document.querySelector('input[name="password"]');
-    const confirmPasswordInput = document.querySelector('input[name="password_confirmation"]');
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('passwordConfirmationInput');
     
     function validatePasswordMatch() {
         if (passwordInput.value || confirmPasswordInput.value) {
@@ -406,10 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert(confirmPasswordInput, 'danger', 'Password dan konfirmasi password harus sama.');
             return false;
         }
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memperbarui...';
-        form.classList.add('loading');
     });
 });
 </script>

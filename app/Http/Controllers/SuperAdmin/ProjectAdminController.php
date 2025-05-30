@@ -52,17 +52,32 @@ class ProjectAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'country_code' => 'required|string|max:5',
-            'phone' => 'required|string|max:20|unique:users',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{9,13}$/',
+                'unique:users'
+            ],
             'password' => 'required|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean'
+        ], [
+            'name.required' => 'Nama harus diisi',
+            'email.required' => 'Email harus diisi',
+            'email.unique' => 'Email sudah terdaftar',
+            'phone.required' => 'Nomor telepon harus diisi',
+            'phone.regex' => 'Format nomor telepon tidak valid. Gunakan format: 8xxxxxxxxx (tanpa +62 dan tanpa 0 di depan)',
+            'phone.unique' => 'Nomor telepon sudah terdaftar',
+            'password.required' => 'Password harus diisi',
+            'password.min' => 'Password minimal 8 karakter',
+            'password.confirmed' => 'Konfirmasi password tidak cocok',
         ]);
 
         DB::transaction(function () use ($request, $project) {
-            $data = $request->only(['name', 'email', 'country_code', 'phone']);
+            $data = $request->only(['name', 'email', 'phone']);
             $data['password'] = Hash::make($request->password);
             $data['role'] = 'admin';
+            $data['country_code'] = '+62'; // default Indonesia
             $data['is_active'] = $request->boolean('is_active', true);
 
             // Handle profile photo upload
@@ -136,16 +151,30 @@ class ProjectAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
-            'country_code' => 'required|string|max:5',
-            'phone' => 'required|string|max:20|unique:users,phone,' . $admin->id,
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{9,13}$/',
+                'unique:users,phone,' . $admin->id
+            ],
             'password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean'
+        ], [
+            'name.required' => 'Nama harus diisi',
+            'email.required' => 'Email harus diisi',
+            'email.unique' => 'Email sudah terdaftar',
+            'phone.required' => 'Nomor telepon harus diisi',
+            'phone.regex' => 'Format nomor telepon tidak valid. Gunakan format: 8xxxxxxxxx (tanpa +62 dan tanpa 0 di depan)',
+            'phone.unique' => 'Nomor telepon sudah terdaftar',
+            'password.min' => 'Password minimal 8 karakter',
+            'password.confirmed' => 'Konfirmasi password tidak cocok',
         ]);
 
         $oldData = $admin->only(['name', 'email', 'phone', 'is_active']);
         
-        $data = $request->only(['name', 'email', 'country_code', 'phone']);
+        $data = $request->only(['name', 'email', 'phone']);
+        $data['country_code'] = '+62'; // default Indonesia
         $data['is_active'] = $request->boolean('is_active', true);
 
         // Handle password update

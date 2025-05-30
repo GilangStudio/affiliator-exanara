@@ -71,7 +71,7 @@
                                        name="name" value="{{ old('name') }}" required
                                        placeholder="Masukkan nama lengkap">
                                 @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint">
                                     <span id="name-count">0</span>/255 karakter
@@ -85,59 +85,43 @@
                                        name="email" value="{{ old('email') }}" required
                                        placeholder="admin@example.com">
                                 @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint">Email akan digunakan untuk login</small>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Kode Negara <span class="text-danger">*</span></label>
-                                <select class="form-select @error('country_code') is-invalid @enderror" 
-                                        name="country_code" required>
-                                    <option value="">Pilih</option>
-                                    <option value="+62" {{ old('country_code') == '+62' ? 'selected' : '' }}>+62 (Indonesia)</option>
-                                    <option value="+1" {{ old('country_code') == '+1' ? 'selected' : '' }}>+1 (US/Canada)</option>
-                                    <option value="+44" {{ old('country_code') == '+44' ? 'selected' : '' }}>+44 (UK)</option>
-                                    <option value="+65" {{ old('country_code') == '+65' ? 'selected' : '' }}>+65 (Singapore)</option>
-                                    <option value="+60" {{ old('country_code') == '+60' ? 'selected' : '' }}>+60 (Malaysia)</option>
-                                </select>
-                                @error('country_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomor Whatsapp <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">+62</span>
+                            <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" 
+                                   placeholder="8123456789" value="{{ old('phone') }}" required>
                         </div>
-                        <div class="col-md-9">
-                            <div class="mb-3">
-                                <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                       name="phone" value="{{ old('phone') }}" required
-                                       placeholder="8123456789">
-                                @error('phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="form-hint">Nomor tanpa kode negara (contoh: 8123456789)</small>
-                            </div>
-                        </div>
+                        @error('phone')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                        <small class="form-hint">Nomor tanpa kode negara dan tanpa 0 di depan (contoh: 8123456789)</small>
+                        <input type="hidden" name="country_code" value="+62">
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Password <span class="text-danger">*</span></label>
-                                <div class="input-group">
+                                <div class="input-group input-group-flat">
                                     <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                           name="password" required minlength="8" id="password-input"
-                                           placeholder="Minimal 8 karakter">
-                                    <button class="btn btn-outline-secondary" type="button" id="toggle-password">
-                                        <i class="ti ti-eye" id="password-icon"></i>
-                                    </button>
+                                           name="password" required minlength="8" id="passwordInput"
+                                           placeholder="Minimal 8 karakter" autocomplete="off">
+                                    <span class="input-group-text">
+                                        <a href="#" class="link-secondary" id="togglePassword" title="Tampilkan password">
+                                            <i class="ti ti-eye icon icon-1"></i>
+                                        </a>
+                                    </span>
                                 </div>
                                 @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <div class="mt-2">
                                     <div class="progress" style="height: 5px;">
@@ -150,16 +134,18 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
-                                <div class="input-group">
+                                <div class="input-group input-group-flat">
                                     <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                           name="password_confirmation" required id="confirm-password-input"
-                                           placeholder="Ulangi password">
-                                    <button class="btn btn-outline-secondary" type="button" id="toggle-confirm-password">
-                                        <i class="ti ti-eye" id="confirm-password-icon"></i>
-                                    </button>
+                                           name="password_confirmation" required id="passwordConfirmationInput"
+                                           placeholder="Ulangi password Anda" autocomplete="off">
+                                    <span class="input-group-text">
+                                        <a href="#" class="link-secondary" id="togglePasswordConfirmation" title="Tampilkan password">
+                                            <i class="ti ti-eye icon icon-1"></i>
+                                        </a>
+                                    </span>
                                 </div>
                                 @error('password_confirmation')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint" id="confirm-password-hint">Harus sama dengan password di atas</small>
                             </div>
@@ -182,7 +168,7 @@
                         <input type="file" class="form-control @error('profile_photo') is-invalid @enderror" 
                                name="profile_photo" accept="image/*" id="photo-input">
                         @error('profile_photo')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                         <small class="form-hint">
                             <i class="ti ti-info-circle me-1"></i>
@@ -338,30 +324,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Password visibility toggles
-    const passwordInput = document.getElementById('password-input');
-    const passwordIcon = document.getElementById('password-icon');
-    const togglePassword = document.getElementById('toggle-password');
-    
-    const confirmPasswordInput = document.getElementById('confirm-password-input');
-    const confirmPasswordIcon = document.getElementById('confirm-password-icon');
-    const toggleConfirmPassword = document.getElementById('toggle-confirm-password');
-    
-    togglePassword.addEventListener('click', function() {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        passwordIcon.classList.toggle('ti-eye');
-        passwordIcon.classList.toggle('ti-eye-off');
-    });
-    
-    toggleConfirmPassword.addEventListener('click', function() {
-        const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        confirmPasswordInput.setAttribute('type', type);
-        confirmPasswordIcon.classList.toggle('ti-eye');
-        confirmPasswordIcon.classList.toggle('ti-eye-off');
-    });
+    // Password toggle functionality
+    function setupPasswordToggle(inputId, toggleId) {
+        const passwordInput = document.getElementById(inputId);
+        const togglePassword = document.getElementById(toggleId);
+        const eyeIcon = togglePassword.querySelector('i');
+
+        togglePassword.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle the icon
+            if (type === 'password') {
+                eyeIcon.classList.remove('ti-eye-off');
+                eyeIcon.classList.add('ti-eye');
+                togglePassword.setAttribute('title', 'Tampilkan password');
+            } else {
+                eyeIcon.classList.remove('ti-eye');
+                eyeIcon.classList.add('ti-eye-off');
+                togglePassword.setAttribute('title', 'Sembunyikan password');
+            }
+        });
+    }
+
+    // Setup password toggles
+    setupPasswordToggle('passwordInput', 'togglePassword');
+    setupPasswordToggle('passwordConfirmationInput', 'togglePasswordConfirmation');
     
     // Password strength indicator
+    const passwordInput = document.getElementById('passwordInput');
     const passwordStrength = document.getElementById('password-strength');
     const passwordHint = document.getElementById('password-hint');
     
@@ -405,6 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Password confirmation validation
+    const confirmPasswordInput = document.getElementById('passwordConfirmationInput');
     const confirmPasswordHint = document.getElementById('confirm-password-hint');
     
     function validatePasswordMatch() {

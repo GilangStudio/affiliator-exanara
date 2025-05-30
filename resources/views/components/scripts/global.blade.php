@@ -11,12 +11,19 @@
     //     }, 5000);
     // });
 
+    const inputs = document.querySelectorAll('input[type="tel"]');
+    inputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+
     const form = document.querySelector('form');
     const submitBtn = document.getElementById('submit-btn');
 
     form.addEventListener('submit', function(e) {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-          form.classList.add('loading');
-      });
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        form.classList.add('loading');
+    });
 </script>

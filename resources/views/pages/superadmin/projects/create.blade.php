@@ -39,7 +39,7 @@
                                        name="name" value="{{ old('name') }}" required
                                        placeholder="Masukkan nama project">
                                 @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">
                                     <span id="name-count">0</span>/255 karakter
@@ -52,7 +52,7 @@
                                 <input type="file" class="form-control @error('logo') is-invalid @enderror" 
                                        name="logo" accept="image/*" id="logo-input">
                                 @error('logo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">
                                     <i class="ti ti-info-circle me-1"></i>
@@ -69,7 +69,7 @@
                                   name="description" id="description-editor" rows="4" 
                                   placeholder="Masukkan deskripsi project...">{{ old('description') }}</textarea>
                         @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <div class="invalid-feedback" id="description-error" style="display: none;"></div>
                         <small class="form-hint">Deskripsi singkat tentang project ini.</small>
@@ -81,7 +81,7 @@
                                   name="terms_and_conditions" id="terms-editor" rows="8" 
                                   placeholder="Masukkan syarat dan ketentuan...">{{ old('terms_and_conditions') }}</textarea>
                         @error('terms_and_conditions')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <div class="invalid-feedback" id="terms-error" style="display: none;"></div>
                         <small class="form-hint">Syarat dan ketentuan lengkap untuk project ini.</small>
@@ -93,7 +93,7 @@
                                   name="additional_info" id="additional-info-editor" rows="6" 
                                   placeholder="Masukkan informasi tambahan...">{{ old('additional_info') }}</textarea>
                         @error('additional_info')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <div class="invalid-feedback" id="additional-info-error" style="display: none;"></div>
                         <small class="form-hint">Informasi tambahan yang diperlukan affiliator.</small>
@@ -123,7 +123,7 @@
                             </option>
                         </select>
                         @error('commission_type')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <small class="form-hint">Pilih jenis komisi yang akan diberikan.</small>
                     </div>
@@ -137,7 +137,7 @@
                                    step="0.01" min="0" required placeholder="0">
                         </div>
                         @error('commission_value')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</div>
                         @enderror
                         <small class="form-hint">Masukkan nilai komisi sesuai tipe yang dipilih.</small>
                     </div>
