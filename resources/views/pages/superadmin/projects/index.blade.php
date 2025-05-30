@@ -89,7 +89,7 @@
                                         <div class="text-secondary small">{{ $project->slug }}</div>
                                         @if($project->description)
                                             <div class="text-secondary small text-truncate" style="max-width: 200px;">
-                                                {{ $project->description }}
+                                                {{ strip_tags($project->description) }}
                                             </div>
                                         @endif
                                     </div>
@@ -146,6 +146,11 @@
                                            class="dropdown-item">
                                             <i class="ti ti-eye me-2"></i>
                                             Lihat Detail
+                                        </a>
+                                        <a href="{{ route('superadmin.projects.admins.index', $project) }}"
+                                           class="dropdown-item">
+                                            <i class="ti ti-user-check me-2"></i>
+                                            Kelola Admin
                                         </a>
                                         <a href="{{ route('superadmin.projects.edit', $project) }}" 
                                            class="dropdown-item">

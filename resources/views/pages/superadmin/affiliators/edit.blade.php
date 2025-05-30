@@ -20,7 +20,7 @@
 </div>
 @endif
 
-<form action="{{ route('superadmin.affiliators.update', $affiliator) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('superadmin.affiliators.update', $affiliator) }}" id="edit-affiliator-form" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmPasswordInput.addEventListener('input', validatePasswordMatch);
 
     // Form submission
-    const form = document.querySelector('form');
+    const form = document.getElementById('edit-affiliator-form');
     const submitBtn = document.getElementById('submit-btn');
     
     form.addEventListener('submit', function(e) {

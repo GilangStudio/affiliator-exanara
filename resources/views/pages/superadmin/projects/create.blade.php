@@ -20,7 +20,7 @@
 </div>
 @endif
 
-<form action="{{ route('superadmin.projects.store') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('superadmin.projects.store') }}" id="create-project-form" method="POST" enctype="multipart/form-data">
     @csrf
     
     <div class="row g-3">
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Form submission
-    const form = document.querySelector('form');
+    const form = document.getElementById('create-project-form');
     const submitBtn = document.getElementById('submit-btn');
     
     form.addEventListener('submit', function(e) {

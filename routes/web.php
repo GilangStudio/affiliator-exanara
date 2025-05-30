@@ -15,7 +15,6 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
-use App\Http\Controllers\SuperAdmin\AdminController as SuperAdminAdminController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
 use App\Http\Controllers\SuperAdmin\ProjectAdminController as SuperAdminProjectAdminController;
@@ -65,7 +64,7 @@ Route::middleware(['guest'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     
     // Logout
-    Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     
     // // Dashboard (role-based redirect handled in controller)
     // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -201,14 +200,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/{affiliator}/remove-photo', [SuperAdminAffiliatorController::class, 'removePhoto'])->name('remove-photo');
             });
 
-            // Admins Management
-            Route::resource('admins', SuperAdminAdminController::class);
-            Route::prefix('admins')->name('admins.')->group(function () {
-                Route::patch('/{admin}/toggle-status', [SuperAdminAdminController::class, 'toggleStatus'])->name('toggle-status');
-                Route::post('/{admin}/reset-password', [SuperAdminAdminController::class, 'resetPassword'])->name('reset-password');
-                Route::delete('/{admin}/remove-photo', [SuperAdminAdminController::class, 'removePhoto'])->name('remove-photo');
-            });
-
             // Projects Management
             Route::resource('projects', SuperAdminProjectController::class);
             Route::prefix('projects')->name('projects.')->group(function () {
@@ -216,8 +207,13 @@ Route::middleware(['auth'])->group(function () {
                 
                 // Project Admins Management
                 Route::get('/{project}/admins', [SuperAdminProjectAdminController::class, 'index'])->name('admins.index');
+                Route::get('/{project}/admins/create', [SuperAdminProjectAdminController::class, 'create'])->name('admins.create');
                 Route::post('/{project}/admins', [SuperAdminProjectAdminController::class, 'store'])->name('admins.store');
+                Route::get('/{project}/admins/{admin}/edit', [SuperAdminProjectAdminController::class, 'edit'])->name('admins.edit');
+                Route::put('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'update'])->name('admins.update');
                 Route::delete('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'destroy'])->name('admins.destroy');
+                Route::patch('/{project}/admins/{admin}/toggle-status', [SuperAdminProjectAdminController::class, 'toggleStatus'])->name('admins.toggle-status');
+                Route::post('/{project}/admins/{admin}/reset-password', [SuperAdminProjectAdminController::class, 'resetPassword'])->name('admins.reset-password');
             });
 
             

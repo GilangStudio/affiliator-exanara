@@ -39,12 +39,10 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Admin Project</h3>
-                @if($availableAdmins->count() > 0)
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-admin-modal">
+                <a href="{{ route('superadmin.projects.admins.create', $project) }}" class="btn btn-primary">
                     <i class="ti ti-plus me-1"></i>
-                    Tambah Admin
-                </button>
-                @endif
+                    Buat Admin Baru
+                </a>
             </div>
 
             <div class="card-body p-0">
@@ -56,7 +54,7 @@
                                     <th>Admin</th>
                                     <th>Contact</th>
                                     <th>Status</th>
-                                    <th>Projects Lain</th>
+                                    {{-- <th>Projects Lain</th> --}}
                                     <th>Ditugaskan</th>
                                     <th>Last Login</th>
                                     <th width="120">Aksi</th>
@@ -88,7 +86,7 @@
                                             {{ $admin->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                         </span>
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         @php
                                             $otherProjects = $admin->adminProjects()->where('projects.id', '!=', $project->id)->count();
                                         @endphp
@@ -97,7 +95,7 @@
                                         @else
                                             <span class="text-secondary">-</span>
                                         @endif
-                                    </td>
+                                    </td> --}}
                                     <td>
                                         <div class="small">{{ $admin->created_at->format('d/m/Y') }}</div>
                                         <div class="text-secondary small">{{ $admin->created_at->diffForHumans() }}</div>
@@ -117,20 +115,37 @@
                                                 <i class="ti ti-dots-vertical"></i>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a href="{{ route('superadmin.admins.edit', $admin) }}" 
+                                                <a href="{{ route('superadmin.projects.admins.edit', [$project, $admin]) }}" 
                                                    class="dropdown-item">
                                                     <i class="ti ti-edit me-2"></i>
                                                     Edit Admin
                                                 </a>
+                                                <button type="button" class="dropdown-item" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#reset-password-modal"
+                                                        data-admin-id="{{ $admin->id }}"
+                                                        data-admin-name="{{ $admin->name }}">
+                                                    <i class="ti ti-key me-2"></i>
+                                                    Reset Password
+                                                </button>
+                                                <form action="{{ route('superadmin.projects.admins.toggle-status', [$project, $admin]) }}" 
+                                                      method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="ti ti-{{ $admin->is_active ? 'eye-off' : 'eye' }} me-2"></i>
+                                                        {{ $admin->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                    </button>
+                                                </form>
                                                 <div class="dropdown-divider"></div>
                                                 <form action="{{ route('superadmin.projects.admins.destroy', [$project, $admin]) }}" 
                                                       method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item text-danger"
-                                                            onclick="return confirm('Hapus admin ini dari project?')">
+                                                            onclick="return confirm('Hapus admin ini dari project? Admin akan dihapus permanen jika tidak ditugaskan di project lain.')">
                                                         <i class="ti ti-trash me-2"></i>
-                                                        Hapus dari Project
+                                                        Hapus Admin
                                                     </button>
                                                 </form>
                                             </div>
@@ -148,17 +163,10 @@
                         </div>
                         <h3 class="text-secondary">Belum ada admin</h3>
                         <p class="text-secondary">Project ini belum memiliki admin yang ditugaskan.</p>
-                        @if($availableAdmins->count() > 0)
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-admin-modal">
+                        <a href="{{ route('superadmin.projects.admins.create', $project) }}" class="btn btn-primary">
                             <i class="ti ti-plus me-1"></i>
-                            Tambah Admin Pertama
-                        </button>
-                        @else
-                        <div class="alert alert-warning">
-                            <i class="ti ti-alert-triangle me-2"></i>
-                            Tidak ada admin yang tersedia untuk ditugaskan.
-                        </div>
-                        @endif
+                            Buat Admin Pertama
+                        </a>
                     </div>
                 @endif
             </div>
@@ -166,47 +174,63 @@
     </div>
 </div>
 
-<!-- Add Admin Modal -->
-@if($availableAdmins->count() > 0)
-<div class="modal fade" id="add-admin-modal" tabindex="-1">
+<!-- Reset Password Modal -->
+<div class="modal fade" id="reset-password-modal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('superadmin.projects.admins.store', $project) }}" method="POST">
+            <form id="reset-password-form" method="POST">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title">Tambah Admin ke Project</h5>
+                    <h5 class="modal-title">Reset Password</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label required">Pilih Admin</label>
-                        <select class="form-select" name="admin_id" required>
-                            <option value="">Pilih admin...</option>
-                            @foreach($availableAdmins as $admin)
-                                <option value="{{ $admin->id }}">
-                                    {{ $admin->name }} ({{ $admin->email }})
-                                    @if($admin->adminProjects()->count() > 0)
-                                        - {{ $admin->adminProjects()->count() }} project lain
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        <small class="form-hint">Hanya admin yang belum ditugaskan di project ini yang ditampilkan.</small>
+                        <label class="form-label">Password Baru <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="new_password" required minlength="8">
+                        <div class="form-hint">Minimal 8 karakter</div>
                     </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>
-                        Admin yang ditambahkan akan menerima notifikasi dan dapat langsung mengelola project ini.
+                    <div class="mb-3">
+                        <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="new_password_confirmation" required>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="ti ti-alert-triangle me-2"></i>
+                        Admin akan menerima notifikasi bahwa password mereka telah direset.
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Tambah Admin</button>
+                    <button type="submit" class="btn btn-warning">Reset Password</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endif
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reset password modal handler
+    const resetPasswordModal = document.getElementById('reset-password-modal');
+    const resetPasswordForm = document.getElementById('reset-password-form');
+    
+    resetPasswordModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const adminId = button.getAttribute('data-admin-id');
+        const adminName = button.getAttribute('data-admin-name');
+        
+        // Update form action
+        resetPasswordForm.action = `{{ route('superadmin.projects.admins.index', $project) }}/${adminId}/reset-password`;
+        
+        // Update modal title
+        resetPasswordModal.querySelector('.modal-title').textContent = `Reset Password - ${adminName}`;
+        
+        // Clear form
+        resetPasswordForm.reset();
+    });
+});
+</script>
+@endpush

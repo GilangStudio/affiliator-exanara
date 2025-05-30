@@ -25,7 +25,7 @@
 </div>
 @endif
 
-<form action="{{ route('superadmin.projects.update', $project) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('superadmin.projects.update', $project) }}" id="edit-project-form" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Form submission
-    const form = document.querySelector('form');
+    const form = document.getElementById('edit-project-form');
     const submitBtn = document.getElementById('submit-btn');
     
     form.addEventListener('submit', function(e) {
