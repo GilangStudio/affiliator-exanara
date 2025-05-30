@@ -137,6 +137,16 @@
                         <span class="nav-link-title"> Users </span>
                     </a>
                 </li>
+                
+                <!-- Affiliator Management -->
+                <li class="nav-item {{ Route::is('superadmin.affiliators.*')? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('superadmin.affiliators.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-users-group icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Affiliators</span>
+                    </a>
+                </li>
 
                 <!-- Admin Management -->
                 <li class="nav-item {{ Route::is('superadmin.admins.*')? 'active' : '' }}">

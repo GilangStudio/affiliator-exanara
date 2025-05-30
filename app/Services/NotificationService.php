@@ -89,21 +89,6 @@ class NotificationService
     }
 
     /**
-     * Send notification to all coordinators of a project
-     */
-    public function notifyProjectCoordinators($projectId, $title, $message, $type = 'info', $data = null)
-    {
-        $project = \App\Models\Project::find($projectId);
-        if (!$project) {
-            return false;
-        }
-
-        $coordinatorIds = $project->coordinators->pluck('id')->toArray();
-
-        return $this->broadcast($coordinatorIds, $title, $message, $type, $data);
-    }
-
-    /**
      * Send notification to all affiliators of a project
      */
     public function notifyProjectAffiliators($projectId, $title, $message, $type = 'info', $data = null)
@@ -384,9 +369,6 @@ class NotificationService
         switch ($targetAudience) {
             case 'admins':
                 $userIds = $project->admins->pluck('id')->toArray();
-                break;
-            case 'coordinators':
-                $userIds = $project->coordinators->pluck('id')->toArray();
                 break;
             case 'affiliators':
                 $userIds = \App\Models\AffiliatorProject::where('project_id', $projectId)

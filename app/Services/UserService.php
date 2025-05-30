@@ -112,17 +112,6 @@ class UserService
     }
 
     /**
-     * Check if user is coordinator of specific project
-     */
-    public function isCoordinatorOf(User $user, $projectId)
-    {
-        return $user->adminProjects()
-            ->where('project_id', $projectId)
-            ->wherePivot('role', 'coordinator')
-            ->exists();
-    }
-
-    /**
      * Check if user is admin of specific project
      */
     public function isAdminOf(User $user, $projectId)

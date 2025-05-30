@@ -31,7 +31,6 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        // $query = Project::with(['admins']);
         $query = Project::query();
 
         // Filter by status
@@ -68,8 +67,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $admins = User::where('role', 'admin')->active()->get();
-        return view('pages.superadmin.projects.create', compact('admins'));
+        return view('pages.superadmin.projects.create');
     }
 
     /**
@@ -86,9 +84,7 @@ class ProjectController extends Controller
             'commission_value' => 'required|numeric|min:0',
             'additional_info' => 'nullable|string',
             'require_digital_signature' => 'boolean',
-            'is_active' => 'boolean',
-            'admins' => 'nullable|array',
-            'admins.*' => 'exists:users,id'
+            'is_active' => 'boolean'
         ]);
 
         DB::transaction(function () use ($request) {
@@ -111,13 +107,6 @@ class ProjectController extends Controller
                 'is_active' => $request->boolean('is_active', true)
             ]);
 
-            // Assign admins
-            if ($request->filled('admins')) {
-                foreach ($request->admins as $adminId) {
-                    $project->admins()->attach($adminId);
-                }
-            }
-
             // Log activity
             $this->activityLogService->log(
                 Auth::id(),
@@ -125,17 +114,6 @@ class ProjectController extends Controller
                 "Project baru dibuat: {$project->name}",
                 $project->id
             );
-
-            // Send notification to assigned admins
-            if ($request->filled('admins')) {
-                $this->notificationService->broadcast(
-                    $request->admins,
-                    'Project Baru',
-                    "Anda telah ditugaskan sebagai admin untuk project: {$project->name}",
-                    'info',
-                    ['project_id' => $project->id]
-                );
-            }
         });
 
         return redirect()->route('superadmin.projects.index')
@@ -177,10 +155,9 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        $admins = User::where('role', 'admin')->active()->get();
-        $assignedAdmins = $project->admins->pluck('id')->toArray();
-        
-        return view('pages.superadmin.projects.edit', compact('project', 'admins', 'assignedAdmins'));
+        $admins = User::admins()->active()->whereNotIn('id', $project->admins->pluck('id'))->get();
+
+        return view('pages.superadmin.projects.edit', compact('project', 'admins'));
     }
 
     /**
@@ -197,9 +174,7 @@ class ProjectController extends Controller
             'commission_value' => 'required|numeric|min:0',
             'additional_info' => 'nullable|string',
             'require_digital_signature' => 'boolean',
-            'is_active' => 'boolean',
-            'admins' => 'nullable|array',
-            'admins.*' => 'exists:users,id'
+            'is_active' => 'boolean'
         ]);
 
         DB::transaction(function () use ($request, $project) {
@@ -226,17 +201,6 @@ class ProjectController extends Controller
                 'is_active' => $request->boolean('is_active', true)
             ]);
 
-            // Update admin assignments
-            $currentAdmins = $project->admins->pluck('id')->toArray();
-            $newAdmins = $request->admins ?? [];
-
-            // Get added and removed admins
-            $addedAdmins = array_diff($newAdmins, $currentAdmins);
-            $removedAdmins = array_diff($currentAdmins, $newAdmins);
-
-            // Sync admins
-            $project->admins()->sync($newAdmins);
-
             // Log activity
             $this->activityLogService->log(
                 Auth::id(),
@@ -245,28 +209,6 @@ class ProjectController extends Controller
                 $project->id,
                 ['old_data' => $oldData, 'new_data' => $project->only(['name', 'is_active'])]
             );
-
-            // Send notifications to newly added admins
-            if (!empty($addedAdmins)) {
-                $this->notificationService->broadcast(
-                    $addedAdmins,
-                    'Project Assignment',
-                    "Anda telah ditugaskan sebagai admin untuk project: {$project->name}",
-                    'info',
-                    ['project_id' => $project->id]
-                );
-            }
-
-            // Send notifications to removed admins
-            if (!empty($removedAdmins)) {
-                $this->notificationService->broadcast(
-                    $removedAdmins,
-                    'Project Assignment Removed',
-                    "Anda telah dihapus dari assignment project: {$project->name}",
-                    'warning',
-                    ['project_id' => $project->id]
-                );
-            }
         });
 
         return redirect()->route('superadmin.projects.index')
@@ -350,73 +292,5 @@ class ProjectController extends Controller
         );
 
         return back()->with('success', "Project berhasil {$statusText}!");
-    }
-
-    /**
-     * Remove admin from project.
-     */
-    public function removeAdmin(Project $project, User $admin)
-    {
-        if (!$project->admins()->where('user_id', $admin->id)->exists()) {
-            return back()->with('error', 'Admin tidak ditemukan di project ini!');
-        }
-
-        $project->admins()->detach($admin->id);
-
-        $this->activityLogService->log(
-            Auth::id(),
-            'remove_project_admin',
-            "Admin {$admin->name} dihapus dari project {$project->name}",
-            $project->id
-        );
-
-        $this->notificationService->createForUser(
-            $admin->id,
-            'Project Assignment Removed',
-            "Anda telah dihapus dari assignment project: {$project->name}",
-            'warning',
-            ['project_id' => $project->id]
-        );
-
-        return back()->with('success', 'Admin berhasil dihapus dari project!');
-    }
-
-    /**
-     * Add admin to project.
-     */
-    public function addAdmin(Request $request, Project $project)
-    {
-        $request->validate([
-            'admin_id' => 'required|exists:users,id'
-        ]);
-
-        $admin = User::find($request->admin_id);
-
-        if ($admin->role !== 'admin') {
-            return back()->with('error', 'User yang dipilih bukan admin!');
-        }
-
-        if ($project->admins()->where('user_id', $admin->id)->exists()) {
-            return back()->with('error', 'Admin sudah ditugaskan di project ini!');
-        }
-
-        $project->admins()->attach($admin->id);
-
-        $this->activityLogService->log(
-            Auth::id(),
-            'add_project_admin',
-            "Admin {$admin->name} ditambahkan ke project {$project->name}",
-            $project->id
-        );
-
-        $this->notificationService->createForUser(
-            $admin->id,
-            'Project Assignment',
-            "Anda telah ditugaskan sebagai admin untuk project: {$project->name}",
-            'info',
-            ['project_id' => $project->id]
-        );
-
-        return back()->with('success', 'Admin berhasil ditambahkan ke project!');
     }
 }

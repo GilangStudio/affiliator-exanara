@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('title', 'Edit Admin')
+@section('title', 'Edit Affiliator')
 
 @push('styles')
 
@@ -20,7 +20,7 @@
 </div>
 @endif
 
-<form action="{{ route('superadmin.admins.update', $admin) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('superadmin.affiliators.update', $affiliator) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     
@@ -29,7 +29,7 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-user me-2"></i>Informasi Admin</h3>
+                    <h3 class="card-title"><i class="ti ti-user me-2"></i>Informasi Affiliator</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -37,13 +37,13 @@
                             <div class="mb-3">
                                 <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                       name="name" value="{{ old('name', $admin->name) }}" required
+                                       name="name" value="{{ old('name', $affiliator->name) }}" required
                                        placeholder="Masukkan nama lengkap">
                                 @error('name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <small class="form-hint">
-                                    <span id="name-count">{{ strlen($admin->name) }}</span>/255 karakter
+                                    <span id="name-count">{{ strlen($affiliator->name) }}</span>/255 karakter
                                 </small>
                             </div>
                         </div>
@@ -51,8 +51,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                       name="email" value="{{ old('email', $admin->email) }}" required
-                                       placeholder="admin@example.com">
+                                       name="email" value="{{ old('email', $affiliator->email) }}" required
+                                       placeholder="affiliator@example.com">
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -68,11 +68,11 @@
                                 <select class="form-select @error('country_code') is-invalid @enderror" 
                                         name="country_code" required>
                                     <option value="">Pilih</option>
-                                    <option value="+62" {{ old('country_code', $admin->country_code) == '+62' ? 'selected' : '' }}>+62 (Indonesia)</option>
-                                    <option value="+1" {{ old('country_code', $admin->country_code) == '+1' ? 'selected' : '' }}>+1 (US/Canada)</option>
-                                    <option value="+44" {{ old('country_code', $admin->country_code) == '+44' ? 'selected' : '' }}>+44 (UK)</option>
-                                    <option value="+65" {{ old('country_code', $admin->country_code) == '+65' ? 'selected' : '' }}>+65 (Singapore)</option>
-                                    <option value="+60" {{ old('country_code', $admin->country_code) == '+60' ? 'selected' : '' }}>+60 (Malaysia)</option>
+                                    <option value="+62" {{ old('country_code', $affiliator->country_code) == '+62' ? 'selected' : '' }}>+62 (Indonesia)</option>
+                                    <option value="+1" {{ old('country_code', $affiliator->country_code) == '+1' ? 'selected' : '' }}>+1 (US/Canada)</option>
+                                    <option value="+44" {{ old('country_code', $affiliator->country_code) == '+44' ? 'selected' : '' }}>+44 (UK)</option>
+                                    <option value="+65" {{ old('country_code', $affiliator->country_code) == '+65' ? 'selected' : '' }}>+65 (Singapore)</option>
+                                    <option value="+60" {{ old('country_code', $affiliator->country_code) == '+60' ? 'selected' : '' }}>+60 (Malaysia)</option>
                                 </select>
                                 @error('country_code')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -83,7 +83,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                       name="phone" value="{{ old('phone', $admin->phone) }}" required
+                                       name="phone" value="{{ old('phone', $affiliator->phone) }}" required
                                        placeholder="8123456789">
                                 @error('phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -131,9 +131,9 @@
                     <h3 class="card-title"><i class="ti ti-photo me-2"></i>Foto Profil</h3>
                 </div>
                 <div class="card-body">
-                    @if($admin->profile_photo)
+                    @if($affiliator->profile_photo)
                         <div class="mb-3 text-center">
-                            <img src="{{ $admin->profile_photo_url }}" alt="Current Photo" 
+                            <img src="{{ $affiliator->profile_photo_url }}" alt="Current Photo" 
                                  class="avatar avatar-xl mb-2">
                             <div class="text-secondary small">Foto saat ini</div>
                         </div>
@@ -164,7 +164,7 @@
                     <div class="mb-3">
                         <label class="form-check">
                             <input type="checkbox" class="form-check-input" name="is_active" 
-                                   value="1" {{ old('is_active', $admin->is_active) ? 'checked' : '' }}>
+                                   value="1" {{ old('is_active', $affiliator->is_active) ? 'checked' : '' }}>
                             <span class="form-check-label">Akun Aktif</span>
                         </label>
                         <small class="form-hint">Centang untuk mengaktifkan akun</small>
@@ -173,15 +173,15 @@
                     <div class="row">
                         <div class="col-6">
                             <div class="text-center">
-                                <div class="h3 mb-0">{{ $admin->adminProjects()->count() }}</div>
+                                <div class="h3 mb-0">{{ $affiliator->affiliatorProjects()->count() }}</div>
                                 <div class="text-secondary small">Project</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="text-center">
                                 <div class="h3 mb-0">
-                                    @if($admin->last_login_at)
-                                        {{ $admin->last_login_at->diffForHumans() }}
+                                    @if($affiliator->last_login_at)
+                                        {{ $affiliator->last_login_at->diffForHumans() }}
                                     @else
                                         Belum pernah
                                     @endif
@@ -193,29 +193,32 @@
                 </div>
             </div>
 
-            <!-- Assigned Projects -->
+            <!-- Projects -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-folder me-2"></i>Project yang Dikelola</h3>
+                    <h3 class="card-title"><i class="ti ti-folder me-2"></i>Project yang Diikuti</h3>
                 </div>
                 <div class="card-body">
-                    @if($admin->adminProjects->count() > 0)
+                    @if($affiliator->affiliatorProjects->count() > 0)
                         <div class="list-group list-group-flush">
-                            @foreach($admin->adminProjects as $project)
+                            @foreach($affiliator->affiliatorProjects as $affiliatorProject)
                             <div class="list-group-item d-flex align-items-center px-0">
-                                @if($project->logo)
-                                    <img src="{{ $project->logo_url }}" alt="{{ $project->name }}" 
+                                @if($affiliatorProject->project->logo)
+                                    <img src="{{ $affiliatorProject->project->logo_url }}" alt="{{ $affiliatorProject->project->name }}" 
                                          class="avatar avatar-sm me-2">
                                 @else
                                     <div class="avatar avatar-sm bg-primary-lt me-2">
-                                        {{ substr($project->name, 0, 1) }}
+                                        {{ substr($affiliatorProject->project->name, 0, 1) }}
                                     </div>
                                 @endif
                                 <div class="flex-fill">
-                                    <div class="fw-bold">{{ $project->name }}</div>
+                                    <div class="fw-bold">{{ $affiliatorProject->project->name }}</div>
                                     <div class="text-secondary small">
-                                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}">
-                                            {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                        <span class="badge bg-{{ $affiliatorProject->status == 'active' ? 'success' : 'warning' }}">
+                                            {{ $affiliatorProject->status_label }}
+                                        </span>
+                                        <span class="badge bg-{{ $affiliatorProject->verification_status == 'verified' ? 'success' : ($affiliatorProject->verification_status == 'rejected' ? 'danger' : 'warning') }}">
+                                            {{ $affiliatorProject->verification_status == 'verified' ? 'Verified' : ($affiliatorProject->verification_status == 'rejected' ? 'Rejected' : 'Pending') }}
                                         </span>
                                     </div>
                                 </div>
@@ -240,18 +243,18 @@
                     <div class="row">
                         <div class="col-12 mb-2">
                             <div class="text-secondary small">Dibuat</div>
-                            <div>{{ $admin->created_at->format('d/m/Y H:i') }}</div>
+                            <div>{{ $affiliator->created_at->format('d/m/Y H:i') }}</div>
                         </div>
                         <div class="col-12 mb-2">
                             <div class="text-secondary small">Terakhir Diperbarui</div>
-                            <div>{{ $admin->updated_at->format('d/m/Y H:i') }}</div>
+                            <div>{{ $affiliator->updated_at->format('d/m/Y H:i') }}</div>
                         </div>
-                        @if($admin->email_verified_at)
+                        @if($affiliator->email_verified_at)
                         <div class="col-12">
                             <div class="text-secondary small">Email Terverifikasi</div>
                             <div class="text-success">
                                 <i class="ti ti-check me-1"></i>
-                                {{ $admin->email_verified_at->format('d/m/Y H:i') }}
+                                {{ $affiliator->email_verified_at->format('d/m/Y H:i') }}
                             </div>
                         </div>
                         @else
@@ -268,17 +271,19 @@
             </div>
         </div>
 
+        
+
         <!-- Submit Buttons -->
         <div class="col-12">
             <div class="card">
                 <div class="card-footer text-end">
                     <div class="d-flex">
-                        <a href="{{ route('superadmin.admins.index') }}" class="btn btn-link">
+                        <a href="{{ route('superadmin.affiliators.index') }}" class="btn btn-link">
                             Batal
                         </a>
                         <button type="submit" class="btn btn-primary ms-auto" id="submit-btn">
                             <i class="ti ti-device-floppy me-1"></i>
-                            Perbarui Admin
+                            Perbarui Affiliator
                         </button>
                     </div>
                 </div>
@@ -401,6 +406,10 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert(confirmPasswordInput, 'danger', 'Password dan konfirmasi password harus sama.');
             return false;
         }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memperbarui...';
+        form.classList.add('loading');
     });
 });
 </script>

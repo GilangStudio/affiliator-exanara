@@ -170,38 +170,19 @@
                 </div>
             </div>
 
-            <!-- Admin Assignment -->
+            <!-- Info Card -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-users me-2"></i>Assign Admin</h3>
+                    <h3 class="card-title"><i class="ti ti-info-circle me-2"></i>Info Penting</h3>
                 </div>
                 <div class="card-body">
-                    @if($admins->count() > 0)
-                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
-                            @foreach($admins as $admin)
-                            <label class="form-selectgroup-item flex-fill">
-                                <input type="checkbox" name="admins[]" value="{{ $admin->id }}" 
-                                       class="form-selectgroup-input"
-                                       {{ in_array($admin->id, old('admins', [])) ? 'checked' : '' }}>
-                                <div class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <div class="me-3">
-                                        <span class="avatar">{{ $admin->initials }}</span>
-                                    </div>
-                                    <div>
-                                        <div class="font-weight-medium">{{ $admin->name }}</div>
-                                        <div class="text-secondary">{{ $admin->email }}</div>
-                                    </div>
-                                </div>
-                            </label>
-                            @endforeach
+                    <div class="alert alert-info mb-0">
+                        <i class="ti ti-lightbulb me-2"></i>
+                        <div>
+                            <strong>Admin Project:</strong><br>
+                            Setelah project dibuat, Anda dapat menambahkan admin untuk mengelola project ini melalui menu "Admin" pada detail project.
                         </div>
-                        <small class="form-hint">Pilih admin yang akan mengelola project ini.</small>
-                    @else
-                        <div class="text-center text-secondary">
-                            <i class="ti ti-users-off icon icon-lg mb-2"></i>
-                            <div>Belum ada admin tersedia</div>
-                        </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -385,10 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             return false;
         }
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
-        form.classList.add('loading');
     });
 });
 </script>

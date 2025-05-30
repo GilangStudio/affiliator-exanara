@@ -346,7 +346,6 @@ class AuthController extends Controller
         return match ($role) {
             'superadmin' => 'superadmin.dashboard',
             'admin' => 'admin.dashboard',
-            'coordinator' => 'coordinator.dashboard',
             'affiliator' => 'dashboard',
             default => 'dashboard'
         };

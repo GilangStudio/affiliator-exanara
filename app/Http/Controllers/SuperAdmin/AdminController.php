@@ -33,7 +33,7 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::admins();
+        $query = User::admins()->withCount('adminProjects');
 
         // Filter by status
         if ($request->filled('status')) {
@@ -60,11 +60,6 @@ class AdminController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         $admins = $query->paginate(15);
-
-        // Load project counts for each admin
-        $admins->each(function($admin) {
-            $admin->projects_count = $admin->adminProjects()->count();
-        });
 
         return view('pages.superadmin.admins.index', compact('admins'));
     }
@@ -134,8 +129,7 @@ class AdminController extends Controller
             return redirect()->route('superadmin.admins.index')
                 ->with('error', 'User yang dipilih bukan admin!');
         }
-
-        $admin->load('adminProjects.project');
+        $admin->load('adminProjects');
 
         return view('pages.superadmin.admins.edit', compact('admin'));
     }

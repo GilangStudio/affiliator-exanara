@@ -29,12 +29,6 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_admins');
     }
 
-    public function coordinators()
-    {
-        return $this->belongsToMany(User::class, 'project_admins')
-            ->wherePivot('role', 'coordinator');
-    }
-
     public function projectAdmins()
     {
         return $this->belongsToMany(User::class, 'project_admins')

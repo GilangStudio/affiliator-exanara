@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('title', 'Tambah Admin')
+@section('title', 'Tambah Affiliator')
 
 @push('styles')
 
@@ -20,7 +20,7 @@
 </div>
 @endif
 
-<form action="{{ route('superadmin.admins.store') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('superadmin.affiliators.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     
     <div class="row g-3">
@@ -28,7 +28,7 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-user me-2"></i>Informasi Admin</h3>
+                    <h3 class="card-title"><i class="ti ti-user me-2"></i>Informasi Affiliator</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -51,7 +51,7 @@
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ old('email') }}" required
-                                       placeholder="admin@example.com">
+                                       placeholder="affiliator@example.com">
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -180,7 +180,7 @@
                         <i class="ti ti-info-circle me-2"></i>
                         <div>
                             <strong>Info:</strong><br>
-                            Admin akan menerima notifikasi bahwa akun mereka telah dibuat dan dapat langsung login ke sistem.
+                            Affiliator akan menerima notifikasi bahwa akun mereka telah dibuat dan dapat langsung login ke sistem.
                         </div>
                     </div>
                 </div>
@@ -189,33 +189,33 @@
             <!-- Role Permissions -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-shield me-2"></i>Hak Akses Admin</h3>
+                    <h3 class="card-title"><i class="ti ti-shield me-2"></i>Hak Akses Affiliator</h3>
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-check text-success me-2"></i>
-                            <span>Mengelola project yang ditugaskan</span>
+                            <span>Bergabung dengan project</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-check text-success me-2"></i>
-                            <span>Verifikasi lead dan KTP affiliator</span>
+                            <span>Menambah dan mengelola lead</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-check text-success me-2"></i>
-                            <span>Kelola penarikan komisi</span>
+                            <span>Melihat komisi dan melakukan penarikan</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-check text-success me-2"></i>
-                            <span>Lihat laporan dan statistik</span>
+                            <span>Mengelola rekening bank</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-check text-success me-2"></i>
-                            <span>Kelola FAQ project</span>
+                            <span>Melihat laporan dan statistik</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-x text-danger me-2"></i>
-                            <span>Kelola admin lain</span>
+                            <span>Mengelola user lain</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center px-0">
                             <i class="ti ti-x text-danger me-2"></i>
@@ -235,7 +235,7 @@
                         <i class="ti ti-alert-triangle me-2"></i>
                         <div>
                             <strong>Penting!</strong><br>
-                            Pastikan email dan nomor telepon yang dimasukkan valid. Admin akan menerima informasi login melalui email.
+                            Pastikan email dan nomor telepon yang dimasukkan valid. Affiliator akan menerima informasi login melalui email.
                         </div>
                     </div>
                 </div>
@@ -247,12 +247,12 @@
             <div class="card">
                 <div class="card-footer text-end">
                     <div class="d-flex">
-                        <a href="{{ route('superadmin.admins.index') }}" class="btn btn-link">
+                        <a href="{{ route('superadmin.affiliators.index') }}" class="btn btn-link">
                             Batal
                         </a>
                         <button type="submit" class="btn btn-primary ms-auto" id="submit-btn">
                             <i class="ti ti-device-floppy me-1"></i>
-                            Simpan Admin
+                            Simpan Affiliator
                         </button>
                     </div>
                 </div>

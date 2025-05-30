@@ -1,15 +1,15 @@
 @extends('layouts.main')
 
-@section('title', 'Kelola Admin')
+@section('title', 'Kelola Affiliator')
 
 @section('content')
 <div class="col-12">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Daftar Admin</h3>
-            <a href="{{ route('superadmin.admins.create') }}" class="btn btn-primary">
+            <h3 class="card-title">Daftar Affiliator</h3>
+            <a href="{{ route('superadmin.affiliators.create') }}" class="btn btn-primary">
                 <i class="ti ti-plus me-1"></i>
-                Tambah Admin
+                Tambah Affiliator
             </a>
         </div>
 
@@ -17,7 +17,7 @@
         <div class="card-body border-bottom">
             <form method="GET" class="row g-2">
                 <div class="col-md-3">
-                    <input type="text" class="form-control" name="search" placeholder="Cari admin..." 
+                    <input type="text" class="form-control" name="search" placeholder="Cari affiliator..." 
                            value="{{ request('search') }}">
                 </div>
                 <div class="col-md-2">
@@ -47,7 +47,7 @@
                             <i class="ti ti-search me-1"></i>
                             Filter
                         </button>
-                        <a href="{{ route('superadmin.admins.index') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('superadmin.affiliators.index') }}" class="btn btn-outline-secondary">
                             <i class="ti ti-x me-1"></i>
                             Reset
                         </a>
@@ -57,64 +57,95 @@
         </div>
 
         <div class="card-body p-0">
-            @if($admins->count() > 0)
+            @if($affiliators->count() > 0)
             <div class="table-responsive">
                 <table class="table table-vcenter">
                     <thead>
                         <tr>
-                            <th>Admin</th>
+                            <th>Affiliator</th>
                             <th>Contact</th>
                             <th>Status</th>
                             <th>Projects</th>
+                            <th>Leads</th>
                             <th>Last Login</th>
                             <th>Dibuat</th>
                             <th width="120">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($admins as $admin)
+                        @foreach($affiliators as $affiliator)
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ $admin->profile_photo_url }}" alt="{{ $admin->name }}" 
+                                    <img src="{{ $affiliator->profile_photo_url }}" alt="{{ $affiliator->name }}" 
                                          class="avatar avatar-sm me-2">
                                     <div>
-                                        <div class="fw-bold">{{ $admin->name }}</div>
-                                        <div class="text-secondary small">{{ $admin->initials }}</div>
+                                        <div class="fw-bold">{{ $affiliator->name }}</div>
+                                        <div class="text-secondary small">{{ $affiliator->initials }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div>
-                                    <div class="fw-bold">{{ $admin->email }}</div>
+                                    <div class="fw-bold">{{ $affiliator->email }}</div>
                                     <div class="text-secondary small">
-                                        {{ $admin->country_code }} {{ $admin->phone }}
+                                        {{ $affiliator->country_code }} {{ $affiliator->phone }}
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $admin->is_active ? 'success text-white' : 'secondary text-white' }}">
-                                    {{ $admin->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                <span class="badge bg-{{ $affiliator->is_active ? 'success text-white' : 'secondary text-white' }}">
+                                    {{ $affiliator->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                 </span>
                             </td>
                             <td>
-                                @if($admin->admin_projects_count > 0)
-                                    <span class="text-success">{{ $admin->admin_projects_count }}</span>
+                                @if($affiliator->affiliatorProjects->count() > 0)
+                                    <div class="avatar-list avatar-list-stacked">
+                                        @foreach($affiliator->affiliatorProjects->take(3) as $affiliatorProject)
+                                            <span class="avatar avatar-xs" title="{{ $affiliatorProject->project->name }}">
+                                                {{ substr($affiliatorProject->project->name, 0, 1) }}
+                                            </span>
+                                        @endforeach
+                                        @if($affiliator->affiliatorProjects->count() > 3)
+                                            <span class="avatar avatar-xs">+{{ $affiliator->affiliatorProjects->count() - 3 }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-secondary small">{{ $affiliator->affiliatorProjects->count() }} project</div>
                                 @else
-                                    <span class="text-secondary">-</span>
+                                    <span class="text-secondary">Belum ada project</span>
                                 @endif
                             </td>
                             <td>
-                                @if($admin->last_login_at)
-                                    <div class="small">{{ $admin->last_login_at->format('d/m/Y H:i') }}</div>
-                                    <div class="text-secondary small">{{ $admin->last_login_at->diffForHumans() }}</div>
+                                @php
+                                    $totalLeads = 0;
+                                    $verifiedLeads = 0;
+                                    foreach($affiliator->affiliatorProjects as $ap) {
+                                        $totalLeads += $ap->leads()->count();
+                                        $verifiedLeads += $ap->leads()->verified()->count();
+                                    }
+                                @endphp
+                                @if($totalLeads > 0)
+                                    <div>
+                                        <span class="badge bg-green text-white">{{ $verifiedLeads }}</span>
+                                        /
+                                        <span class="badge bg-gray">{{ $totalLeads }}</span>
+                                    </div>
+                                    <div class="text-secondary small">Verified/Total</div>
+                                @else
+                                    <span class="text-secondary">Belum ada lead</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($affiliator->last_login_at)
+                                    <div class="small">{{ $affiliator->last_login_at->format('d/m/Y H:i') }}</div>
+                                    <div class="text-secondary small">{{ $affiliator->last_login_at->diffForHumans() }}</div>
                                 @else
                                     <span class="text-secondary">Belum pernah login</span>
                                 @endif
                             </td>
                             <td>
-                                <div class="small">{{ $admin->created_at->format('d/m/Y') }}</div>
-                                <div class="text-secondary small">{{ $admin->created_at->diffForHumans() }}</div>
+                                <div class="small">{{ $affiliator->created_at->format('d/m/Y') }}</div>
+                                <div class="text-secondary small">{{ $affiliator->created_at->diffForHumans() }}</div>
                             </td>
                             <td>
                                 <div class="dropdown">
@@ -123,7 +154,7 @@
                                         <i class="ti ti-dots-vertical"></i>
                                     </button>
                                     <div class="dropdown-menu">
-                                        <a href="{{ route('superadmin.admins.edit', $admin) }}" 
+                                        <a href="{{ route('superadmin.affiliators.edit', $affiliator) }}" 
                                            class="dropdown-item">
                                             <i class="ti ti-edit me-2"></i>
                                             Edit
@@ -131,22 +162,22 @@
                                         <button type="button" class="dropdown-item" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#reset-password-modal"
-                                                data-admin-id="{{ $admin->id }}"
-                                                data-admin-name="{{ $admin->name }}">
+                                                data-affiliator-id="{{ $affiliator->id }}"
+                                                data-affiliator-name="{{ $affiliator->name }}">
                                             <i class="ti ti-key me-2"></i>
                                             Reset Password
                                         </button>
-                                        <form action="{{ route('superadmin.admins.toggle-status', $admin) }}" 
+                                        <form action="{{ route('superadmin.affiliators.toggle-status', $affiliator) }}" 
                                               method="POST" class="d-inline">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="dropdown-item">
-                                                <i class="ti ti-{{ $admin->is_active ? 'eye-off' : 'eye' }} me-2"></i>
-                                                {{ $admin->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                <i class="ti ti-{{ $affiliator->is_active ? 'eye-off' : 'eye' }} me-2"></i>
+                                                {{ $affiliator->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                             </button>
                                         </form>
-                                        @if($admin->profile_photo)
-                                        <form action="{{ route('superadmin.admins.remove-photo', $admin) }}" 
+                                        @if($affiliator->profile_photo)
+                                        <form action="{{ route('superadmin.affiliators.remove-photo', $affiliator) }}" 
                                               method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
@@ -159,8 +190,8 @@
                                         @endif
                                         <div class="dropdown-divider"></div>
                                         <button type="button" class="dropdown-item text-danger delete-btn"
-                                                data-name="{{ $admin->name }}"
-                                                data-url="{{ route('superadmin.admins.destroy', $admin) }}">
+                                                data-name="{{ $affiliator->name }}"
+                                                data-url="{{ route('superadmin.affiliators.destroy', $affiliator) }}">
                                             <i class="ti ti-trash me-2"></i>
                                             Hapus
                                         </button>
@@ -176,21 +207,21 @@
             <!-- Pagination -->
             <div class="card-footer d-flex align-items-center">
                 <p class="m-0 text-secondary">
-                    Menampilkan {{ $admins->firstItem() ?? 0 }} hingga {{ $admins->lastItem() ?? 0 }} 
-                    dari {{ $admins->total() }} admin
+                    Menampilkan {{ $affiliators->firstItem() ?? 0 }} hingga {{ $affiliators->lastItem() ?? 0 }} 
+                    dari {{ $affiliators->total() }} affiliator
                 </p>
-                @include('components.pagination', ['paginator' => $admins])
+                @include('components.pagination', ['paginator' => $affiliators])
             </div>
             @else
             <div class="text-center py-5">
                 <div class="mb-3">
                     <i class="ti ti-users-off icon icon-xl text-secondary"></i>
                 </div>
-                <h3 class="text-secondary">Belum ada admin</h3>
-                <p class="text-secondary">Mulai dengan membuat admin pertama Anda.</p>
-                <a href="{{ route('superadmin.admins.create') }}" class="btn btn-primary">
+                <h3 class="text-secondary">Belum ada affiliator</h3>
+                <p class="text-secondary">Mulai dengan membuat affiliator pertama Anda.</p>
+                <a href="{{ route('superadmin.affiliators.create') }}" class="btn btn-primary">
                     <i class="ti ti-plus me-1"></i>
-                    Tambah Admin
+                    Tambah Affiliator
                 </a>
             </div>
             @endif
@@ -220,7 +251,7 @@
                     </div>
                     <div class="alert alert-warning">
                         <i class="ti ti-alert-triangle me-2"></i>
-                        Admin akan menerima notifikasi bahwa password mereka telah direset.
+                        Affiliator akan menerima notifikasi bahwa password mereka telah direset.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -244,14 +275,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     resetPasswordModal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
-        const adminId = button.getAttribute('data-admin-id');
-        const adminName = button.getAttribute('data-admin-name');
+        const affiliatorId = button.getAttribute('data-affiliator-id');
+        const affiliatorName = button.getAttribute('data-affiliator-name');
         
         // Update form action
-        resetPasswordForm.action = `{{ route('superadmin.admins.index') }}/${adminId}/reset-password`;
+        resetPasswordForm.action = `{{ route('superadmin.affiliators.index') }}/${affiliatorId}/reset-password`;
         
         // Update modal title
-        resetPasswordModal.querySelector('.modal-title').textContent = `Reset Password - ${adminName}`;
+        resetPasswordModal.querySelector('.modal-title').textContent = `Reset Password - ${affiliatorName}`;
         
         // Clear form
         resetPasswordForm.reset();

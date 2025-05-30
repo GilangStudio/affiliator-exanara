@@ -20,29 +20,33 @@
             <div class="col">
                 <h1 class="mb-1">{{ $project->name }}</h1>
                 <div class="text-secondary mb-2">{{ $project->slug }}</div>
-                @if($project->description)
+                {{-- @if($project->description)
                     <p class="text-secondary mb-2">{{ $project->description }}</p>
-                @endif
+                @endif --}}
                 <div class="row">
                     <div class="col-auto">
-                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }} me-2">
+                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }} text-white me-2">
                             {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
-                        <span class="badge bg-blue me-2">{{ $project->commission_display }}</span>
+                        <span class="badge bg-secondary text-white me-2">{{ $project->commission_display }}</span>
                         @if($project->require_digital_signature)
-                            <span class="badge bg-purple">Tanda Tangan Digital Wajib</span>
+                            <span class="badge bg-secondary text-white">Tanda Tangan Digital Wajib</span>
                         @endif
                     </div>
                 </div>
             </div>
             <div class="col-auto">
                 <div class="btn-list">
+                    <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-outline-primary">
+                        <i class="ti ti-users me-1"></i>
+                        Kelola Admin
+                    </a>
                     <a href="{{ route('superadmin.projects.edit', $project) }}" class="btn btn-primary">
                         <i class="ti ti-edit me-1"></i>
                         Edit Project
                     </a>
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary h-100 px-2" data-bs-toggle="dropdown">
                             <i class="ti ti-dots-vertical"></i>
                         </button>
                         <div class="dropdown-menu">
@@ -134,15 +138,15 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Admin Project</h3>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#add-admin-modal">
-                    <i class="ti ti-plus me-1"></i>
-                    Tambah Admin
-                </button>
+                <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-sm btn-primary">
+                    <i class="ti ti-settings me-1"></i>
+                    Kelola
+                </a>
             </div>
             <div class="card-body p-0">
                 @if($project->admins->count() > 0)
                     <div class="list-group list-group-flush">
-                        @foreach($project->admins as $admin)
+                        @foreach($project->admins->take(5) as $admin)
                         <div class="list-group-item">
                             <div class="row align-items-center">
                                 <div class="col-auto">
@@ -155,25 +159,31 @@
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <form action="{{ route('superadmin.projects.remove-admin', [$project, $admin]) }}" 
-                                            method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-ghost-danger"
-                                                onclick="return confirm('Hapus admin ini dari project?')">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </form>
+                                    <span class="badge bg-{{ $admin->is_active ? 'success' : 'secondary' }} text-white">
+                                        {{ $admin->is_active ? 'Aktif' : 'Nonaktif' }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         @endforeach
                     </div>
+                    @if($project->admins->count() > 5)
+                        <div class="card-footer text-center">
+                            <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="text-secondary">
+                                Lihat {{ $project->admins->count() - 5 }} admin lainnya
+                            </a>
+                        </div>
+                    @endif
                 @else
                     <div class="text-center py-4">
                         <div class="text-secondary">
                             <i class="ti ti-users-off icon icon-xl mb-2"></i>
                             <div>Belum ada admin</div>
+                            <div class="mt-2">
+                                <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-sm btn-primary">
+                                    Tambah Admin
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -271,13 +281,15 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="terms">
                         <div class="markdown">
-                            {!! nl2br(e($project->terms_and_conditions)) !!}
+                            {{-- {!! nl2br(e($project->terms_and_conditions)) !!} --}}
+                            {!! $project->terms_and_conditions !!}
                         </div>
                     </div>
                     <div class="tab-pane" id="additional-info">
                         @if($project->additional_info)
                             <div class="markdown">
-                                {!! nl2br(e($project->additional_info)) !!}
+                                {{-- {!! nl2br(e($project->additional_info)) !!} --}}
+                                {!! $project->additional_info !!}
                             </div>
                         @else
                             <div class="text-center text-secondary">
@@ -288,36 +300,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Admin Modal -->
-<div class="modal fade" id="add-admin-modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('superadmin.projects.add-admin', $project) }}" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Tambah Admin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Pilih Admin</label>
-                        <select class="form-select" name="admin_id" required>
-                            <option value="">Pilih admin...</option>
-                            @foreach(App\Models\User::where('role', 'admin')->active()->whereNotIn('id', $project->admins->pluck('id'))->get() as $admin)
-                                <option value="{{ $admin->id }}">{{ $admin->name }} ({{ $admin->email }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Tambah Admin</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
