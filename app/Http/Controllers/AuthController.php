@@ -66,7 +66,7 @@ class AuthController extends Controller
                 'password' => $request->password
             ];
 
-            if (Auth::attempt($credentials)) {
+            if (Auth::attempt($credentials, $request->remember)) {
                 $user = Auth::user();
 
                 // Cek apakah user aktif
@@ -346,7 +346,7 @@ class AuthController extends Controller
         return match ($role) {
             'superadmin' => 'superadmin.dashboard',
             'admin' => 'admin.dashboard',
-            'affiliator' => 'dashboard',
+            'affiliator' => 'affiliator.dashboard',
             default => 'dashboard'
         };
     }

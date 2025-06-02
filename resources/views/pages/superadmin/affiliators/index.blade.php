@@ -3,6 +3,9 @@
 @section('title', 'Kelola Affiliator')
 
 @section('content')
+
+@include('components.alert')
+
 <div class="col-12">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -94,7 +97,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $affiliator->is_active ? 'success text-white' : 'secondary text-white' }}-lt">
+                                <span class="badge bg-{{ $affiliator->is_active ? 'success' : 'secondary' }}-lt">
                                     {{ $affiliator->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                 </span>
                             </td>
@@ -149,7 +152,7 @@
                             </td>
                             <td>
                                 <div class="dropdown">
-                                    <button class="btn btn-ghost-secondary btn-sm dropdown-toggle" 
+                                    <button class="btn btn-icon bg-light" 
                                             data-bs-toggle="dropdown">
                                         <i class="ti ti-dots-vertical"></i>
                                     </button>

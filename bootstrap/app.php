@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'active.user' => \App\Http\Middleware\ActiveUserMiddleware::class,
             'maintenance' => \App\Http\Middleware\MaintenanceMiddleware::class,
+            'check.project.affiliator' => \App\Http\Middleware\CheckProjectAffiliatorMiddleware::class,
         ]);
 
         $middleware->group('affiliator', [

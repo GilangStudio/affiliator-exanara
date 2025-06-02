@@ -24,6 +24,18 @@
     </div>
     @endif
 
+    @if(session('info'))
+    <div class="alert alert-info alert-dismissible w-100" role="alert">
+        <div class="d-flex">
+            <div>
+                <i class="ti ti-info me-2"></i>
+            </div>
+            <div>{{ session('info') }}</div>
+        </div>
+        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+    </div>
+    @endif
+
     @if ($errors->any())
     <div class="alert alert-danger alert-dismissible w-100" role="alert">
         <div class="d-flex">

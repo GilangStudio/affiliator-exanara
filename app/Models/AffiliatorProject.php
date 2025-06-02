@@ -50,7 +50,7 @@ class AffiliatorProject extends Model
         return $query->where($this->getTable() . '.verification_status', 'verified');
     }
 
-    public function scopePendingVerification($query)
+    public function scopePending($query)
     {
         return $query->where($this->getTable() . '.verification_status', 'pending');
     }

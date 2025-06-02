@@ -9,7 +9,7 @@
         <!-- END NAVBAR TOGGLER -->
         <!-- BEGIN NAVBAR LOGO -->
         <h1 class="navbar-brand navbar-brand-autodark">
-            <a href="{{ route('dashboard') }}">
+            <a href="">
                 @php
                 $siteLogo = \App\Models\SystemSetting::getValue('site_logo');
                 $siteName = \App\Models\SystemSetting::getValue('site_name', 'Affiliator System');
@@ -254,6 +254,137 @@
                         </div>
                     </div>
                 </li>
+                @elseif(auth()->user()->role === 'admin')
+<!-- Admin Dashboard -->
+<li class="nav-item {{ Route::is('admin.dashboard') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('admin.dashboard') }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-dashboard icon icon-1"></i>
+        </span>
+        <span class="nav-link-title">Dashboard</span>
+    </a>
+</li>
+
+<!-- Project Management -->
+<li class="nav-item {{ Route::is('admin.projects.*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('admin.projects.index') }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-folder icon icon-1"></i>
+        </span>
+        <span class="nav-link-title">Kelola Project</span>
+    </a>
+</li>
+
+<!-- Affiliator Management -->
+<li class="nav-item {{ Route::is('admin.affiliators.*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('admin.affiliators.index') }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-users-group icon icon-1"></i>
+        </span>
+        <span class="nav-link-title">Kelola Affiliator</span>
+        @php
+            $pendingAffiliators = \App\Models\AffiliatorProject::whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'))
+                ->where('verification_status', 'pending')->count();
+        @endphp
+        @if($pendingAffiliators > 0)
+            <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAffiliators }}</span>
+        @endif
+    </a>
+</li>
+
+<!-- Lead Management -->
+<li class="nav-item {{ Route::is('admin.leads.*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('admin.leads.index') }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-users icon icon-1"></i>
+        </span>
+        <span class="nav-link-title">Kelola Lead</span>
+        @php
+            $pendingLeads = \App\Models\Lead::whereHas('affiliatorProject', function($q) {
+                $q->whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'));
+            })->where('verification_status', 'pending')->count();
+        @endphp
+        @if($pendingLeads > 0)
+            <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
+        @endif
+    </a>
+</li>
+
+<!-- Withdrawal Management -->
+<li class="nav-item dropdown {{ request()->routeIs('admin.withdrawals.*') ? 'active' : '' }}">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}" 
+       href="#navbar-withdrawals" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" 
+       aria-expanded="{{ request()->routeIs('admin.withdrawals.*') ? 'true' : 'false' }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-credit-card"></i>
+        </span>
+        <span class="nav-link-title">Kelola Penarikan</span>
+        @php
+            $pendingWithdrawals = \App\Models\CommissionWithdrawal::whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'))
+                ->where('status', 'pending')->count();
+        @endphp
+        @if($pendingWithdrawals > 0)
+            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
+        @endif
+    </a>
+    <div class="dropdown-menu {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}">
+        <div class="dropdown-menu-columns">
+            <div class="dropdown-menu-column">
+                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.index') ? 'active' : '' }}" 
+                   href="{{ route('admin.withdrawals.index') }}">
+                    <i class="ti ti-list me-2"></i>
+                    Semua Penarikan
+                </a>
+                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.pending') ? 'active' : '' }}" 
+                   href="{{ route('admin.withdrawals.pending') }}">
+                    <i class="ti ti-clock me-2"></i>
+                    Menunggu Persetujuan
+                    @if($pendingWithdrawals > 0)
+                        <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
+                    @endif
+                </a>
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Profile & Settings -->
+<li class="nav-item dropdown {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.profile.*') ? 'show' : '' }}"
+        href="#navbar-profile" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
+        aria-expanded="{{ request()->routeIs('admin.profile.*') ? 'true' : 'false' }}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-user-circle"></i>
+        </span>
+        <span class="nav-link-title">Profil & Pengaturan</span>
+    </a>
+    <div class="dropdown-menu {{ request()->routeIs('admin.profile.*') ? 'show' : '' }}">
+        <div class="dropdown-menu-columns">
+            <div class="dropdown-menu-column">
+                <a class="dropdown-item {{ request()->routeIs('admin.profile.show') ? 'active' : '' }}"
+                    href="{{ route('admin.profile.show') }}">
+                    <i class="ti ti-user me-2"></i>
+                    Lihat Profil
+                </a>
+                <a class="dropdown-item {{ request()->routeIs('admin.profile.edit') ? 'active' : '' }}"
+                    href="{{ route('admin.profile.edit') }}">
+                    <i class="ti ti-edit me-2"></i>
+                    Edit Profil
+                </a>
+                <a class="dropdown-item {{ request()->routeIs('admin.profile.change-password') ? 'active' : '' }}"
+                    href="{{ route('admin.profile.change-password') }}">
+                    <i class="ti ti-key me-2"></i>
+                    Ganti Password
+                </a>
+                <a class="dropdown-item {{ request()->routeIs('admin.profile.activity-log') ? 'active' : '' }}"
+                    href="{{ route('admin.profile.activity-log') }}">
+                    <i class="ti ti-history me-2"></i>
+                    Log Aktivitas
+                </a>
+            </div>
+        </div>
+    </div>
+</li>
                 @endif
             </ul>
             <!-- END NAVBAR MENU -->
