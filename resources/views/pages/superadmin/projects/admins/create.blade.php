@@ -92,18 +92,36 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Nomor Whatsapp <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">+62</span>
-                            <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" 
-                                   placeholder="8123456789" value="{{ old('phone') }}" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                       name="username" value="{{ old('username') }}" required
+                                       placeholder="Masukkan username">
+                                @error('username')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Minimal 6 karakter
+                                </small>
+                            </div>
                         </div>
-                        @error('phone')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                        <small class="form-hint">Nomor tanpa kode negara dan tanpa 0 di depan (contoh: 8123456789)</small>
-                        <input type="hidden" name="country_code" value="+62">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nomor Whatsapp <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">+62</span>
+                                    <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" 
+                                           placeholder="8123456789" value="{{ old('phone') }}" required>
+                                </div>
+                                @error('phone')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">Nomor tanpa kode negara dan tanpa 0 di depan (contoh: 8123456789)</small>
+                                <input type="hidden" name="country_code" value="+62">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">

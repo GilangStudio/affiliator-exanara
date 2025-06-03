@@ -52,6 +52,7 @@ class ProjectAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|min:6|max:20|unique:users',
             'phone' => [
                 'required',
                 'string',
@@ -65,6 +66,10 @@ class ProjectAdminController extends Controller
             'name.required' => 'Nama harus diisi',
             'email.required' => 'Email harus diisi',
             'email.unique' => 'Email sudah terdaftar',
+            'username.required' => 'Username harus diisi',
+            'username.unique' => 'Username sudah terdaftar',
+            'username.min' => 'Username minimal 6 karakter',
+            'username.max' => 'Username maksimal 20 karakter',
             'phone.required' => 'Nomor telepon harus diisi',
             'phone.regex' => 'Format nomor telepon tidak valid. Gunakan format: 8xxxxxxxxx (tanpa +62 dan tanpa 0 di depan)',
             'phone.unique' => 'Nomor telepon sudah terdaftar',
@@ -75,6 +80,7 @@ class ProjectAdminController extends Controller
 
         DB::transaction(function () use ($request, $project) {
             $data = $request->only(['name', 'email', 'phone']);
+            $data['username'] = strtolower($request->username);
             $data['password'] = Hash::make($request->password);
             $data['role'] = 'admin';
             $data['country_code'] = '+62'; // default Indonesia
@@ -151,6 +157,7 @@ class ProjectAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
+            'username' =>'required|string|min:6|max:20|unique:users,username,'. $admin->id,
             'phone' => [
                 'required',
                 'string',
@@ -164,6 +171,10 @@ class ProjectAdminController extends Controller
             'name.required' => 'Nama harus diisi',
             'email.required' => 'Email harus diisi',
             'email.unique' => 'Email sudah terdaftar',
+            'username.required' => 'Username harus diisi',
+            'username.unique' => 'Username sudah terdaftar',
+            'username.min' => 'Username minimal 6 karakter',
+            'username.max' => 'Username maksimal 20 karakter',
             'phone.required' => 'Nomor telepon harus diisi',
             'phone.regex' => 'Format nomor telepon tidak valid. Gunakan format: 8xxxxxxxxx (tanpa +62 dan tanpa 0 di depan)',
             'phone.unique' => 'Nomor telepon sudah terdaftar',
@@ -174,6 +185,7 @@ class ProjectAdminController extends Controller
         $oldData = $admin->only(['name', 'email', 'phone', 'is_active']);
         
         $data = $request->only(['name', 'email', 'phone']);
+        $data['username'] = strtolower($request->username);
         $data['country_code'] = '+62'; // default Indonesia
         $data['is_active'] = $request->boolean('is_active', true);
 

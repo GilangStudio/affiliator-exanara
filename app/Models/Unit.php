@@ -13,7 +13,7 @@ class Unit extends Model
 
     protected $casts = [
         'price' => 'decimal:0',
-        'commission_value' => 'decimal:0',
+        'commission_value' => 'decimal:2',
         'is_active' => 'boolean',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
@@ -98,7 +98,7 @@ class Unit extends Model
     public function getCommissionDisplayAttribute()
     {
         if ($this->commission_type === 'percentage') {
-            return number_format($this->commission_value, 1) . '%';
+            return number_format($this->commission_value, 2) . '%';
         }
         return 'Rp ' . number_format($this->commission_value, 0, ',', '.');
     }

@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->unsignedBigInteger('crm_unit_id')->nullable(); // Unit yang dihubungkan ke CRM
             $table->string('name');
-            $table->string('code')->unique(); // Kode unit unik
             $table->text('description')->nullable();
             $table->decimal('price', 15, 0); // Harga unit
             $table->enum('commission_type', ['percentage', 'fixed'])->default('percentage');
-            $table->decimal('commission_value', 15, 0)->default(0); // Nilai komisi untuk unit ini
+            $table->decimal('commission_value', 15,2)->default(0); // Nilai komisi untuk unit ini
+
             $table->string('image')->nullable(); // Gambar unit
             $table->string('unit_type')->nullable(); // Tipe unit (residential, commercial, dll)
             $table->string('building_area')->nullable(); // Luas bangunan
@@ -34,7 +34,7 @@ return new class extends Migration
             
             $table->index('crm_unit_id');
             $table->index(['project_id']);
-            $table->index(['code', 'is_active']);
+            $table->index(['is_active']);
         });
     }
 

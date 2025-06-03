@@ -146,15 +146,20 @@
                                             <i class="ti ti-eye me-2"></i>
                                             Lihat Detail
                                         </a>
+                                        <a href="{{ route('superadmin.projects.edit', $project) }}" 
+                                           class="dropdown-item">
+                                            <i class="ti ti-edit me-2"></i>
+                                            Edit
+                                        </a>
                                         <a href="{{ route('superadmin.projects.admins.index', $project) }}"
                                            class="dropdown-item">
                                             <i class="ti ti-user-check me-2"></i>
                                             Kelola Admin
                                         </a>
-                                        <a href="{{ route('superadmin.projects.edit', $project) }}" 
+                                        <a href="{{ route('superadmin.projects.units.index', $project) }}"
                                            class="dropdown-item">
-                                            <i class="ti ti-edit me-2"></i>
-                                            Edit
+                                            <i class="ti ti-home-check me-2"></i>
+                                            Kelola Unit
                                         </a>
                                         <form action="{{ route('superadmin.projects.toggle-status', $project) }}" 
                                               method="POST" class="d-inline">

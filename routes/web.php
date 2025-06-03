@@ -225,6 +225,15 @@ Route::middleware(['web', 'auth'])->group(function () {
                 Route::delete('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'destroy'])->name('admins.destroy');
                 Route::patch('/{project}/admins/{admin}/toggle-status', [SuperAdminProjectAdminController::class, 'toggleStatus'])->name('admins.toggle-status');
                 Route::post('/{project}/admins/{admin}/reset-password', [SuperAdminProjectAdminController::class, 'resetPassword'])->name('admins.reset-password');
+
+                // Project Units Management
+                Route::get('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'index'])->name('units.index');
+                Route::get('/{project}/units/create', [App\Http\Controllers\SuperAdmin\UnitController::class, 'create'])->name('units.create');
+                Route::post('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'store'])->name('units.store');
+                Route::get('/{project}/units/{unit}/edit', [App\Http\Controllers\SuperAdmin\UnitController::class, 'edit'])->name('units.edit');
+                Route::put('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'update'])->name('units.update');
+                Route::delete('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'destroy'])->name('units.destroy');
+                Route::patch('/{project}/units/{unit}/toggle-status', [App\Http\Controllers\SuperAdmin\UnitController::class, 'toggleStatus'])->name('units.toggle-status');
             });
 
             Route::resource('faqs', SuperAdminFaqController::class);

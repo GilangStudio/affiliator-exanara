@@ -40,7 +40,7 @@
                         <i class="ti ti-users me-1"></i>
                         Kelola Admin
                     </a>
-                    <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-outline-primary">
+                    <a href="{{ route('superadmin.projects.units.index', $project) }}" class="btn btn-outline-primary">
                         <i class="ti ti-home me-1"></i>
                         Kelola Unit
                     </a>

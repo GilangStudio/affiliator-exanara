@@ -69,7 +69,7 @@
                                                  class="avatar avatar-sm me-2">
                                             <div>
                                                 <div class="fw-bold">{{ $admin->name }}</div>
-                                                <div class="text-secondary small">{{ $admin->initials }}</div>
+                                                <div class="text-secondary small">{{ $admin->username }}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -138,16 +138,12 @@
                                                     </button>
                                                 </form>
                                                 <div class="dropdown-divider"></div>
-                                                <form action="{{ route('superadmin.projects.admins.destroy', [$project, $admin]) }}" 
-                                                      method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="dropdown-item text-danger"
-                                                            onclick="return confirm('Hapus admin ini dari project? Admin akan dihapus permanen jika tidak ditugaskan di project lain.')">
-                                                        <i class="ti ti-trash me-2"></i>
-                                                        Hapus Admin
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="dropdown-item text-danger delete-btn"
+                                                        data-name="{{ $admin->name }}"
+                                                        data-url="{{ route('superadmin.projects.admins.destroy', [$project, $admin]) }}">
+                                                    <i class="ti ti-trash me-2"></i>
+                                                    Hapus Admin
+                                                </button>
                                             </div>
                                         </div>
                                     </td>
@@ -208,6 +204,7 @@
     </div>
 </div>
 
+@include('components.delete-modal')
 @endsection
 
 @push('scripts')
