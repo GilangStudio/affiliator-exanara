@@ -27,9 +27,9 @@ class CommissionHistory extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function project()
+    public function unit()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Unit::class);
     }
 
     // Scopes
@@ -53,9 +53,16 @@ class CommissionHistory extends Model
         return $query->where('user_id', $userId);
     }
 
+    public function scopeByUnit($query, $unitId)
+    {
+        return $query->where('unit_id', $unitId);
+    }
+
     public function scopeByProject($query, $projectId)
     {
-        return $query->where('project_id', $projectId);
+        return $query->whereHas('unit', function ($q) use ($projectId) {
+            $q->where('project_id', $projectId);
+        });
     }
 
     public function scopeThisMonth($query)

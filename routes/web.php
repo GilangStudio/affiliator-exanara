@@ -75,7 +75,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::middleware(['role:affiliator', 'active.user'])->group(function () {
 
         Route::middleware('check.project.affiliator')->group(function () {
-            Route::name('affiliator.')->middleware('check.project.affiliator')->group(function () {
+            Route::name('affiliator.')->group(function () {
                 Route::get('/dashboard', [AffiliatorDashboardController::class, 'index'])->name('dashboard');
 
                 // Main join project page
@@ -213,6 +213,9 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::prefix('projects')->name('projects.')->group(function () {
                 Route::patch('/{project}/toggle-status', [SuperAdminProjectController::class, 'toggleStatus'])->name('toggle-status');
                 
+                Route::get('/api/crm-projects', [SuperAdminProjectController::class, 'getCrmProjects'])->name('crm-projects');
+                Route::get('/api/crm-project-details/{id}', [SuperAdminProjectController::class, 'getCrmProjectDetails'])->name('crm-project-details');
+
                 // Project Admins Management
                 Route::get('/{project}/admins', [SuperAdminProjectAdminController::class, 'index'])->name('admins.index');
                 Route::get('/{project}/admins/create', [SuperAdminProjectAdminController::class, 'create'])->name('admins.create');

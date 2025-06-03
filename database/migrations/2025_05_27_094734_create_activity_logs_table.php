@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('action');
             $table->text('description');
             $table->json('properties')->nullable();
@@ -22,7 +23,7 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->timestamps();
             
-            $table->index(['user_id', 'created_at']);
+            $table->index(['user_id', 'project_id', 'unit_id', 'created_at']);
         });
     }
 

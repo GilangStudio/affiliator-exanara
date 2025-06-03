@@ -71,6 +71,14 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'Otomatis approve penarikan tanpa review manual'
             ],
 
+            // Agreement Project Settings
+            [
+                'key' => 'agreement_project',
+                'value' => 'Silakan baca dan setujui syarat dan ketentuan berikut sebelum menggunakan layanan kami.',
+                'type' => 'string',
+                'description' => 'Teks syarat dan ketentuan project'
+            ],
+
             // Notification Settings
             [
                 'key' => 'email_notification',
@@ -89,32 +97,6 @@ class SystemSettingsSeeder extends Seeder
                 'value' => '1',
                 'type' => 'boolean',
                 'description' => 'Aktifkan push notification'
-            ],
-
-            // Security Settings
-            [
-                'key' => 'password_min_length',
-                'value' => '8',
-                'type' => 'integer',
-                'description' => 'Minimal panjang password'
-            ],
-            [
-                'key' => 'session_timeout',
-                'value' => '120',
-                'type' => 'integer',
-                'description' => 'Timeout session dalam menit'
-            ],
-            [
-                'key' => 'max_login_attempts',
-                'value' => '5',
-                'type' => 'integer',
-                'description' => 'Maksimal percobaan login'
-            ],
-            [
-                'key' => 'require_email_verification',
-                'value' => '0',
-                'type' => 'boolean',
-                'description' => 'Wajib verifikasi email untuk user baru'
             ],
 
             // Maintenance Settings

@@ -63,7 +63,7 @@
                         <tr>
                             <th>Project</th>
                             <th>Status</th>
-                            <th>Komisi</th>
+                            <th>Unit</th>
                             <th>Admin</th>
                             <th>Affiliator</th>
                             <th>Lead</th>
@@ -85,8 +85,8 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="fw-bold">{{ $project->name }}</div>
-                                        <div class="text-secondary small">{{ $project->slug }}</div>
+                                        <div class="fw-bold">{{ $project->name }} {!! $project->crm_project_id ? '<i class="ti ti-link text-info" data-bs-toggle="tooltip" title="Project ini terhubung dengan CRM Project ID: ' . $project->crm_project_id . '"></i>' : '' !!}</div>
+                                        <div class="text-secondary small">{{ strtoupper($project->location) }}</div>
                                         @if($project->description)
                                             <div class="text-secondary small text-truncate" style="max-width: 200px;">
                                                 {{ strip_tags($project->description) }}
@@ -101,10 +101,9 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="fw-bold">{{ $project->commission_display }}</div>
-                                <div class="text-secondary small">
-                                    {{ $project->commission_type == 'percentage' ? 'Persentase' : 'Fixed' }}
-                                </div>
+                                <span class="badge bg-secondary-lt">
+                                    {{ $project->units_count }}
+                                </span>
                             </td>
                             <td>
                                 <div class="avatar-list avatar-list-stacked">

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('commission_withdrawals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->foreignId('bank_account_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 15, 0);
             $table->enum('status', ['pending', 'approved', 'rejected', 'processed'])->default('pending');

@@ -28,7 +28,6 @@
                         <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt me-2">
                             {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
-                        <span class="badge bg-blue-lt me-2">{{ $project->commission_display }}</span>
                         @if($project->require_digital_signature)
                             <span class="badge bg-blue-lt">Tanda Tangan Digital Wajib</span>
                         @endif
@@ -40,6 +39,10 @@
                     <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-outline-primary">
                         <i class="ti ti-users me-1"></i>
                         Kelola Admin
+                    </a>
+                    <a href="{{ route('superadmin.projects.admins.index', $project) }}" class="btn btn-outline-primary">
+                        <i class="ti ti-home me-1"></i>
+                        Kelola Unit
                     </a>
                     <a href="{{ route('superadmin.projects.edit', $project) }}" class="btn btn-primary">
                         <i class="ti ti-edit me-1"></i>
@@ -76,7 +79,7 @@
 
 <!-- Stats Cards -->
 <div class="row mb-3">
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-4">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -93,7 +96,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-4">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -110,7 +113,24 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Total Unit</div>
+                </div>
+                <div class="h1 mb-0">{{ number_format($stats['total_units']) }}</div>
+                <div class="d-flex mb-2">
+                    <div class="text-secondary">
+                        <span class="text-green d-inline-flex align-items-center lh-1">
+                            {{ number_format($stats['active_units']) }} aktif
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- <div class="col-sm-6 col-lg-3">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -129,7 +149,7 @@
                 <div class="h1 mb-0">Rp {{ number_format($stats['total_commission_withdrawn'], 0, ',', '.') }}</div>
             </div>
         </div>
-    </div>
+    </div> --}}
 </div>
 
 <div class="row">

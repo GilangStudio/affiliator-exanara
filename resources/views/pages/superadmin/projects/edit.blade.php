@@ -3,7 +3,11 @@
 @section('title', 'Edit Project')
 
 @push('styles')
+<link href="{{ asset('libs/tom-select/dist/css/tom-select.bootstrap5.min.css') }}" rel="stylesheet" />
 <style>
+    .ts-dropdown, .ts-dropdown.form-control, .ts-dropdown.form-select {
+        background-color: #fff;
+    }
     textarea:focus {
         border-color: #a60000;
         box-shadow: 0 0 0 0.2rem rgba(0, 84, 166, 0.25);
@@ -13,17 +17,7 @@
 
 @section('content')
 {{-- Alert Messages --}}
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible" role="alert">
-    <div class="d-flex">
-        <div>
-            <i class="ti ti-exclamation-circle me-2"></i>
-        </div>
-        <div>{{ session('error') }}</div>
-    </div>
-    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-</div>
-@endif
+@include('components.alert')
 
 <form action="{{ route('superadmin.projects.update', $project) }}" id="edit-project-form" method="POST" enctype="multipart/form-data">
     @csrf
@@ -32,23 +26,116 @@
     <div class="row g-3">
         <!-- Main Content -->
         <div class="col-lg-8">
+            <!-- Project Source Selection -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-source me-2"></i>Sumber Project</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column" id="new-project-section">
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="project_source" class="form-selectgroup-input" value="new" 
+                                           {{ old('project_source', $project->crm_project_id ? 'existing' : 'new') == 'new' ? 'checked' : '' }} />
+                                    <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <div class="me-3">
+                                            <span class="form-selectgroup-check"></span>
+                                        </div>
+                                        <div class="form-selectgroup-label-content d-flex align-items-center">
+                                            <div>
+                                                <strong>Project Manual</strong>
+                                                <p class="text-secondary small mb-0 mt-1">Project dengan nama dan informasi yang ditentukan manual.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column" id="existing-project-section">
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="project_source" class="form-selectgroup-input" value="existing" 
+                                           {{ old('project_source', $project->crm_project_id ? 'existing' : 'new') == 'existing' ? 'checked' : '' }} />
+                                    <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <div class="me-3">
+                                            <span class="form-selectgroup-check"></span>
+                                        </div>
+                                        <div class="form-selectgroup-label-content d-flex align-items-center">
+                                            <div>
+                                                <strong>Dari CRM</strong>
+                                                <p class="text-secondary small mb-0 mt-1">Project yang dipilih dari sistem CRM.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($project->crm_project_id)
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="ti ti-info-circle me-2"></i>
+                        <strong>Info:</strong> Project ini saat ini terhubung dengan CRM Project ID: {{ $project->crm_project_id }}
+                    </div>
+                    @endif
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="ti ti-folder me-2"></i>Informasi Project</h3>
                 </div>
                 <div class="card-body">
+                    <!-- Existing Project Selection -->
+                    <div id="existing-project-fields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Project dari CRM <span class="text-danger">*</span></label>
+                            <select class="form-select @error('existing_project_id') is-invalid @enderror" 
+                                    name="existing_project_id" id="crm-project-select">
+                                @if($project->crm_project_id)
+                                    <option value="{{ $project->crm_project_id }}" selected>
+                                        {{ $project->name }} (Current)
+                                    </option>
+                                @else
+                                    <option value="">Pilih project...</option>
+                                @endif
+                            </select>
+                            @error('existing_project_id')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            <small class="form-hint">Ketik untuk mencari project berdasarkan nama</small>
+                        </div>
+                    </div>
+
+                    <!-- New Project Fields -->
+                    <div id="new-project-fields">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Project <span class="text-danger new-required">*</span></label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                   name="name" value="{{ old('name', $project->name) }}" id="project-name-input"
+                                   placeholder="Masukkan nama project">
+                            @error('name')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            <small class="form-hint">
+                                <span id="name-count">{{ strlen($project->name) }}</span>/255 karakter
+                            </small>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Nama Project <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                       name="name" value="{{ old('name', $project->name) }}" required
-                                       placeholder="Masukkan nama project">
+                                <label class="form-label">Lokasi</label>
+                                <input type="text" class="form-control @error('location') is-invalid @enderror" 
+                                       name="location" value="{{ old('location', $project->location) }}"
+                                       placeholder="Jakarta">
                                 @error('name')
-                                    <small class="text-danger">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint">
-                                    <span id="name-count">{{ strlen($project->name) }}</span>/255 karakter
+                                    Misal: Jakarta, Bandung, Surabaya
                                 </small>
                             </div>
                         </div>
@@ -64,7 +151,7 @@
                                 <input type="file" class="form-control @error('logo') is-invalid @enderror" 
                                        name="logo" accept="image/*" id="logo-input">
                                 @error('logo')
-                                    <small class="text-danger">{{ $message }}</div>
+                                    <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint">
                                     <i class="ti ti-info-circle me-1"></i>
@@ -76,18 +163,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Slug</label>
-                        <input type="text" class="form-control" value="{{ $project->slug }}" readonly>
-                        <small class="form-hint">Slug otomatis dibuat dari nama project dan tidak dapat diubah.</small>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Deskripsi</label>
                         <textarea class="form-control @error('description') is-invalid @enderror" 
                                   name="description" id="description-editor" rows="4" 
                                   placeholder="Masukkan deskripsi project...">{{ old('description', $project->description) }}</textarea>
                         @error('description')
-                            <small class="text-danger">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                         <div class="invalid-feedback" id="description-error" style="display: none;"></div>
                         <small class="form-hint">Deskripsi singkat tentang project ini.</small>
@@ -99,7 +180,7 @@
                                   name="terms_and_conditions" id="terms-editor" rows="8" 
                                   placeholder="Masukkan syarat dan ketentuan...">{{ old('terms_and_conditions', $project->terms_and_conditions) }}</textarea>
                         @error('terms_and_conditions')
-                            <small class="text-danger">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                         <div class="invalid-feedback" id="terms-error" style="display: none;"></div>
                         <small class="form-hint">Syarat dan ketentuan lengkap untuk project ini.</small>
@@ -111,7 +192,7 @@
                                   name="additional_info" id="additional-info-editor" rows="6" 
                                   placeholder="Masukkan informasi tambahan...">{{ old('additional_info', $project->additional_info) }}</textarea>
                         @error('additional_info')
-                            <small class="text-danger">{{ $message }}</div>
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                         <div class="invalid-feedback" id="additional-info-error" style="display: none;"></div>
                         <small class="form-hint">Informasi tambahan yang diperlukan affiliator.</small>
@@ -122,50 +203,8 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
-            <!-- Commission Settings -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-percentage me-2"></i>Pengaturan Komisi</h3>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tipe Komisi <span class="text-danger">*</span></label>
-                        <select class="form-select @error('commission_type') is-invalid @enderror" 
-                                name="commission_type" required id="commission-type-select">
-                            <option value="">Pilih Tipe</option>
-                            <option value="percentage" {{ old('commission_type', $project->commission_type) == 'percentage' ? 'selected' : '' }}>
-                                Persentase (%)
-                            </option>
-                            <option value="fixed" {{ old('commission_type', $project->commission_type) == 'fixed' ? 'selected' : '' }}>
-                                Fixed Amount (Rp)
-                            </option>
-                        </select>
-                        @error('commission_type')
-                            <small class="text-danger">{{ $message }}</div>
-                        @enderror
-                        <small class="form-hint">Pilih jenis komisi yang akan diberikan.</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Nilai Komisi <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text" id="commission-prefix">
-                                {{ $project->commission_type == 'percentage' ? '%' : 'Rp' }}
-                            </span>
-                            <input type="number" class="form-control @error('commission_value') is-invalid @enderror" 
-                                   name="commission_value" value="{{ old('commission_value', $project->commission_value) }}" 
-                                   step="0.01" min="0" required placeholder="0">
-                        </div>
-                        @error('commission_value')
-                            <small class="text-danger">{{ $message }}</div>
-                        @enderror
-                        <small class="form-hint">Masukkan nilai komisi sesuai tipe yang dipilih.</small>
-                    </div>
-                </div>
-            </div>
-
             <!-- Project Settings -->
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="ti ti-settings me-2"></i>Pengaturan Project</h3>
                 </div>
@@ -226,41 +265,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Admin Assignment -->
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-users me-2"></i>Assign Admin</h3>
-                </div>
-                <div class="card-body">
-                    @if($admins->count() > 0)
-                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
-                            @foreach($admins as $admin)
-                            <label class="form-selectgroup-item flex-fill">
-                                <input type="checkbox" name="admins[]" value="{{ $admin->id }}" 
-                                       class="form-selectgroup-input"
-                                       {{ in_array($admin->id, old('admins', $assignedAdmins)) ? 'checked' : '' }}>
-                                <div class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <div class="me-3">
-                                        <span class="avatar">{{ $admin->initials }}</span>
-                                    </div>
-                                    <div>
-                                        <div class="font-weight-medium">{{ $admin->name }}</div>
-                                        <div class="text-secondary">{{ $admin->email }}</div>
-                                    </div>
-                                </div>
-                            </label>
-                            @endforeach
-                        </div>
-                        <small class="form-hint">Pilih admin yang akan mengelola project ini.</small>
-                    @else
-                        <div class="text-center text-secondary">
-                            <i class="ti ti-users-off icon icon-lg mb-2"></i>
-                            <div>Belum ada admin tersedia</div>
-                        </div>
-                    @endif
-                </div>
-            </div>
         </div>
 
         <!-- Submit Buttons -->
@@ -284,8 +288,8 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('libs/tom-select/dist/js/tom-select.base.min.js') }}" defer></script>
 @include('components.scripts.wysiwyg')
-@include('components.alert')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize HugeRTE for textareas
@@ -297,6 +301,86 @@ document.addEventListener('DOMContentLoaded', function() {
 
     options.selector = '#additional-info-editor';
     hugeRTE.init(options);
+    
+    // Initialize Tom Select for CRM projects
+    const crmProjectSelect = new TomSelect('#crm-project-select', {
+        valueField: 'id',
+        labelField: 'text',
+        searchField: ['text'],
+        placeholder: 'Pilih project dari CRM...',
+        load: function(query, callback) {
+            const url = '{{ route("superadmin.projects.crm-projects") }}?' + new URLSearchParams({
+                q: query,
+                page: 1
+            });
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    callback(data.results);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    callback();
+                });
+        },
+        render: {
+            option: function(data, escape) {
+                return `<div class="py-2 px-3">
+                    <div class="fw-bold">${escape(data.text)}</div>
+                </div>`;
+            },
+            item: function(data, escape) {
+                return `<div>${escape(data.text)}</div>`;
+            }
+        }
+    });
+
+    // Handle CRM project selection - hapus auto-fill behavior
+    crmProjectSelect.on('change', function(value) {
+        // Tidak perlu melakukan apa-apa, biarkan user input manual
+    });
+
+    // Project source radio handlers
+    const newProjectRadio = document.querySelector('input[name="project_source"][value="new"]');
+    const existingProjectRadio = document.querySelector('input[name="project_source"][value="existing"]');
+    const newProjectFields = document.getElementById('new-project-fields');
+    const existingProjectFields = document.getElementById('existing-project-fields');
+    const newProjectSection = document.getElementById('new-project-section');
+    const existingProjectSection = document.getElementById('existing-project-section');
+
+    function toggleProjectSourceFields() {
+        const isNewProject = newProjectRadio.checked;
+        
+        newProjectFields.style.display = isNewProject ? 'block' : 'none';
+        existingProjectFields.style.display = isNewProject ? 'none' : 'block';
+        
+        // Update required attributes
+        const nameInput = document.getElementById('project-name-input');
+        
+        if (isNewProject) {
+            nameInput.setAttribute('required', 'required');
+            crmProjectSelect.settings.required = false;
+            newProjectSection.classList.add('active');
+            existingProjectSection.classList.remove('active');
+        } else {
+            nameInput.removeAttribute('required');
+            crmProjectSelect.settings.required = true;
+            newProjectSection.classList.remove('active');
+            existingProjectSection.classList.add('active');
+        }
+
+        // Update required indicators
+        document.querySelectorAll('.new-required').forEach(el => {
+            el.style.display = isNewProject ? 'inline' : 'none';
+        });
+    }
+
+    newProjectRadio.addEventListener('change', toggleProjectSourceFields);
+    existingProjectRadio.addEventListener('change', toggleProjectSourceFields);
+
+    // Initialize on page load
+    toggleProjectSourceFields();
     
     // Name character counter
     const nameInput = document.querySelector('input[name="name"]');
@@ -317,26 +401,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Commission type handler
-    const commissionTypeSelect = document.getElementById('commission-type-select');
-    const commissionPrefix = document.getElementById('commission-prefix');
+    // const commissionTypeSelect = document.getElementById('commission-type-select');
+    // const commissionPrefix = document.getElementById('commission-prefix');
     
-    function updateCommissionPrefix() {
-        const type = commissionTypeSelect.value;
-        if (type === 'percentage') {
-            commissionPrefix.textContent = '%';
-        } else if (type === 'fixed') {
-            commissionPrefix.textContent = 'Rp';
-        } else {
-            commissionPrefix.textContent = '';
-        }
-    }
+    // function updateCommissionPrefix() {
+    //     const type = commissionTypeSelect.value;
+    //     if (type === 'percentage') {
+    //         commissionPrefix.textContent = '%';
+    //     } else if (type === 'fixed') {
+    //         commissionPrefix.textContent = 'Rp';
+    //     } else {
+    //         commissionPrefix.textContent = '';
+    //     }
+    // }
     
-    commissionTypeSelect.addEventListener('change', updateCommissionPrefix);
+    // commissionTypeSelect.addEventListener('change', updateCommissionPrefix);
     
     // Logo preview functionality
     const logoInput = document.getElementById('logo-input');
     const logoPreview = document.getElementById('logo-preview');
-    
+
     logoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -442,6 +526,30 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+
+    // Show alert function
+    function showAlert(input, type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+        alertDiv.innerHTML = `
+            <div class="d-flex">
+                <div>
+                    <i class="ti ti-alert-triangle icon alert-icon me-2"></i>
+                </div>
+                <div>${message}</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert"></a>
+        `;
+        
+        // Insert after the input element
+        input.parentNode.insertBefore(alertDiv, input.nextSibling);
+        
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
 });
 </script>
 @endpush

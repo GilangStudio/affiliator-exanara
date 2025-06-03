@@ -36,6 +36,11 @@ class Lead extends Model
         return $this->hasOneThrough(Project::class, AffiliatorProject::class, 'id', 'id', 'affiliator_project_id', 'project_id');
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
@@ -67,9 +72,16 @@ class Lead extends Model
         return $query->where($this->getTable() . '.verification_status', 'rejected');
     }
 
-    public function scopeSentToCrm($query)
+    public function scopeByUnit($query, $unitId)
     {
-        return $query->whereNotNull('crm_lead_id');
+        return $query->where('unit_id', $unitId);
+    }
+
+    public function scopeByProject($query, $projectId)
+    {
+        return $query->whereHas('affiliatorProject', function ($q) use ($projectId) {
+            $q->where('project_id', $projectId);
+        });
     }
 
     // Accessors
@@ -106,5 +118,28 @@ class Lead extends Model
     public function getDealValueFormattedAttribute()
     {
         return $this->deal_value ? 'Rp ' . number_format($this->deal_value, 0, ',', '.') : '-';
+    }
+
+    public function getProjectLocationAttribute()
+    {
+        return $this->project ? $this->project->location : null;
+    }
+
+    // Methods
+    public function calculateCommission()
+    {
+        if (!$this->unit) {
+            return 0;
+        }
+        
+        return $this->unit->calculateCommission($this->deal_value);
+    }
+
+    public function updateCommission()
+    {
+        $this->commission_earned = $this->calculateCommission();
+        $this->save();
+        
+        return $this->commission_earned;
     }
 }

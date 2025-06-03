@@ -22,9 +22,14 @@ class CommissionWithdrawal extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->hasOneThrough(Project::class, Unit::class, 'id', 'id', 'unit_id', 'project_id');
     }
 
     public function bankAccount()
@@ -56,6 +61,18 @@ class CommissionWithdrawal extends Model
     public function scopeRejected($query)
     {
         return $query->where('status', 'rejected');
+    }
+
+    public function scopeByUnit($query, $unitId)
+    {
+        return $query->where('unit_id', $unitId);
+    }
+
+    public function scopeByProject($query, $projectId)
+    {
+        return $query->whereHas('unit', function ($q) use ($projectId) {
+            $q->where('project_id', $projectId);
+        });
     }
 
     // Accessors

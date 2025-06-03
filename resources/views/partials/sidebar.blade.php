@@ -131,7 +131,7 @@
             <!-- BEGIN NAVBAR MENU -->
             <ul class="navbar-nav pt-lg-3">
                 <li class="nav-item {{ Route::is('dashboard') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('dashboard') }}">
+                    <a class="nav-link" href="">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-dashboard icon icon-1"></i>
                         </span>

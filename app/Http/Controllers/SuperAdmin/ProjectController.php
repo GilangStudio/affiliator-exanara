@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\ProjectAdmin;
 use Illuminate\Http\Request;
+use App\Models\CRM\ProjectCRM;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogService;
@@ -52,6 +53,8 @@ class ProjectController extends Controller
             });
         }
 
+        $query = $query->with(['projectCrm:id,nama_project'])->withCount('units');
+
         // Sort
         $sortBy = $request->get('sort', 'created_at');
         $sortOrder = $request->get('order', 'desc');
@@ -76,16 +79,24 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'project_source' => 'required|in:new,existing',
+            // 'existing_project_id' => 'nullable|required_if:project_source,existing|exists:project,id',
+            'name' => 'nullable|required_if:project_source,new|string|max:255',
+            'location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'terms_and_conditions' => 'required|string',
-            'commission_type' => 'required|in:percentage,fixed',
-            'commission_value' => 'required|numeric|min:0',
             'additional_info' => 'nullable|string',
             'require_digital_signature' => 'boolean',
             'is_active' => 'boolean'
         ]);
+
+        if ($request->project_source === 'existing') {
+            $existingProject = Project::where('crm_project_id', $request->existing_project_id)->first();
+            if ($existingProject) {
+                return redirect()->back()->withErrors(['existing_project_id' => 'Project ini sudah terdaftar.']);
+            }
+        }
 
         DB::transaction(function () use ($request) {
             // Handle logo upload
@@ -94,17 +105,25 @@ class ProjectController extends Controller
                 $logoPath = $request->file('logo')->store('projects/logos', 'public');
             }
 
+            // Determine project name and description
+            if ($request->project_source === 'existing') {
+                $crmProject = ProjectCRM::findOrFail($request->existing_project_id);
+                $projectName = $crmProject->nama_project;
+            } else {
+                $projectName = $request->name;
+            }
+
             // Create project
             $project = Project::create([
-                'name' => $request->name,
-                'description' => $request->description,
+                'name' => $projectName,
+                'location' => $request->location,
                 'logo' => $logoPath,
+                'description' => $request->description,
                 'terms_and_conditions' => $request->terms_and_conditions,
-                'commission_type' => $request->commission_type,
-                'commission_value' => $request->commission_value,
                 'additional_info' => $request->additional_info,
                 'require_digital_signature' => $request->boolean('require_digital_signature', true),
-                'is_active' => $request->boolean('is_active', true)
+                'is_active' => $request->boolean('is_active', true),
+                'crm_project_id' => $request->project_source === 'existing' ? $request->existing_project_id : null,
             ]);
 
             // Log activity
@@ -129,7 +148,7 @@ class ProjectController extends Controller
             'admins',
             'affiliatorProjects.user',
             'leads',
-            'commissionHistories'
+            'units'
         ]);
 
         $stats = [
@@ -137,8 +156,10 @@ class ProjectController extends Controller
             'active_affiliators' => $project->affiliatorProjects()->where('status', 'active')->count(),
             'total_leads' => $project->leads()->count(),
             'verified_leads' => $project->leads()->verified()->count(),
-            'total_commission_earned' => $project->commissionHistories()->where('type', 'earned')->sum('amount'),
-            'total_commission_withdrawn' => $project->commissionHistories()->where('type', 'withdrawn')->sum('amount')
+            'total_units' => $project->units()->count(),
+            'active_units' => $project->units()->active()->count(),
+            // 'total_commission_earned' => $project->commissionHistories()->where('type', 'earned')->sum('amount'),
+            // 'total_commission_withdrawn' => $project->commissionHistories()->where('type', 'withdrawn')->sum('amount')
         ];
 
         $recentLeads = $project->leads()
@@ -166,16 +187,24 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'project_source' => 'required|in:new,existing',
+            // 'existing_project_id' => 'nullable|required_if:project_source,existing|exists:project_crms,id',
+            'name' => 'nullable|required_if:project_source,new|string|max:255',
+            'location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'terms_and_conditions' => 'required|string',
-            'commission_type' => 'required|in:percentage,fixed',
-            'commission_value' => 'required|numeric|min:0',
             'additional_info' => 'nullable|string',
             'require_digital_signature' => 'boolean',
             'is_active' => 'boolean'
         ]);
+
+        if ($request->project_source === 'existing') {
+            $existingProject = Project::where('crm_project_id', $request->existing_project_id)->first();
+            if ($existingProject && $existingProject->id !== $project->id) {
+                return redirect()->back()->withErrors(['existing_project_id' => 'Project ini sudah terdaftar.']);
+            }
+        }
 
         DB::transaction(function () use ($request, $project) {
             $oldData = $project->only(['name', 'is_active']);
@@ -189,16 +218,28 @@ class ProjectController extends Controller
                 $project->logo = $request->file('logo')->store('projects/logos', 'public');
             }
 
+            // Determine project name and description
+            if ($request->project_source === 'existing') {
+                $crmProject = ProjectCRM::findOrFail($request->existing_project_id);
+                $projectName = $crmProject->nama_project;
+                $crmProjectId = $request->existing_project_id;
+            } else {
+                $projectName = $request->name;
+                $crmProjectId = null;
+            }
+
             // Update project
             $project->update([
-                'name' => $request->name,
+                'name' => $projectName,
+                'location' => $request->location,
                 'description' => $request->description,
                 'terms_and_conditions' => $request->terms_and_conditions,
-                'commission_type' => $request->commission_type,
-                'commission_value' => $request->commission_value,
                 'additional_info' => $request->additional_info,
                 'require_digital_signature' => $request->boolean('require_digital_signature', true),
-                'is_active' => $request->boolean('is_active', true)
+                'is_agreement_accepted' => true,
+                'agreement_sign' => 'auto',
+                'is_active' => $request->boolean('is_active', true),
+                'crm_project_id' => $crmProjectId,
             ]);
 
             // Log activity
@@ -292,5 +333,52 @@ class ProjectController extends Controller
         );
 
         return back()->with('success', "Project berhasil {$statusText}!");
+    }
+
+    /**
+     * Get CRM projects for Select2 with pagination and search
+     */
+    public function getCrmProjects(Request $request)
+    {
+        $search = $request->get('q', '');
+        $page = $request->get('page', 1);
+        $perPage = 10;
+
+        $query = ProjectCRM::query();
+
+        if ($search) {
+            $query->where('nama_project', 'like', "%{$search}%");
+        }
+
+        $projects = $query->orderBy('nama_project')->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'results' => $projects->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'text' => $project->nama_project,
+                ];
+            }),
+            'pagination' => [
+                'more' => $projects->hasMorePages()
+            ]
+        ]);
+    }
+
+    /**
+     * Get specific CRM project details
+     */
+    public function getCrmProjectDetails(Request $request, $id)
+    {
+        $project = ProjectCRM::find($id);
+        
+        if (!$project) {
+            return response()->json(['error' => 'Project tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'id' => $project->id,
+            'name' => $project->nama_project,
+        ]);
     }
 }

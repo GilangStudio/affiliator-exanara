@@ -26,6 +26,11 @@ class ActivityLog extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     // Scopes
     public function scopeByUser($query, $userId)
     {
@@ -35,6 +40,11 @@ class ActivityLog extends Model
     public function scopeByProject($query, $projectId)
     {
         return $query->where('project_id', $projectId);
+    }
+
+    public function scopeByUnit($query, $unitId)
+    {
+        return $query->where('unit_id', $unitId);
     }
 
     public function scopeByAction($query, $action)
@@ -71,6 +81,12 @@ class ActivityLog extends Model
             'digital_signature' => 'Tanda Tangan Digital',
             'update_profile_photo' => 'Update Foto Profil',
             'commission_earned' => 'Komisi Diperoleh',
+            'create_unit' => 'Buat Unit',
+            'update_unit' => 'Update Unit',
+            'delete_unit' => 'Hapus Unit',
+            'unit_sold' => 'Unit Terjual',
+            'unit_reserved' => 'Unit Dipesan',
+            'unit_available' => 'Unit Tersedia',
         ];
 
         return $labels[$this->action] ?? $this->action;

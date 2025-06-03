@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use App\Models\CRM\ProjectCRM;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -35,6 +36,11 @@ class Project extends Model
             ->wherePivot('role', 'admin');
     }
 
+    public function projectCrm()
+    {
+        return $this->belongsTo(ProjectCRM::class, 'crm_project_id');
+    }
+
     public function leads()
     {
         return $this->hasManyThrough(Lead::class, AffiliatorProject::class);
@@ -52,18 +58,28 @@ class Project extends Model
 
     public function commissionWithdrawals()
     {
-        return $this->hasMany(CommissionWithdrawal::class);
+        return $this->hasManyThrough(CommissionWithdrawal::class, Unit::class);
     }
 
     public function commissionHistories()
     {
-        return $this->hasMany(CommissionHistory::class);
+        return $this->hasManyThrough(CommissionHistory::class, Unit::class);
+    }
+
+    public function units()
+    {
+        return $this->hasMany(Unit::class);
     }
 
     // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeByLocation($query, $location)
+    {
+        return $query->where('location', 'like', "%{$location}%");
     }
 
     // Mutators
@@ -74,7 +90,7 @@ class Project extends Model
         //slug must be unique
         $slug = Str::slug($value);
         $count = 1;
-        while (Project::where('slug', $slug)->exists()) {
+        while (Project::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
             $slug = Str::slug($value) . '-' . $count;
             $count++;
         }
@@ -85,14 +101,6 @@ class Project extends Model
     public function getLogoUrlAttribute()
     {
         return $this->logo ? asset('storage/' . $this->logo) : null;
-    }
-
-    public function getCommissionDisplayAttribute()
-    {
-        if ($this->commission_type === 'percentage') {
-            return $this->commission_value . '%';
-        }
-        return 'Rp ' . number_format($this->commission_value, 0, ',', '.');
     }
 
     public function getRouteKeyName()

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('leads', function (Blueprint $table) {
             $table->id();
             $table->foreignId('affiliator_project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->nullable();
             $table->string('customer_name');
             $table->string('customer_phone');
             $table->string('customer_email')->nullable();
@@ -23,12 +24,13 @@ return new class extends Migration
             $table->timestamp('verified_at')->nullable();
             $table->foreignId('verified_by')->nullable()->constrained('users');
             $table->decimal('commission_earned', 15, 0)->default(0);
+            // $table->enum('status', [''])->default('pending');
             // Relasi ke CRM external
             $table->unsignedBigInteger('crm_lead_id')->nullable();
             $table->timestamps();
             
             $table->index('crm_lead_id');
-            $table->index(['verification_status', 'created_at']);
+            $table->index(['unit_id', 'verification_status', 'created_at']);
         });
     }
 

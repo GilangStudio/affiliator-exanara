@@ -23,11 +23,18 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Superadmin',
             'email' => 'superadmin@example.com',
+            'username' => 'superadmin',
             'country_code' => '62',
             'phone' => '81234567890',
             'password' => bcrypt('superadmin'),
             'role' => 'superadmin',
             'is_active' => true,
         ]);
+
+        //call FaqSeeder
+        $this->call(FaqSeeder::class);
+        //call SystemSettingSeeder
+        $this->call(SystemSettingsSeeder::class);
+        
     }
 }

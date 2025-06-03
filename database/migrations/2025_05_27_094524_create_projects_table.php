@@ -15,15 +15,23 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->string('location')->nullable();
             $table->text('description')->nullable();
             $table->string('logo')->nullable();
             $table->text('terms_and_conditions');
-            $table->enum('commission_type', ['percentage', 'fixed'])->default('percentage');
-            $table->decimal('commission_value', 15, 0)->default(0);
             $table->text('additional_info')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('require_digital_signature')->default(true);
+
+            //apakah sudah menyetujui perjanjian kerjasama / MoU
+            $table->boolean('is_agreement_accepted')->default(false);
+            $table->text('agreement_sign')->nullable();
+
+            $table->unsignedBigInteger('crm_project_id')->nullable(); // Project yang dihubungkan ke CRM
+            
             $table->timestamps();
+
+            $table->index('crm_project_id');
         });
     }
 
