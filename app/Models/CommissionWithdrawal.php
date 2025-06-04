@@ -22,14 +22,9 @@ class CommissionWithdrawal extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
-
     public function project()
     {
-        return $this->hasOneThrough(Project::class, Unit::class, 'id', 'id', 'unit_id', 'project_id');
+        return $this->belongsTo(Project::class);
     }
 
     public function bankAccount()

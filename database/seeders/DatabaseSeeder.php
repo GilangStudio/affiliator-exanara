@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Superadmin',
             'email' => 'superadmin@example.com',
             'username' => 'superadmin',
-            'country_code' => '62',
+            'country_code' => '+62',
             'phone' => '81234567890',
             'password' => bcrypt('superadmin'),
             'role' => 'superadmin',

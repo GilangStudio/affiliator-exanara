@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\AffiliatorController as AdminAffiliatorController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
@@ -76,24 +77,23 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         Route::middleware('check.project.affiliator')->group(function () {
             Route::name('affiliator.')->group(function () {
-                Route::get('/dashboard', [AffiliatorDashboardController::class, 'index'])->name('dashboard');
+                Route::get('/dashboard', [AffiliatorDashboardController::class, 'index'])->name('dashboard');               
+            });             
+        });
 
-                // Main join project page
-                Route::get('/project/join', [JoinProjectController::class, 'index'])->name('project.join.index');
-                
-                // Submit join project
-                Route::post('/project/join', [JoinProjectController::class, 'joinProject'])->name('project.join.store');
-            });
+        // Main join project page
+        Route::get('/project/join', [JoinProjectController::class, 'index'])->name('affiliator.project.join.index');
+        // Submit join project
+        Route::post('/project/join', [JoinProjectController::class, 'joinProject'])->name('affiliator.project.join.store');
 
-            // AJAX Routes untuk Join Project
-            Route::prefix('ajax')->name('ajax.')->group(function () {
+         // AJAX Routes untuk Join Project
+         Route::prefix('ajax')->name('ajax.')->group(function () {
                 
-                // Get project details
-                Route::get('/project/{project}/details', [JoinProjectController::class, 'getProjectDetails'])->name('project.details');
-                
-                // Get available projects
-                Route::get('/projects/available', [JoinProjectController::class, 'getAvailableProjects'])->name('projects.available');
-            });
+            // Get project details
+            Route::get('/project/{project}/details', [JoinProjectController::class, 'getProjectDetails'])->name('project.details');
+            
+            // Get available projects
+            Route::get('/projects/available', [JoinProjectController::class, 'getAvailableProjects'])->name('projects.available');
         });
 
     });
@@ -165,15 +165,10 @@ Route::middleware(['web', 'auth'])->group(function () {
             
             // Profile Management
             Route::prefix('profile')->name('profile.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Admin\AdminProfileController::class, 'show'])->name('show');
-                Route::get('/edit', [App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('edit');
-                Route::put('/', [App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('update');
-                Route::get('/change-password', [App\Http\Controllers\Admin\AdminProfileController::class, 'changePasswordForm'])->name('change-password');
-                Route::put('/change-password', [App\Http\Controllers\Admin\AdminProfileController::class, 'changePassword'])->name('change-password.update');
-                Route::post('/photo', [App\Http\Controllers\Admin\AdminProfileController::class, 'updatePhoto'])->name('photo.update');
-                Route::delete('/photo', [App\Http\Controllers\Admin\AdminProfileController::class, 'deletePhoto'])->name('photo.delete');
-                Route::get('/activity-log', [App\Http\Controllers\Admin\AdminProfileController::class, 'activityLog'])->name('activity-log');
-                Route::get('/statistics', [App\Http\Controllers\Admin\AdminProfileController::class, 'statistics'])->name('statistics');
+                Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+                Route::put('/update', [AdminProfileController::class, 'update'])->name('update');
+                Route::put('/password', [AdminProfileController::class, 'changePassword'])->name('password.change');
+                Route::delete('/photo', [AdminProfileController::class, 'deletePhoto'])->name('photo.delete');
             });
             
         });

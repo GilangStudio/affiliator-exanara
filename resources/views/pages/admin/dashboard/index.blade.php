@@ -183,6 +183,7 @@
                                 <tr>
                                     <th>Customer</th>
                                     <th>Affiliator</th>
+                                    <th>Unit</th>
                                     <th>Status</th>
                                     <th>Komisi</th>
                                 </tr>
@@ -205,6 +206,16 @@
                                                 {{ $lead->affiliatorProject->user->name }}
                                             </span>
                                         </div>
+                                    </td>
+                                    <td>
+                                        @if($lead->unit)
+                                            <div class="text-truncate" style="max-width: 120px;">
+                                                <div class="fw-bold">{{ $lead->unit->name }}</div>
+                                                <div class="text-secondary small">{{ $lead->unit->project->name }}</div>
+                                            </div>
+                                        @else
+                                            <span class="text-secondary">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @php
@@ -261,9 +272,9 @@
                             <thead>
                                 <tr>
                                     <th>Affiliator</th>
+                                    <th>Project</th>
                                     <th>Jumlah</th>
                                     <th>Status</th>
-                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -278,6 +289,16 @@
                                                 {{ $withdrawal->user->name }}
                                             </span>
                                         </div>
+                                    </td>
+                                    <td>
+                                        @if($withdrawal->project)
+                                            <div class="text-truncate" style="max-width: 120px;">
+                                                <div class="small fw-bold">{{ $withdrawal->project->name }}</div>
+                                                <div class="text-secondary small">{{ $withdrawal->project->location ?? 'Lokasi tidak tersedia' }}</div>
+                                            </div>
+                                        @else
+                                            <span class="text-secondary">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="fw-bold">Rp {{ number_format($withdrawal->amount, 0, ',', '.') }}</div>
@@ -302,24 +323,6 @@
                                         <span class="badge bg-{{ $statusColor }}-lt">
                                             {{ $statusLabel }}
                                         </span>
-                                    </td>
-                                    <td>
-                                        @if($withdrawal->status == 'pending')
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-success"
-                                                        onclick="updateWithdrawalStatus({{ $withdrawal->id }}, 'approved')">
-                                                    <i class="ti ti-check"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="updateWithdrawalStatus({{ $withdrawal->id }}, 'rejected')">
-                                                    <i class="ti ti-x"></i>
-                                                </button>
-                                            </div>
-                                        @else
-                                            <span class="text-secondary small">
-                                                {{ $withdrawal->updated_at->format('d/m') }}
-                                            </span>
-                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -354,6 +357,7 @@
                                 <th>Affiliator</th>
                                 <th>Lead</th>
                                 <th>Status</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -371,7 +375,7 @@
                                         @endif
                                         <div>
                                             <div class="fw-bold">{{ $project->name }}</div>
-                                            <div class="text-secondary small">{{ $project->slug }}</div>
+                                            <div class="text-secondary small">{{ $project->location ?? 'Lokasi tidak tersedia' }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -386,47 +390,16 @@
                                         {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                                     </span>
                                 </td>
+                                <td>
+                                    <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-eye me-1"></i>
+                                        Detail
+                                    </a>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-
-<!-- Recent Activities -->
-@if(isset($recent_activities) && $recent_activities->count() > 0)
-<div class="row mt-3">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Aktivitas Terbaru</h3>
-            </div>
-            <div class="card-body">
-                <div class="list-group list-group-flush">
-                    @foreach($recent_activities as $activity)
-                    <div class="list-group-item">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <span class="avatar avatar-sm">
-                                    {{ $activity->user->initials ?? 'U' }}
-                                </span>
-                            </div>
-                            <div class="col text-truncate">
-                                <div class="text-reset d-block">{{ $activity->description }}</div>
-                                <div class="d-block text-secondary text-truncate mt-n1">
-                                    {{ $activity->created_at->format('d/m/Y H:i') }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="text-secondary">{{ $activity->created_at->diffForHumans() }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
                 </div>
             </div>
         </div>
@@ -444,13 +417,17 @@ document.addEventListener("DOMContentLoaded", function () {
     @if(isset($monthly_stats) && !empty($monthly_stats))
     // Prepare monthly stats data
     const monthlyStats = @json($monthly_stats);
-    const months = Object.keys(monthlyStats);
-    const leadData = months.map(month => monthlyStats[month].leads || 0);
-    const verifiedLeadData = months.map(month => monthlyStats[month].verified_leads || 0);
-    const commissionData = months.map(month => monthlyStats[month].commission || 0);
-    const monthLabels = months.map(month => {
+    const months = [];
+    const leadData = [];
+    const verifiedLeadData = [];
+    const commissionData = [];
+    
+    Object.keys(monthlyStats).forEach(month => {
         const date = new Date(month + '-01');
-        return date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+        months.push(date.toLocaleDateString('id-ID', { month: 'short' }));
+        leadData.push(monthlyStats[month].leads || 0);
+        verifiedLeadData.push(monthlyStats[month].verified_leads || 0);
+        commissionData.push(monthlyStats[month].commission || 0);
     });
 
     // Leads Chart
@@ -477,7 +454,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }],
             colors: ["var(--tblr-primary)", "var(--tblr-success)"],
             xaxis: {
-                categories: monthLabels,
+                categories: months,
                 labels: { padding: 0 }
             },
             yaxis: {
@@ -517,7 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }],
             colors: ["var(--tblr-green)"],
             xaxis: {
-                categories: monthLabels,
+                categories: months,
                 labels: { padding: 0 }
             },
             yaxis: {
@@ -543,37 +520,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     @endif
 });
-
-// Update withdrawal status function
-function updateWithdrawalStatus(withdrawalId, status) {
-    const statusText = status === 'approved' ? 'menyetujui' : 'menolak';
-    
-    if (confirm(`Apakah Anda yakin ingin ${statusText} penarikan ini?`)) {
-        fetch(`/${withdrawalId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                status: status,
-                admin_notes: status === 'rejected' ? 'Ditolak dari dashboard' : null
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(data.message || 'Gagal memperbarui status penarikan', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Terjadi kesalahan', 'error');
-        });
-    }
-}
 </script>
-@endpush 
+@endpush

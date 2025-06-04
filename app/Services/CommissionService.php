@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Lead;
+use App\Models\Unit;
+use App\Models\Project;
 use App\Models\CommissionHistory;
 use App\Models\CommissionWithdrawal;
 use App\Models\User;
@@ -23,21 +25,22 @@ class CommissionService
     }
 
     /**
-     * Calculate commission amount for a lead
+     * Calculate commission amount for a lead based on unit
      */
     public function calculateCommission(Lead $lead)
     {
-        if (!$lead->deal_value || !$lead->affiliatorProject) {
+        if (!$lead->unit || !$lead->affiliatorProject) {
             return 0;
         }
 
-        $project = $lead->affiliatorProject->project;
+        $unit = $lead->unit;
         
-        if ($project->commission_type === 'percentage') {
-            return ($lead->deal_value * $project->commission_value) / 100;
+        if ($unit->commission_type === 'percentage') {
+            $baseAmount = $lead->deal_value ?? $unit->price;
+            return ($baseAmount * $unit->commission_value) / 100;
         }
         
-        return $project->commission_value;
+        return $unit->commission_value;
     }
 
     /**
@@ -46,7 +49,6 @@ class CommissionService
     public function calculateAndSaveCommission(Lead $lead)
     {
         if ($lead->commission_earned > 0) {
-            // Commission already calculated
             return $lead->commission_earned;
         }
 
@@ -59,18 +61,19 @@ class CommissionService
             CommissionHistory::create([
                 'lead_id' => $lead->id,
                 'user_id' => $lead->affiliatorProject->user_id,
-                'project_id' => $lead->affiliatorProject->project_id,
+                'unit_id' => $lead->unit_id,
                 'amount' => $commissionAmount,
                 'type' => 'earned',
                 'description' => "Komisi dari lead: {$lead->customer_name}",
                 'metadata' => [
                     'deal_value' => $lead->deal_value,
-                    'commission_rate' => $lead->affiliatorProject->project->commission_value,
-                    'commission_type' => $lead->affiliatorProject->project->commission_type
+                    'unit_price' => $lead->unit->price,
+                    'commission_rate' => $lead->unit->commission_value,
+                    'commission_type' => $lead->unit->commission_type
                 ]
             ]);
 
-            // Send notification to affiliator
+            // Send notification
             $this->notificationService->createForUser(
                 $lead->affiliatorProject->user_id,
                 'Komisi Baru!',
@@ -84,8 +87,8 @@ class CommissionService
                 $lead->affiliatorProject->user_id,
                 'commission_earned',
                 "Komisi diperoleh dari lead {$lead->customer_name}: Rp " . number_format($commissionAmount, 0, ',', '.'),
-                $lead->affiliatorProject->project_id,
-                ['lead_id' => $lead->id, 'amount' => $commissionAmount]
+                $lead->unit->project_id,
+                ['lead_id' => $lead->id, 'unit_id' => $lead->unit_id, 'amount' => $commissionAmount]
             );
         });
 
@@ -93,7 +96,7 @@ class CommissionService
     }
 
     /**
-     * Validate withdrawal request
+     * Validate withdrawal request (now per project)
      */
     public function validateWithdrawal($userId, $projectId, $amount)
     {
@@ -105,15 +108,20 @@ class CommissionService
             return $errors;
         }
 
+        $project = Project::find($projectId);
+        if (!$project) {
+            $errors[] = 'Project tidak ditemukan';
+            return $errors;
+        }
+
         // Check minimum withdrawal amount
         $minAmount = SystemSetting::getValue('min_withdrawal_amount', 100000);
         if ($amount < $minAmount) {
             $errors[] = "Minimal penarikan Rp " . number_format($minAmount, 0, ',', '.');
         }
 
-        // Check available commission
-        $userService = app(UserService::class);
-        $availableCommission = $userService->getAvailableCommission($user, $projectId);
+        // Check available commission for this project (calculated from all units in project)
+        $availableCommission = $this->getAvailableCommissionByProject($user, $projectId);
         if ($amount > $availableCommission) {
             $errors[] = "Saldo komisi tidak mencukupi. Saldo tersedia: Rp " . number_format($availableCommission, 0, ',', '.');
         }
@@ -124,7 +132,7 @@ class CommissionService
             $errors[] = "Anda belum memiliki rekening bank yang terverifikasi.";
         }
 
-        // Check pending withdrawal
+        // Check pending withdrawal for this project
         $pendingWithdrawal = CommissionWithdrawal::where('user_id', $userId)
             ->where('project_id', $projectId)
             ->pending()
@@ -143,7 +151,7 @@ class CommissionService
     }
 
     /**
-     * Create withdrawal request
+     * Create withdrawal request (now per project)
      */
     public function createWithdrawal($userId, $projectId, $bankAccountId, $amount, $notes = null)
     {
@@ -154,10 +162,6 @@ class CommissionService
         }
 
         $withdrawal = DB::transaction(function () use ($userId, $projectId, $bankAccountId, $amount, $notes) {
-            // Apply withdrawal fee if any
-            $withdrawalFee = SystemSetting::getValue('commission_withdrawal_fee', 0);
-            $netAmount = $amount - $withdrawalFee;
-
             $withdrawal = CommissionWithdrawal::create([
                 'user_id' => $userId,
                 'project_id' => $projectId,
@@ -167,24 +171,25 @@ class CommissionService
                 'status' => 'pending'
             ]);
 
+            $project = Project::find($projectId);
+            
             $this->activityLogService->log(
                 $userId,
                 'request_withdrawal',
-                "Request penarikan komisi Rp " . number_format($amount, 0, ',', '.'),
-                $projectId,
-                ['withdrawal_id' => $withdrawal->id, 'withdrawal_fee' => $withdrawalFee]
+                "Request penarikan komisi Rp " . number_format($amount, 0, ',', '.') . " untuk project {$project->name}",
+                $project->id,
+                ['withdrawal_id' => $withdrawal->id, 'project_id' => $projectId]
             );
 
-            // Notify admins about new withdrawal request
+            // Notify project admins
             $user = User::find($userId);
-            $project = \App\Models\Project::find($projectId);
             $admins = $project->admins;
 
             foreach ($admins as $admin) {
                 $this->notificationService->createForUser(
                     $admin->id,
                     'Request Penarikan Baru',
-                    "Penarikan komisi Rp " . number_format($amount, 0, ',', '.') . " dari {$user->name}",
+                    "Penarikan komisi Rp " . number_format($amount, 0, ',', '.') . " dari {$user->name} untuk project {$project->name}",
                     'info',
                     ['withdrawal_id' => $withdrawal->id]
                 );
@@ -194,6 +199,61 @@ class CommissionService
         });
 
         return $withdrawal;
+    }
+
+    /**
+     * Get available commission by project (calculated from all units in project)
+     */
+    public function getAvailableCommissionByProject(User $user, $projectId)
+    {
+        // Get all units in this project
+        $unitIds = Unit::where('project_id', $projectId)->pluck('id');
+        
+        $earned = CommissionHistory::where('user_id', $user->id)
+            ->whereIn('unit_id', $unitIds)
+            ->where('type', 'earned')
+            ->sum('amount');
+            
+        $withdrawn = CommissionHistory::where('user_id', $user->id)
+            ->whereIn('unit_id', $unitIds)
+            ->where('type', 'withdrawn')
+            ->sum('amount');
+            
+        $adjustments = CommissionHistory::where('user_id', $user->id)
+            ->whereIn('unit_id', $unitIds)
+            ->where('type', 'adjustment')
+            ->sum('amount');
+        
+        return $earned - $withdrawn + $adjustments;
+    }
+
+    /**
+     * Get commission statistics for user (can be filtered by project)
+     */
+    public function getUserCommissionStats(User $user, $projectId = null)
+    {
+        if ($projectId) {
+            // Get units for specific project
+            $unitIds = Unit::where('project_id', $projectId)->pluck('id');
+            $query = $user->commissionHistories()->whereIn('unit_id', $unitIds);
+            $withdrawalQuery = $user->commissionWithdrawals()->where('project_id', $projectId);
+        } else {
+            $query = $user->commissionHistories();
+            $withdrawalQuery = $user->commissionWithdrawals();
+        }
+
+        $stats = [
+            'total_earned' => $query->clone()->where('type', 'earned')->sum('amount'),
+            'total_withdrawn' => $query->clone()->where('type', 'withdrawn')->sum('amount'),
+            'total_adjustments' => $query->clone()->where('type', 'adjustment')->sum('amount'),
+            'pending_withdrawals' => $withdrawalQuery->pending()->sum('amount'),
+            'this_month_earned' => $query->clone()->where('type', 'earned')->thisMonth()->sum('amount'),
+            'this_year_earned' => $query->clone()->where('type', 'earned')->thisYear()->sum('amount')
+        ];
+
+        $stats['available_balance'] = $stats['total_earned'] - $stats['total_withdrawn'] + $stats['total_adjustments'];
+
+        return $stats;
     }
 
     /**
@@ -213,11 +273,10 @@ class CommissionService
                 'admin_notes' => $notes
             ]);
 
-            // Send notification to user
             $this->notificationService->createForUser(
                 $withdrawal->user_id,
                 'Penarikan Disetujui',
-                "Penarikan komisi {$withdrawal->amount_formatted} telah disetujui",
+                "Penarikan komisi {$withdrawal->amount_formatted} untuk project {$withdrawal->project->name} telah disetujui",
                 'success',
                 ['withdrawal_id' => $withdrawal->id]
             );
@@ -225,9 +284,9 @@ class CommissionService
             $this->activityLogService->log(
                 $adminId,
                 'approve_withdrawal',
-                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} disetujui",
+                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} untuk project {$withdrawal->project->name} disetujui",
                 $withdrawal->project_id,
-                ['withdrawal_id' => $withdrawal->id]
+                ['withdrawal_id' => $withdrawal->id, 'project_id' => $withdrawal->project_id]
             );
         });
 
@@ -255,11 +314,10 @@ class CommissionService
                 'admin_notes' => $notes
             ]);
 
-            // Send notification to user
             $this->notificationService->createForUser(
                 $withdrawal->user_id,
                 'Penarikan Ditolak',
-                "Penarikan komisi {$withdrawal->amount_formatted} ditolak: {$notes}",
+                "Penarikan komisi {$withdrawal->amount_formatted} untuk project {$withdrawal->project->name} ditolak: {$notes}",
                 'error',
                 ['withdrawal_id' => $withdrawal->id]
             );
@@ -267,9 +325,9 @@ class CommissionService
             $this->activityLogService->log(
                 $adminId,
                 'reject_withdrawal',
-                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} ditolak: {$notes}",
+                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} untuk project {$withdrawal->project->name} ditolak: {$notes}",
                 $withdrawal->project_id,
-                ['withdrawal_id' => $withdrawal->id]
+                ['withdrawal_id' => $withdrawal->id, 'project_id' => $withdrawal->project_id]
             );
         });
 
@@ -293,24 +351,33 @@ class CommissionService
             ]);
 
             // Create commission history for withdrawal
-            CommissionHistory::create([
-                'lead_id' => null,
-                'user_id' => $withdrawal->user_id,
-                'project_id' => $withdrawal->project_id,
-                'amount' => $withdrawal->amount,
-                'type' => 'withdrawn',
-                'description' => 'Penarikan komisi diproses',
-                'metadata' => [
-                    'withdrawal_id' => $withdrawal->id,
-                    'bank_account' => $withdrawal->bankAccount->bank_name . ' - ' . $withdrawal->bankAccount->account_number
-                ]
-            ]);
+            // We need to distribute this withdrawal across the units proportionally
+            $projectUnits = Unit::where('project_id', $withdrawal->project_id)->pluck('id');
+            
+            // For simplicity, we'll record one withdrawal entry for the main unit or distribute evenly
+            // This depends on business logic - here we'll record to the first unit
+            $firstUnit = $projectUnits->first();
+            
+            if ($firstUnit) {
+                CommissionHistory::create([
+                    'lead_id' => null,
+                    'user_id' => $withdrawal->user_id,
+                    'unit_id' => $firstUnit,
+                    'amount' => $withdrawal->amount,
+                    'type' => 'withdrawn',
+                    'description' => 'Penarikan komisi diproses',
+                    'metadata' => [
+                        'withdrawal_id' => $withdrawal->id,
+                        'project_id' => $withdrawal->project_id,
+                        'bank_account' => $withdrawal->bankAccount->bank_name . ' - ' . $withdrawal->bankAccount->account_number
+                    ]
+                ]);
+            }
 
-            // Send notification to user
             $this->notificationService->createForUser(
                 $withdrawal->user_id,
                 'Penarikan Diproses',
-                "Penarikan komisi {$withdrawal->amount_formatted} telah diproses dan dikirim ke rekening Anda",
+                "Penarikan komisi {$withdrawal->amount_formatted} untuk project {$withdrawal->project->name} telah diproses",
                 'success',
                 ['withdrawal_id' => $withdrawal->id]
             );
@@ -318,9 +385,9 @@ class CommissionService
             $this->activityLogService->log(
                 $adminId,
                 'process_withdrawal',
-                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} telah diproses",
+                "Withdrawal {$withdrawal->amount_formatted} dari {$withdrawal->user->name} untuk project {$withdrawal->project->name} telah diproses",
                 $withdrawal->project_id,
-                ['withdrawal_id' => $withdrawal->id]
+                ['withdrawal_id' => $withdrawal->id, 'project_id' => $withdrawal->project_id]
             );
         });
 
@@ -345,37 +412,12 @@ class CommissionService
         $this->activityLogService->log(
             $userId,
             'cancel_withdrawal',
-            "Pembatalan withdrawal {$withdrawal->amount_formatted}",
+            "Pembatalan withdrawal {$withdrawal->amount_formatted} untuk project {$withdrawal->project->name}",
             $withdrawal->project_id,
             ['withdrawal_id' => $withdrawal->id]
         );
 
         return true;
-    }
-
-    /**
-     * Get commission statistics for user
-     */
-    public function getUserCommissionStats(User $user, $projectId = null)
-    {
-        $query = $user->commissionHistories();
-        
-        if ($projectId) {
-            $query->where('project_id', $projectId);
-        }
-
-        $stats = [
-            'total_earned' => $query->clone()->where('type', 'earned')->sum('amount'),
-            'total_withdrawn' => $query->clone()->where('type', 'withdrawn')->sum('amount'),
-            'total_adjustments' => $query->clone()->where('type', 'adjustment')->sum('amount'),
-            'pending_withdrawals' => $user->commissionWithdrawals()->pending()->sum('amount'),
-            'this_month_earned' => $query->clone()->where('type', 'earned')->thisMonth()->sum('amount'),
-            'this_year_earned' => $query->clone()->where('type', 'earned')->thisYear()->sum('amount')
-        ];
-
-        $stats['available_balance'] = $stats['total_earned'] - $stats['total_withdrawn'] + $stats['total_adjustments'];
-
-        return $stats;
     }
 
     /**
@@ -387,7 +429,8 @@ class CommissionService
             ->where('type', 'earned');
 
         if ($projectId) {
-            $query->where('project_id', $projectId);
+            $unitIds = Unit::where('project_id', $projectId)->pluck('id');
+            $query->whereIn('unit_id', $unitIds);
         }
 
         // Apply period filter
@@ -415,27 +458,36 @@ class CommissionService
      */
     public function createCommissionAdjustment($userId, $projectId, $amount, $description, $adminId)
     {
+        // Get first unit in project for recording the adjustment
+        $firstUnit = Unit::where('project_id', $projectId)->first();
+        
+        if (!$firstUnit) {
+            throw new \Exception('Project tidak memiliki unit');
+        }
+
         $adjustment = CommissionHistory::create([
             'lead_id' => null,
             'user_id' => $userId,
-            'project_id' => $projectId,
+            'unit_id' => $firstUnit->id,
             'amount' => $amount,
             'type' => 'adjustment',
             'description' => $description,
             'metadata' => [
                 'adjusted_by' => $adminId,
+                'project_id' => $projectId,
                 'adjustment_reason' => $description
             ]
         ]);
 
         $user = User::find($userId);
+        $project = Project::find($projectId);
         $adjustmentType = $amount > 0 ? 'penambahan' : 'pengurangan';
         
         // Send notification
         $this->notificationService->createForUser(
             $userId,
             'Penyesuaian Komisi',
-            "Komisi Anda disesuaikan ({$adjustmentType}): Rp " . number_format(abs($amount), 0, ',', '.') . ". {$description}",
+            "Komisi Anda disesuaikan ({$adjustmentType}): Rp " . number_format(abs($amount), 0, ',', '.') . " untuk project {$project->name}. {$description}",
             $amount > 0 ? 'success' : 'warning',
             ['adjustment_id' => $adjustment->id]
         );
@@ -443,7 +495,7 @@ class CommissionService
         $this->activityLogService->log(
             $adminId,
             'commission_adjustment',
-            "Penyesuaian komisi untuk {$user->name}: Rp " . number_format($amount, 0, ',', '.') . ". {$description}",
+            "Penyesuaian komisi untuk {$user->name}: Rp " . number_format($amount, 0, ',', '.') . " untuk project {$project->name}. {$description}",
             $projectId,
             ['adjustment_id' => $adjustment->id, 'user_id' => $userId]
         );
@@ -456,11 +508,12 @@ class CommissionService
      */
     public function generateCommissionReport($startDate, $endDate, $projectId = null)
     {
-        $query = CommissionHistory::with(['user:id,name,email', 'project:id,name', 'lead:id,customer_name'])
+        $query = CommissionHistory::with(['user:id,name,email', 'unit.project:id,name', 'lead:id,customer_name'])
             ->whereBetween('created_at', [$startDate, $endDate]);
 
         if ($projectId) {
-            $query->where('project_id', $projectId);
+            $unitIds = Unit::where('project_id', $projectId)->pluck('id');
+            $query->whereIn('unit_id', $unitIds);
         }
 
         $commissions = $query->orderBy('created_at', 'desc')->get();

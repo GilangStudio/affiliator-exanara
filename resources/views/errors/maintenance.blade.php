@@ -10,18 +10,19 @@
     <style>
         @import url('https://rsms.me/inter/inter.css');
         .maintenance-page {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+            background: #f9fafb;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .maintenance-card {
+        /* .maintenance-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 1rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
+        } */
         .maintenance-icon {
             width: 80px;
             height: 80px;
@@ -118,13 +119,13 @@
                             @if (Auth::check())
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="btn btn-outline-secondary">
+                                    <button type="submit" class="btn btn-danger-lt">
                                         <i class="ti ti-arrow-left me-1"></i>
                                         Logout
                                     </button>
                                 </form>
                             @else
-                                <a href="{{ route('login') }}" class="btn btn-outline-primary">
+                                <a href="{{ route('login') }}" class="btn btn-primary">
                                     <i class="ti ti-arrow-left me-1"></i>
                                     Kembali ke Login
                                 </a>

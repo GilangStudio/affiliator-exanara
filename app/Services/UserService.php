@@ -128,7 +128,9 @@ class UserService
     {
         $user = User::create([
             'name' => $data['name'],
+            'username' => $data['username'],
             'email' => $data['email'],
+            'country_code' => $data['country_code'], // Add this line
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
             'role' => $data['role'] ?? 'affiliator',

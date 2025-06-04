@@ -348,42 +348,14 @@
     </div>
 </li>
 
-<!-- Profile & Settings -->
-<li class="nav-item dropdown {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.profile.*') ? 'show' : '' }}"
-        href="#navbar-profile" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
-        aria-expanded="{{ request()->routeIs('admin.profile.*') ? 'true' : 'false' }}">
+<!-- Profile & Settings - UPDATED MENU -->
+<li class="nav-item {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('admin.profile.index') }}">
         <span class="nav-link-icon d-md-none d-lg-inline-block">
             <i class="ti ti-user-circle"></i>
         </span>
         <span class="nav-link-title">Profil & Pengaturan</span>
     </a>
-    <div class="dropdown-menu {{ request()->routeIs('admin.profile.*') ? 'show' : '' }}">
-        <div class="dropdown-menu-columns">
-            <div class="dropdown-menu-column">
-                <a class="dropdown-item {{ request()->routeIs('admin.profile.show') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.show') }}">
-                    <i class="ti ti-user me-2"></i>
-                    Lihat Profil
-                </a>
-                <a class="dropdown-item {{ request()->routeIs('admin.profile.edit') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.edit') }}">
-                    <i class="ti ti-edit me-2"></i>
-                    Edit Profil
-                </a>
-                <a class="dropdown-item {{ request()->routeIs('admin.profile.change-password') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.change-password') }}">
-                    <i class="ti ti-key me-2"></i>
-                    Ganti Password
-                </a>
-                <a class="dropdown-item {{ request()->routeIs('admin.profile.activity-log') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.activity-log') }}">
-                    <i class="ti ti-history me-2"></i>
-                    Log Aktivitas
-                </a>
-            </div>
-        </div>
-    </div>
 </li>
                 @endif
             </ul>

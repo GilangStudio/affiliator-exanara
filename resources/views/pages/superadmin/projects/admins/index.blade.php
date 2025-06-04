@@ -3,6 +3,9 @@
 @section('title', 'Admin Project - ' . $project->name)
 
 @section('content')
+
+@include('components.alert')
+
 <!-- Project Header -->
 <div class="card mb-3">
     <div class="card-body">

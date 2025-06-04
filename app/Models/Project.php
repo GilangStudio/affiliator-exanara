@@ -100,7 +100,7 @@ class Project extends Model
     // Accessors
     public function getLogoUrlAttribute()
     {
-        return $this->logo ? asset('storage/' . $this->logo) : null;
+        return $this->logo ? asset('storage/' . $this->logo) : asset('img/default.jpg');
     }
 
     public function getRouteKeyName()

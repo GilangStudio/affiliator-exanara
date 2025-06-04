@@ -146,10 +146,15 @@ class AuthController extends Controller
             // Format phone number
             $phone = $this->formatPhoneNumber($request->phone);
 
+            // Generate username
+            $username = $this->processUsername($request->email);
+
             // Create user using service
             $userData = [
                 'name' => $request->name,
+                'username' => $username,
                 'email' => $request->email,
+                'country_code' => '+62',
                 'phone' => $phone,
                 'password' => $request->password,
                 'role' => 'affiliator', // default role for registration
@@ -303,6 +308,19 @@ class AuthController extends Controller
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan saat reset password. Silakan coba lagi.');
         }
+    }
+
+    /**
+     * Process username
+     */
+    private function processUsername($email)
+    {
+        $username = strtolower(substr(explode('@', $email)[0], 0, 20));
+        
+        while (User::where('username', $username)->exists()) {
+            $username .= rand(100, 999);
+        }
+        return $username;
     }
 
     /**

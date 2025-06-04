@@ -22,7 +22,7 @@ class CheckProjectAffiliatorMiddleware
             return redirect()->route('login');
         }
 
-        $user = User::affiliator()->find(Auth::id());
+        $user = User::affiliators()->find(Auth::id());
 
         // Check if user is active
         if (!$user->is_active) {
