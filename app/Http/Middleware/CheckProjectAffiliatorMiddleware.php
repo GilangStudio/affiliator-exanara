@@ -40,15 +40,15 @@ class CheckProjectAffiliatorMiddleware
         }
 
         // Check if user has at least one active project
-        $hasActiveProject = $user->affiliatorProjects()
-            ->where('status', 'active')
-            ->exists();
+        // $hasActiveProject = $user->affiliatorProjects()
+        //     ->where('status', 'active')
+        //     ->exists();
 
-        if (!$hasActiveProject) {
-            // If no incomplete projects, redirect to project selection
-            return redirect()->route('affiliator.setup.projects')
-                ->with('info', 'Silahkan bergabung dengan project untuk melanjutkan.');
-        }
+        // if (!$hasActiveProject) {
+        //     // If no incomplete projects, redirect to project selection
+        //     return redirect()->route('affiliator.setup.projects')
+        //         ->with('info', 'Silahkan bergabung dengan project untuk melanjutkan.');
+        // }
 
         return $next($request);
     }

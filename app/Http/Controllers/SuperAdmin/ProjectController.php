@@ -121,7 +121,7 @@ class ProjectController extends Controller
                 'description' => $request->description,
                 'terms_and_conditions' => $request->terms_and_conditions,
                 'additional_info' => $request->additional_info,
-                'require_digital_signature' => $request->boolean('require_digital_signature', true),
+                'require_digital_signature' => $request->require_digital_signature == '1'? true : false,
                 'is_active' => $request->boolean('is_active', true),
                 'crm_project_id' => $request->project_source === 'existing' ? $request->existing_project_id : null,
             ]);
@@ -227,7 +227,6 @@ class ProjectController extends Controller
                 $projectName = $request->name;
                 $crmProjectId = null;
             }
-
             // Update project
             $project->update([
                 'name' => $projectName,
@@ -235,7 +234,7 @@ class ProjectController extends Controller
                 'description' => $request->description,
                 'terms_and_conditions' => $request->terms_and_conditions,
                 'additional_info' => $request->additional_info,
-                'require_digital_signature' => $request->boolean('require_digital_signature', true),
+                'require_digital_signature' => $request->require_digital_signature == '1' ? true : false,
                 'is_agreement_accepted' => true,
                 'agreement_sign' => 'auto',
                 'is_active' => $request->boolean('is_active', true),

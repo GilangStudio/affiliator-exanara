@@ -1,5 +1,5 @@
 /*!
- * Tabler Vendors v1.2.0 (https://tabler.io)
+ * Tabler Vendors v1.3.2 (https://tabler.io)
  * Copyright 2018-2025 The Tabler Authors
  * Copyright 2018-2025 codecalm.net Paweł Kuna
  * Licensed under MIT (https://github.com/tabler/tabler/blob/master/LICENSE)
@@ -55,7 +55,7 @@
   margin: 1px 1px 0 0;
 }
 .noUi-handle.noUi-active, .noUi-handle:focus {
-  box-shadow: 0 0 0 1px #FAFAFA, 0 0 0 0.12rem rgba(var(--tblr-primary-rgb), 1);
+  box-shadow: 0 0 0 1px #F9F9F9, 0 0 0 0.12rem rgba(var(--tblr-primary-rgb), 1);
 }
 
 .noUi-connect {

@@ -8,10 +8,129 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Join Project - {{ config('app.name') }}</title>
   @include('partials.style')
+  
+  <!-- Custom styles for join project -->
+  <style>
+    #terms-and-conditions * {
+      all: revert;
+      font-family: inherit;
+      color: inherit;
+    }
+
+    .signature-canvas {
+      width: 100%;
+      height: 300px;
+      border: 2px dashed #e9ecef;
+      border-radius: 0.375rem;
+      cursor: crosshair;
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .units-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      scroll-behavior: smooth;
+    }
+
+    .units-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .units-scroll::-webkit-scrollbar-track {
+      background: #f1f3f4;
+      border-radius: 10px;
+    }
+
+    .units-scroll::-webkit-scrollbar-thumb {
+      background: #c1c8cd;
+      border-radius: 10px;
+    }
+
+    .unit-card {
+      width: 18rem;
+      /* min-width: 280px; */
+      flex-shrink: 0;
+    }
+
+    .commission-info-card {
+      background: linear-gradient(135deg, #54d12b 0%, #1d7a1a 100%);
+      color: white;
+      border: none;
+    }
+
+    .commission-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .commission-desc {
+      opacity: 0.9;
+      font-size: 0.875rem;
+    }
+
+    .terms-content {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 0.375rem;
+      line-height: 1.6;
+    }
+
+    .card-transition {
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .units-scroll {
+        gap: 0.5rem;
+      }
+      
+      .unit-card {
+        min-width: 250px;
+      }
+      
+      .commission-value {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <div class="page page-center">
+
+    @if ($userProjects->count() == 0)
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1000;">
+      <form action="{{ route('logout') }}" method="POST" class="d-inline">
+        @csrf
+        <button type="submit" class="btn btn-link" title="Keluar dari sistem">
+          Logout
+        </button>
+      </form>
+    </div>
+    @else
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1000;">
+      <a href="{{ route('affiliator.dashboard') }}" class="btn btn-link" title="Kembali ke dashboard">
+        Dashboard
+      </a>
+    </div>
+    @endif
+
     <form class="container container-tight py-4" id="join-project-form">
       <div class="text-center mb-4">
         <!-- BEGIN NAVBAR LOGO -->
@@ -88,12 +207,13 @@
                         <div class="font-weight-medium">{{ strtoupper($project['name']) }}</div>
                         <div class="text-secondary small mb-1">{{ $project['location'] }}</div>
                         <div class="d-flex gap-2">
-                          <div class="badge badge-sm bg-primary-lt">
-                            {{ $project['commission_display'] }}
-                          </div>
+                          {{-- <div class="badge badge-sm bg-primary-lt">
+                            Komisi tersedia
+                          </div> --}}
                           @if($project['require_digital_signature'])
                             <div class="badge badge-sm bg-info-lt">
                               <i class="ti ti-writing"></i>
+                              Tanda tangan digital
                             </div>
                           @endif
                         </div>
@@ -116,32 +236,68 @@
             <!-- Project Information -->
             <div class="row mb-4">
               <div class="col-12">
-                <div class="card bg-light">
+                <div class="commission-info-card card">
                   <div class="card-body">
-                    <h4>Informasi Komisi</h4>
-                    <div id="commission-info"></div>
+                    <h4 class="mb-3 text-white">
+                      <i class="ti ti-coin me-2"></i>
+                      Informasi Komisi
+                    </h4>
+                    <div id="commission-info">
+                      <div class="commission-value" id="commission-range">Loading...</div>
+                      <div class="commission-desc" id="commission-description">Memuat informasi komisi...</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Terms and Conditions -->
+            <!-- Units Information -->
             <div class="mb-4">
-              <h4>Syarat & Ketentuan</h4>
+              <h4 class="mb-3">
+                <i class="ti ti-building me-2"></i>
+                Unit Tersedia
+              </h4>
+              <div class="units-scroll" id="units-container">
+                <!-- Units will be loaded here -->
+              </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="mb-4" id="additional-info-section" style="display: none;">
+              <h4 class="mb-3">
+                <i class="ti ti-info-circle me-2"></i>
+                Informasi Tambahan
+              </h4>
               <div class="card">
-                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                  <div class="markdown" id="terms-and-conditions"></div>
+                <div class="card-body">
+                  <div id="additional-info-content"></div>
                 </div>
               </div>
-              
-              <div class="mt-3">
-                <label class="form-check">
-                  <input type="checkbox" class="form-check-input" id="terms-checkbox" name="terms" required>
-                  <span class="form-check-label">
-                    Saya telah membaca dan menyetujui syarat & ketentuan project ini
-                  </span>
-                </label>
-              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms and Conditions Card -->
+        <div class="card card-md card-transition" id="terms-card" style="display: none;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="ti ti-file-text me-2"></i>
+              Syarat & Ketentuan
+            </h3>
+            <div class="card-subtitle ms-auto">Bacalah dengan teliti sebelum melanjutkan</div>
+          </div>
+          <div class="card-body">
+            <div class="terms-content" id="terms-and-conditions">
+              <!-- Terms content will be loaded here -->
+            </div>
+            
+            <div class="mt-4">
+              <label class="form-check">
+                <input type="checkbox" class="form-check-input" id="terms-checkbox" name="terms" required>
+                <span class="form-check-label">
+                  <strong>Saya telah membaca dan menyetujui syarat & ketentuan project ini</strong>
+                </span>
+              </label>
             </div>
           </div>
         </div>
@@ -150,6 +306,7 @@
         <div class="card card-md" id="ktp-card" style="display: none;">
           <div class="card-header">
             <h3 class="card-title">Data KTP</h3>
+            <div class="card-subtitle">Lengkapi data KTP untuk verifikasi identitas</div>
           </div>
           <div class="card-body">
             <div class="mb-3">
@@ -172,20 +329,17 @@
         <div class="card card-md" id="signature-card" style="display: none;">
           <div class="card-header">
             <h3 class="card-title">Tanda Tangan Digital</h3>
+            <div class="card-subtitle">Berikan tanda tangan digital sebagai komitmen bergabung</div>
           </div>
           <div class="card-body">
             <div class="mb-3">
-              <p class="text-secondary text-center">
-                Berikan tanda tangan digital Anda sebagai komitmen bergabung dengan project ini
-              </p>
-              
               <div class="signature position-relative">
-                <div class="position-absolute top-0 end-0 p-2">
-                  <div class="btn btn-icon" id="signature-clear" title="Hapus tanda tangan" data-bs-toggle="tooltip">
+                <div class="position-absolute top-0 end-0 p-2 z-index-1">
+                  <div class="btn btn-icon btn-sm" id="signature-clear" title="Hapus tanda tangan" data-bs-toggle="tooltip">
                     <i class="ti ti-trash icon"></i>
                   </div>
                 </div>
-                <canvas id="signature-canvas" width="600" height="300" class="signature-canvas border rounded"></canvas>
+                <canvas id="signature-canvas" width="600" height="300" class="signature-canvas border rounded bg-white"></canvas>
               </div>
               
               <div class="text-secondary text-center mt-2">
@@ -200,13 +354,12 @@
         
         <!-- Progress and Navigation -->
         <div class="row align-items-center mt-3">
-          <div class="col-4">
-            <div class="progress">
-              <div class="progress-bar" id="progress-bar" style="width: 20%" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+          <div class="d-flex align-items-center justify-content-between gap-3">
+            <div class="progress" style="width: 100px;">
+              <div class="progress-bar" id="progress-bar" style="width: 16%" role="progressbar" aria-valuenow="16" aria-valuemin="0" aria-valuemax="100">
               </div>
             </div>
-          </div>
-          <div class="col">
+
             <div class="btn-list justify-content-end">
               <button type="button" class="btn btn-link link-secondary" id="back-btn" style="display: none;">
                 Kembali
@@ -214,7 +367,7 @@
               <button type="button" class="btn btn-primary" id="next-btn" disabled>
                 Lanjut
               </button>
-              <button type="submit" class="btn btn-success" id="join-btn" style="display: none;">
+              <button type="submit" class="btn btn-primary" id="join-btn" style="display: none;">
                 <i class="ti ti-user-plus me-1"></i>
                 Bergabung Project
               </button>
@@ -235,7 +388,7 @@
               Silakan hubungi admin atau coba lagi nanti.
             </p>
             <div class="mt-4">
-              <a href="{{ route('support.index') }}" class="btn btn-outline-primary">
+              <a href="#" class="btn btn-outline-primary">
                 <i class="ti ti-help me-1"></i>
                 Hubungi Support
               </a>
@@ -259,6 +412,7 @@
       let selectedProjectId = null;
       let projectData = null;
       let signaturePad = null;
+      let requireDigitalSignature = false; // **HIGHLIGHT: Added variable to track signature requirement**
       
       // DOM Elements
       const radioButtons = document.querySelectorAll('input[name="selected_project"]');
@@ -268,6 +422,7 @@
       const welcomeCard = document.getElementById('welcome-card');
       const projectSelectionCard = document.getElementById('project-selection-card');
       const projectDetailsCard = document.getElementById('project-details-card');
+      const termsCard = document.getElementById('terms-card');
       const ktpCard = document.getElementById('ktp-card');
       const signatureCard = document.getElementById('signature-card');
       const progressBar = document.getElementById('progress-bar');
@@ -276,16 +431,33 @@
       const ktpPhoto = document.getElementById('ktp-photo');
       const ktpPreview = document.getElementById('ktp-preview');
 
-      // Steps configuration
-      const steps = [
-        { progress: 20, showBack: false },  // Step 1: Project selection
-        { progress: 40, showBack: true },   // Step 2: Terms
-        { progress: 60, showBack: true },   // Step 3: KTP
-        { progress: 80, showBack: true },   // Step 4: Signature
-        { progress: 100, showBack: false }  // Step 5: Complete
-      ];
+      // **HIGHLIGHT: Updated steps configuration for proper completion step**
+      function getStepsConfig() {
+        if (requireDigitalSignature) {
+          return [
+            { progress: 14, showBack: false },  // Step 1: Project selection
+            { progress: 28, showBack: true },   // Step 2: Project details
+            { progress: 42, showBack: true },   // Step 3: Terms
+            { progress: 56, showBack: true },   // Step 4: KTP
+            { progress: 70, showBack: true },   // Step 5: Signature
+            { progress: 85, showBack: true },   // Step 6: Completion
+            { progress: 100, showBack: false } // Step 7: Complete
+          ];
+        } else {
+          return [
+            { progress: 16, showBack: false },  // Step 1: Project selection
+            { progress: 33, showBack: true },   // Step 2: Project details
+            { progress: 50, showBack: true },   // Step 3: Terms
+            { progress: 66, showBack: true },   // Step 4: KTP
+            { progress: 83, showBack: true },   // Step 5: Completion
+            { progress: 100, showBack: false } // Step 6: Complete
+          ];
+        }
+      }
 
       function updateProgress(step) {
+        // **HIGHLIGHT: Use dynamic steps configuration**
+        const steps = getStepsConfig();
         const stepData = steps[step - 1];
         progressBar.style.width = stepData.progress + '%';
         progressBar.setAttribute('aria-valuenow', stepData.progress);
@@ -307,8 +479,10 @@
         });
       });
 
-      // Back button handler
+      // **HIGHLIGHT: Fixed back button handler**
       backButton.addEventListener('click', function() {
+        console.log('Current step:', currentStep, 'requireDigitalSignature:', requireDigitalSignature);
+        
         if (currentStep === 2) {
           // Back to project selection
           projectSelectionCard.style.display = 'block';
@@ -321,42 +495,81 @@
           updateProgress(currentStep);
           nextButton.disabled = true;
           document.getElementById('join-project-form').classList.add('container-tight');
+          
         } else if (currentStep === 3) {
-          // Back to terms
+          // Back to project details
           projectDetailsCard.style.display = 'block';
-          ktpCard.style.display = 'none';
+          termsCard.style.display = 'none';
           currentStep = 2;
           updateProgress(currentStep);
-          nextButton.style.display = 'inline-block';
-          nextButton.disabled = !termsCheckbox.checked;
-          document.getElementById('join-project-form').classList.remove('container-tight');
+          nextButton.disabled = false;
+          
         } else if (currentStep === 4) {
-          // Back to KTP
+          // Back to terms
+          termsCard.style.display = 'block';
+          ktpCard.style.display = 'none';
+          currentStep = 3;
+          updateProgress(currentStep);
+          nextButton.disabled = !termsCheckbox.checked;
+          
+        } else if (currentStep === 5 && requireDigitalSignature) {
+          // **HIGHLIGHT: Back from signature to KTP (when signature required)**
           ktpCard.style.display = 'block';
           signatureCard.style.display = 'none';
-          currentStep = 3;
+          currentStep = 4;
           updateProgress(currentStep);
           nextButton.style.display = 'inline-block';
           joinButton.style.display = 'none';
           validateKtpStep();
+          
+        } else if (currentStep === 5 && !requireDigitalSignature) {
+          // **HIGHLIGHT: Back from completion to KTP (when no signature required)**
+          hideCompletionMessage();
+          ktpCard.style.display = 'block';
+          currentStep = 4;
+          updateProgress(currentStep);
+          nextButton.style.display = 'inline-block';
+          joinButton.style.display = 'none';
+          validateKtpStep();
+          
+        } else if (currentStep === 6 && requireDigitalSignature) {
+          // **HIGHLIGHT: Back from completion to signature (when signature required)**
+          hideCompletionMessage();
+          signatureCard.style.display = 'block';
+          currentStep = 5;
+          updateProgress(currentStep);
+          nextButton.style.display = 'inline-block';
+          joinButton.style.display = 'none';
+          validateSignatureStep();
         }
       });
 
       // Next button handler
       nextButton.addEventListener('click', function() {
         if (currentStep === 1 && selectedProjectId) {
-          loadProjectDetailsAndTerms(selectedProjectId);
-        } else if (currentStep === 2 && termsCheckbox.checked) {
+          loadProjectDetails(selectedProjectId);
+        } else if (currentStep === 2) {
+          showTermsStep();
+        } else if (currentStep === 3 && termsCheckbox.checked) {
           showKtpStep();
-        } else if (currentStep === 3 && validateKtpStep()) {
-          showSignature();
+        } else if (currentStep === 4 && validateKtpStep()) {
+          // **HIGHLIGHT: Check if signature is required before showing signature step**
+          if (requireDigitalSignature) {
+            showSignature();
+          } else {
+            // Skip signature step and show completion
+            showCompletionStep();
+          }
+        } else if (currentStep === 5 && requireDigitalSignature && validateSignatureStep()) {
+          // **HIGHLIGHT: From signature to completion**
+          showCompletionStep();
         }
       });
 
       // Terms checkbox handler
       if (termsCheckbox) {
         termsCheckbox.addEventListener('change', function() {
-          if (currentStep === 2) {
+          if (currentStep === 3) {
             nextButton.disabled = !this.checked;
           }
         });
@@ -368,11 +581,21 @@
         const ktpPhotoValid = ktpPhoto.files.length > 0;
         const isValid = ktpNumberValid && ktpPhotoValid;
         
-        if (currentStep === 3) {
+        if (currentStep === 4) {
           nextButton.disabled = !isValid;
         }
         
         return isValid;
+      }
+
+      // **HIGHLIGHT: New signature validation function**
+      function validateSignatureStep() {
+        if (requireDigitalSignature && currentStep === 5) {
+          const isValid = signaturePad && !signaturePad.isEmpty();
+          nextButton.disabled = !isValid;
+          return isValid;
+        }
+        return true;
       }
 
       // KTP number validation
@@ -450,7 +673,7 @@
       };
 
       // Load project details
-      function loadProjectDetailsAndTerms(projectId) {
+      function loadProjectDetails(projectId) {
         fetch(`/ajax/project/${projectId}/details`, {
           headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -465,10 +688,12 @@
           }
           
           projectData = data;
+          // **HIGHLIGHT: Set signature requirement based on project settings**
+          requireDigitalSignature = data.require_digital_signature;
+          
           displayProjectDetails(data);
           currentStep = 2;
           updateProgress(currentStep);
-          nextButton.disabled = true;
 
           projectSelectionCard.style.display = 'none';
           projectDetailsCard.style.display = 'block';
@@ -484,25 +709,86 @@
       function displayProjectDetails(data) {
         document.getElementById('project-details-title').textContent = `Detail Project - ${data.name}`;
         
-        document.getElementById('commission-info').innerHTML = `
-          <div class="row">
-            <div class="col-12 mb-2">
-              <div class="text-success h4">${data.commission_info.display}</div>
-              <div class="text-muted small">${data.commission_info.description}</div>
-            </div>
-          </div>
-        `;
+        // Commission info
+        document.getElementById('commission-range').textContent = data.commission_range || 'Komisi Bervariasi';
+        document.getElementById('commission-description').textContent = data.commission_description || 'Komisi disesuaikan berdasarkan unit yang dipilih';
 
-        document.getElementById('terms-and-conditions').innerHTML = data.terms_and_conditions.replace(/\n/g, '<br>');
+        // Units
+        if (data.units && data.units.length > 0) {
+          displayUnits(data.units);
+        } else {
+          document.getElementById('units-container').innerHTML = `
+            <div class="text-center p-4">
+              <i class="ti ti-building-off icon icon-lg text-muted mb-2"></i>
+              <p class="text-muted">Belum ada unit tersedia untuk project ini</p>
+            </div>
+          `;
+        }
+
+        // Additional info
+        if (data.additional_info) {
+          document.getElementById('additional-info-section').style.display = 'block';
+          document.getElementById('additional-info-content').innerHTML = data.additional_info.replace(/\n/g, '<br>');
+        }
+
+        projectDetailsCard.classList.add('card-transition');
         projectDetailsCard.scrollIntoView({ behavior: 'smooth' });
       }
 
-      // Show KTP step
-      function showKtpStep() {
+      // Display units
+      function displayUnits(units) {
+        const unitsHtml = units.map(unit => `
+          <div class="unit-card card h-100">
+            ${unit.image ? `<img src="${unit.image}" class="card-img-top" style="height: 150px; object-fit: cover;">` : ''}
+            <div class="card-body">
+              <h5 class="card-title">${unit.name}</h5>
+              ${unit.description ? `<p class="card-text text-muted small">${unit.description}</p>` : ''}
+              
+              <div class="row mb-2">
+                <div class="col-6">
+                  <div class="text-muted small">Harga</div>
+                  <div class="fw-bold">${unit.price_formatted}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-muted small">Komisi</div>
+                  <div class="fw-bold text-success">${unit.commission_display}</div>
+                </div>
+              </div>
+              
+              ${unit.specs ? `
+                <div class="mt-2">
+                  <small class="text-muted">${unit.specs}</small>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('units-container').innerHTML = unitsHtml;
+      }
+
+      // Show terms step
+      function showTermsStep() {
         currentStep = 3;
         updateProgress(currentStep);
         
         projectDetailsCard.style.display = 'none';
+        termsCard.style.display = 'block';
+        termsCard.classList.add('card-transition');
+        
+        // Load terms
+        document.getElementById('terms-and-conditions').innerHTML = projectData.terms_and_conditions.replace(/\n/g, '<br>');
+        
+        termsCard.scrollIntoView({ behavior: 'smooth' });
+        nextButton.disabled = !termsCheckbox.checked;
+      }
+
+      // Show KTP step
+      function showKtpStep() {
+        currentStep = 4;
+        updateProgress(currentStep);
+        
+        termsCard.style.display = 'none';
         ktpCard.style.display = 'block';
         document.getElementById('join-project-form').classList.add('container-tight');
         ktpCard.scrollIntoView({ behavior: 'smooth' });
@@ -512,17 +798,117 @@
 
       // Show signature step
       function showSignature() {
-        currentStep = 4;
+        currentStep = 5;
         updateProgress(currentStep);
 
-        nextButton.style.display = 'none';
-        joinButton.style.display = 'inline-block';
+        // **HIGHLIGHT: Keep next button visible**
+        nextButton.style.display = 'inline-block';
+        joinButton.style.display = 'none';
 
         ktpCard.style.display = 'none';
         signatureCard.style.display = 'block';
         signatureCard.scrollIntoView({ behavior: 'smooth' });
         
         initializeSignaturePad();
+        validateSignatureStep();
+      }
+
+      // **HIGHLIGHT: New completion step function**
+      function showCompletionStep() {
+        // **HIGHLIGHT: Set step based on signature requirement**
+        currentStep = requireDigitalSignature ? 6 : 5;
+        updateProgress(currentStep);
+
+        nextButton.style.display = 'none';
+        joinButton.style.display = 'inline-block';
+        joinButton.disabled = false;
+
+        // Hide previous cards
+        if (requireDigitalSignature) {
+          signatureCard.style.display = 'none';
+        } else {
+          ktpCard.style.display = 'none';
+        }
+        
+        showCompletionMessage();
+      }
+
+      // **HIGHLIGHT: Enhanced completion message function**
+      function showCompletionMessage() {
+        // **HIGHLIGHT: Dynamic content based on signature requirement**
+        const signatureStatus = requireDigitalSignature ? 
+          '<div class="text-success small"><i class="ti ti-check me-1"></i>Tanda tangan digital tersimpan</div>' :
+          '<div class="text-info small"><i class="ti ti-info-circle me-1"></i>Project ini tidak memerlukan tanda tangan digital</div>';
+
+        const completionHtml = `
+          <div class="card card-md card-transition" id="completion-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="ti ti-check-circle me-2"></i>
+                Siap Bergabung
+              </h3>
+              <div class="card-subtitle">Semua data telah lengkap</div>
+            </div>
+            <div class="card-body text-center">
+              <div class="mb-3">
+                <i class="ti ti-circle-check icon icon-xl text-success"></i>
+              </div>
+              <h4>Data Anda Sudah Lengkap!</h4>
+              <p class="text-secondary">
+                Semua persyaratan telah terpenuhi. Klik tombol "Bergabung Project" 
+                untuk menyelesaikan proses bergabung dengan project ${projectData.name}.
+              </p>
+              
+              <div class="mt-4">
+                <div class="row mb-3">
+                  <div class="col-6">
+                    <div class="text-muted small">Project</div>
+                    <div class="fw-bold">${projectData.name}</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="text-muted small">Komisi</div>
+                    <div class="fw-bold text-success">${projectData.commission_range}</div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-6">
+                    <div class="text-muted small">Status KTP</div>
+                    <div class="text-warning small"><i class="ti ti-clock me-1"></i>Menunggu verifikasi</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="text-muted small">Tanda Tangan</div>
+                    ${signatureStatus}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // **HIGHLIGHT: Remove existing completion card first**
+        hideCompletionMessage();
+        
+        // Insert completion card before navigation
+        const form = document.getElementById('join-project-form');
+        const navigation = form.querySelector('.row.align-items-center.mt-3');
+        navigation.insertAdjacentHTML('beforebegin', completionHtml);
+        
+        // Scroll to completion card
+        setTimeout(() => {
+          const completionCard = document.getElementById('completion-card');
+          if (completionCard) {
+            completionCard.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+
+      // **HIGHLIGHT: Function to hide completion message**
+      function hideCompletionMessage() {
+        const completionCard = document.getElementById('completion-card');
+        if (completionCard) {
+          completionCard.remove();
+        }
       }
 
       // Initialize signature pad
@@ -530,7 +916,7 @@
         const canvas = document.getElementById("signature-canvas");
         if (canvas && !signaturePad) {
           signaturePad = new SignaturePad(canvas, {
-            backgroundColor: "transparent",
+            backgroundColor: "rgba(255,255,255,0)",
             penColor: getComputedStyle(canvas).color || "#000000",
             minWidth: 1,
             maxWidth: 3
@@ -538,10 +924,13 @@
 
           document.getElementById("signature-clear").addEventListener("click", function () {
             signaturePad.clear();
-            updateJoinButton();
+            validateSignatureStep();
           });
 
-          signaturePad.addEventListener("afterUpdateStroke", updateJoinButton);
+          // **HIGHLIGHT: Only validate, don't auto-show completion**
+          signaturePad.addEventListener("afterUpdateStroke", function() {
+            validateSignatureStep();
+          });
 
           function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -553,15 +942,8 @@
           
           window.addEventListener("resize", resizeCanvas);
           resizeCanvas();
-        }
-      }
 
-      // Update join button state
-      function updateJoinButton() {
-        if (signaturePad && !signaturePad.isEmpty()) {
-          joinButton.disabled = false;
-        } else {
-          joinButton.disabled = true;
+          validateSignatureStep();
         }
       }
 
@@ -584,7 +966,8 @@
           return;
         }
 
-        if (!signaturePad || signaturePad.isEmpty()) {
+        // **HIGHLIGHT: Only validate signature if required**
+        if (requireDigitalSignature && (!signaturePad || signaturePad.isEmpty())) {
           showAlert('Berikan tanda tangan digital', 'warning');
           return;
         }
@@ -596,7 +979,10 @@
         formData.append('project_id', selectedProjectId);
         formData.append('ktp_number', ktpNumber.value);
         formData.append('ktp_photo', ktpPhoto.files[0]);
-        formData.append('digital_signature', signaturePad.toSVG());
+        // **HIGHLIGHT: Only append signature if required**
+        if (requireDigitalSignature && signaturePad) {
+          formData.append('digital_signature', signaturePad.toSVG());
+        }
         formData.append('terms_accepted', '1');
 
         fetch('{{ route("affiliator.project.join.store") }}', {
@@ -611,7 +997,8 @@
         .then(data => {
           if (data.success) {
             showAlert(data.message, 'success');
-            currentStep = 5;
+            // **HIGHLIGHT: Use appropriate final step based on signature requirement**
+            currentStep = requireDigitalSignature ? 7 : 6;
             updateProgress(currentStep);
             
             setTimeout(() => {
@@ -674,7 +1061,7 @@
       // Initial state
       updateProgress(1);
     });
-  </script>
+</script>
 
 </body>
 </html>

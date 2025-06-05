@@ -14,9 +14,9 @@ class Project extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'commission_value' => 'decimal:2',
         'is_active' => 'boolean',
         'require_digital_signature' => 'boolean',
+        'is_agreement_accepted' => 'boolean',
     ];
 
     // Relationships
@@ -58,7 +58,7 @@ class Project extends Model
 
     public function commissionWithdrawals()
     {
-        return $this->hasManyThrough(CommissionWithdrawal::class, Unit::class);
+        return $this->hasMany(CommissionWithdrawal::class);
     }
 
     public function commissionHistories()
@@ -86,8 +86,7 @@ class Project extends Model
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = $value;
-        // $this->attributes['slug'] = Str::slug($value);
-        //slug must be unique
+        // Generate unique slug
         $slug = Str::slug($value);
         $count = 1;
         while (Project::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
@@ -106,5 +105,196 @@ class Project extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    // remove br in terms and conditions
+    public function getTermsAndConditionsAttribute($value)
+    {
+        // dd(str_replace(["\r\n", "\n", "\r"], '', $value));
+        return str_replace(["\r\n", "\n", "\r"], '', $value);
+    }
+
+    /**
+     * Get commission information for this project
+     */
+    public function getCommissionInfoAttribute()
+    {
+        $units = $this->units()->active()->get();
+        
+        if ($units->isEmpty()) {
+            return [
+                'range' => 'Komisi Tidak Tersedia',
+                'description' => 'Belum ada unit yang tersedia',
+                'type' => 'none'
+            ];
+        }
+
+        $percentageUnits = $units->where('commission_type', 'percentage');
+        $fixedUnits = $units->where('commission_type', 'fixed');
+
+        $ranges = [];
+        $descriptions = [];
+
+        if ($percentageUnits->count() > 0) {
+            $minPercentage = $percentageUnits->min('commission_value');
+            $maxPercentage = $percentageUnits->max('commission_value');
+            
+            if ($minPercentage == $maxPercentage) {
+                $ranges[] = number_format($minPercentage, 1) . '%';
+            } else {
+                $ranges[] = number_format($minPercentage, 1) . '% - ' . number_format($maxPercentage, 1) . '%';
+            }
+            
+            $descriptions[] = 'komisi persentase dari harga unit';
+        }
+
+        if ($fixedUnits->count() > 0) {
+            $minFixed = $fixedUnits->min('commission_value');
+            $maxFixed = $fixedUnits->max('commission_value');
+            
+            if ($minFixed == $maxFixed) {
+                $ranges[] = 'Rp ' . number_format($minFixed, 0, ',', '.');
+            } else {
+                $ranges[] = 'Rp ' . number_format($minFixed, 0, ',', '.') . ' - Rp ' . number_format($maxFixed, 0, ',', '.');
+            }
+            
+            $descriptions[] = 'komisi tetap per unit';
+        }
+
+        return [
+            'range' => implode(' atau ', $ranges),
+            'description' => 'Anda akan mendapat ' . implode(' atau ', $descriptions) . ' tergantung unit yang dipilih customer',
+            'type' => $percentageUnits->count() > 0 && $fixedUnits->count() > 0 ? 'mixed' : 
+                     ($percentageUnits->count() > 0 ? 'percentage' : 'fixed')
+        ];
+    }
+
+    /**
+     * Check if user can join this project
+     */
+    public function canBeJoinedBy(User $user)
+    {
+        // Check if project is active
+        if (!$this->is_active) {
+            return [
+                'can_join' => false,
+                'reason' => 'Project ini sedang tidak aktif'
+            ];
+        }
+
+        // Check if user already joined
+        $alreadyJoined = $user->affiliatorProjects()
+            ->where('project_id', $this->id)
+            ->exists();
+        
+        if ($alreadyJoined) {
+            return [
+                'can_join' => false,
+                'reason' => 'Anda sudah bergabung dengan project ini'
+            ];
+        }
+
+        // Check max projects limit for user
+        $maxProjects = \App\Models\SystemSetting::getValue('max_projects_per_affiliator', 3);
+        $currentCount = $user->affiliatorProjects()->count();
+        
+        if ($currentCount >= $maxProjects) {
+            return [
+                'can_join' => false,
+                'reason' => "Anda sudah mencapai batas maksimal {$maxProjects} project"
+            ];
+        }
+
+        // Check max affiliators per project if setting exists
+        $maxAffiliators = \App\Models\SystemSetting::getValue('max_affiliators_per_project', null);
+        if ($maxAffiliators) {
+            $currentAffiliators = $this->affiliatorProjects()->count();
+            
+            if ($currentAffiliators >= $maxAffiliators) {
+                return [
+                    'can_join' => false,
+                    'reason' => 'Project sudah mencapai batas maksimal affiliator'
+                ];
+            }
+        }
+
+        // Check if user is active
+        if (!$user->is_active) {
+            return [
+                'can_join' => false,
+                'reason' => 'Akun Anda tidak aktif'
+            ];
+        }
+
+        return [
+            'can_join' => true,
+            'reason' => null
+        ];
+    }
+
+    /**
+     * Get total affiliators count
+     */
+    public function getTotalAffiliatorsAttribute()
+    {
+        return $this->affiliatorProjects()->count();
+    }
+
+    /**
+     * Get active affiliators count
+     */
+    public function getActiveAffiliatorsAttribute()
+    {
+        return $this->affiliatorProjects()->where('status', 'active')->count();
+    }
+
+    /**
+     * Get pending affiliators count
+     */
+    public function getPendingAffiliatorsAttribute()
+    {
+        return $this->affiliatorProjects()->where('verification_status', 'pending')->count();
+    }
+
+    /**
+     * Get total leads count
+     */
+    public function getTotalLeadsAttribute()
+    {
+        return $this->leads()->count();
+    }
+
+    /**
+     * Get verified leads count
+     */
+    public function getVerifiedLeadsAttribute()
+    {
+        return $this->leads()->verified()->count();
+    }
+
+    /**
+     * Get total commission paid
+     */
+    public function getTotalCommissionPaidAttribute()
+    {
+        return $this->commissionHistories()->where('type', 'earned')->sum('amount');
+    }
+
+    /**
+     * Get project statistics
+     */
+    public function getStatistics()
+    {
+        return [
+            'total_affiliators' => $this->total_affiliators,
+            'active_affiliators' => $this->active_affiliators,
+            'pending_affiliators' => $this->pending_affiliators,
+            'total_leads' => $this->total_leads,
+            'verified_leads' => $this->verified_leads,
+            'total_commission_paid' => $this->total_commission_paid,
+            'total_units' => $this->units()->count(),
+            'active_units' => $this->units()->active()->count(),
+            'commission_info' => $this->commission_info
+        ];
     }
 }

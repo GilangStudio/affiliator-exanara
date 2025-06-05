@@ -130,8 +130,9 @@
         <div class="collapse navbar-collapse" id="sidebar-menu">
             <!-- BEGIN NAVBAR MENU -->
             <ul class="navbar-nav pt-lg-3">
-                <li class="nav-item {{ Route::is('dashboard') ? 'active' : '' }}">
-                    <a class="nav-link" href="">
+                @if(auth()->user()->role ==='affiliator')
+                <li class="nav-item {{ Route::is('affiliator.dashboard') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('affiliator.dashboard') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-dashboard icon icon-1"></i>
                         </span>
@@ -139,7 +140,18 @@
                     </a>
                 </li>
 
-                @if(auth()->user()->role === 'superadmin')
+                @elseif(auth()->user()->role === 'superadmin')
+
+                <!-- Dashboard -->
+                <li class="nav-item {{ Route::is('superadmin.dashboard')? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('superadmin.dashboard') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-dashboard icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title"> Dashboard </span>
+                    </a>
+                </li>
+
                 <!-- User Management -->
                 {{-- <li class="nav-item {{ Route::is('superadmin.users.*') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('superadmin.users.index') }}">

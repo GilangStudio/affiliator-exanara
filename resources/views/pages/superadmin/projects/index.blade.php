@@ -3,6 +3,9 @@
 @section('title', 'Kelola Project')
 
 @section('content')
+
+@include('components.alert')
+
 <div class="col-12">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">

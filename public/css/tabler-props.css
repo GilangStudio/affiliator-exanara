@@ -1,5 +1,5 @@
 /*!
- * Tabler v1.2.0 (https://tabler.io)
+ * Tabler v1.3.2 (https://tabler.io)
  * Copyright 2018-2025 The Tabler Authors
  * Copyright 2018-2025 codecalm.net Paweł Kuna
  * Licensed under MIT (https://github.com/tabler/tabler/blob/master/LICENSE)
@@ -41,17 +41,17 @@
   --tblr-dark: #1f2937;
   --tblr-light: #f9fafb;
   /** Brand colors */
-  --tblr-brand: #54D12B;
+  --tblr-brand: #000000;
   /** Theme colors */
-  --tblr-primary: #54D12B;
-  --tblr-primary-rgb: 84, 209, 43;
+  --tblr-primary: #000000;
+  --tblr-primary-rgb: 0, 0, 0;
   --tblr-primary-fg: var(--tblr-light);
-  --tblr-primary-darken: #4cbc27;
+  --tblr-primary-darken: black;
   --tblr-primary-darken: color-mix(in oklab, var(--tblr-primary), transparent 20%);
-  --tblr-primary-lt: #eefaea;
+  --tblr-primary-lt: #e6e6e6;
   --tblr-primary-lt: color-mix(in oklab, var(--tblr-primary) 10%, transparent);
   --tblr-primary-200: color-mix(in oklab, var(--tblr-primary) 20%, transparent);
-  --tblr-primary-lt-rgb: 238, 250, 234;
+  --tblr-primary-lt-rgb: 230, 230, 230;
   --tblr-secondary: #6b7280;
   --tblr-secondary-rgb: 107, 114, 128;
   --tblr-secondary-fg: var(--tblr-light);

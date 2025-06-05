@@ -8,6 +8,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        dd('Affiliator Dashboard');
+        // dd('Affiliator Dashboard');
+        return view('pages.affiliator.dashboard.index');
     }
 }

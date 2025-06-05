@@ -13,7 +13,7 @@ class Unit extends Model
 
     protected $casts = [
         'price' => 'decimal:0',
-        'commission_value' => 'decimal:2',
+        'commission_value' => 'decimal:0',
         'is_active' => 'boolean',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
@@ -90,6 +90,11 @@ class Unit extends Model
     }
 
     // Accessors
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : asset('img/default.jpg');
+    }
+
     public function getPriceFormattedAttribute()
     {
         return 'Rp ' . number_format($this->price, 0, ',', '.');

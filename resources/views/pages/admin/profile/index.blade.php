@@ -50,7 +50,7 @@
             <div class="card-body">
                 <div class="text-center mb-3">
                     <img src="{{ $admin->profile_photo_url }}" alt="{{ $admin->name }}" 
-                         class="avatar avatar-lg mb-2">
+                         class="avatar avatar-lg mb-2 object-cover">
                     <div class="fw-bold">{{ $admin->name }}</div>
                     <div class="text-secondary small">{{ $admin->email }}</div>
                 </div>
