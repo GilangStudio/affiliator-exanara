@@ -186,6 +186,9 @@ Route::middleware(['web', 'auth'])->group(function () {
                     });
                 });
             });
+
+            // Leads
+            Route::get('/leads', [AdminLeadsController::class, 'index'])->name('leads.index');
             
             // Affiliator Management
             Route::prefix('affiliators')->name('affiliators.')->group(function () {
