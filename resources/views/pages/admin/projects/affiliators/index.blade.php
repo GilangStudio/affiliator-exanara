@@ -1,11 +1,51 @@
 @extends('layouts.main')
 
-@section('title', 'Kelola Affiliator')
+@section('title', 'Kelola Affiliator - ' . $project->name)
 
 @section('content')
 
 @include('components.alert')
 @include('components.toast')
+
+<!-- Project Header -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                @if($project->logo)
+                    <img src="{{ $project->logo_url }}" alt="{{ $project->name }}" 
+                            class="avatar avatar-lg">
+                @else
+                    <div class="avatar avatar-lg bg-primary-lt">
+                        {{ substr($project->name, 0, 2) }}
+                    </div>
+                @endif
+            </div>
+            <div class="col">
+                <h4 class="text-secondary mb-2">Affiliator Project {{ $project->name }}</h4>
+                <div class="row">
+                    <div class="col-auto">
+                        <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt me-2">
+                            {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                        </span>
+                        @if($project->location)
+                            <span class="badge bg-blue-lt">{{ $project->location }}</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.projects.index') }}">Project</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.projects.show', $project) }}">{{ $project->name }}</a></li>
+                        <li class="breadcrumb-item active">Affiliator</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Stats Cards -->
 <div class="row mb-3">
@@ -94,40 +134,21 @@
 <div class="col-12">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Daftar Affiliator</h3>
-            <a href="{{ route('admin.affiliators.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
+            <h3 class="card-title">Daftar Affiliator Project {{ $project->name }}</h3>
+            <a href="{{ route('admin.projects.affiliators.export', array_merge([$project], request()->query())) }}" class="btn btn-outline-success btn-sm">
                 <i class="ti ti-download me-1"></i>
                 Export CSV
             </a>
-            {{-- <div class="btn-group">
-                <a href="{{ route('admin.affiliators.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
-                    <i class="ti ti-download me-1"></i>
-                    Export CSV
-                </a>
-                <div class="text-secondary ms-3">
-                    <small>{{ $affiliators->total() }} affiliator dari {{ $projects->count() }} project</small>
-                </div>
-            </div> --}}
         </div>
 
         <!-- Filters -->
         <div class="card-body border-bottom">
             <form method="GET" class="row g-2">
-                <div class="col-md-3">
-                    <input type="text" class="form-control" name="search" placeholder="Cari affiliator atau project..." 
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="search" placeholder="Cari affiliator..." 
                            value="{{ request('search') }}">
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select" name="project_id">
-                        <option value="">Semua Project</option>
-                        @foreach($projects as $project)
-                            <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
-                                {{ $project->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <select class="form-select" name="verification_status">
                         <option value="">Semua Status Verifikasi</option>
                         <option value="pending" {{ request('verification_status') == 'pending' ? 'selected' : '' }}>Pending</option>
@@ -150,7 +171,7 @@
                             <i class="ti ti-search me-1"></i>
                             Filter
                         </button>
-                        <a href="{{ route('admin.affiliators.index') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="btn btn-outline-secondary">
                             <i class="ti ti-x me-1"></i>
                             Reset
                         </a>
@@ -166,7 +187,6 @@
                     <thead>
                         <tr>
                             <th>Affiliator</th>
-                            <th>Project</th>
                             <th>Status Verifikasi</th>
                             <th>Status</th>
                             <th>Lead</th>
@@ -188,14 +208,6 @@
                                         <div class="text-secondary small">{{ $affiliator->user->email }}</div>
                                         <div class="text-secondary small">{{ $affiliator->user->country_code }} {{ $affiliator->user->phone }}</div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div>
-                                    <div class="fw-bold">{{ $affiliator->project->name }}</div>
-                                    @if($affiliator->project->location)
-                                        <div class="text-secondary small">{{ $affiliator->project->location }}</div>
-                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -300,7 +312,11 @@
                     <i class="ti ti-users-off icon icon-xl text-secondary"></i>
                 </div>
                 <h3 class="text-secondary">Belum ada affiliator</h3>
-                <p class="text-secondary">Belum ada affiliator yang terdaftar di project yang Anda kelola.</p>
+                <p class="text-secondary">Belum ada affiliator yang terdaftar di project {{ $project->name }}.</p>
+                <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-primary">
+                    <i class="ti ti-arrow-left me-1"></i>
+                    Kembali ke Project
+                </a>
             </div>
             @endif
         </div>

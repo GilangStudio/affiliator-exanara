@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\WithdrawalManagementController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\ProjectAffiliatorController as AdminProjectAffiliatorController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\AffiliatorController as AdminAffiliatorController;
@@ -33,6 +34,8 @@ use App\Http\Controllers\SuperAdmin\ProjectAdminController as SuperAdminProjectA
 | Public Routes (No Authentication Required)
 |--------------------------------------------------------------------------
 */
+
+Route::get('/@{username}', [AuthController::class, 'show'])->name('profile.show');
 
 // Authentication routes
 Route::middleware(['guest'])->group(function () {
@@ -87,8 +90,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         // Submit join project
         Route::post('/project/join', [JoinProjectController::class, 'joinProject'])->name('affiliator.project.join.store');
 
-         // AJAX Routes untuk Join Project
-         Route::prefix('ajax')->name('ajax.')->group(function () {
+        // AJAX Routes untuk Join Project
+        Route::prefix('ajax')->name('ajax.')->group(function () {
                 
             // Get project details
             Route::get('/project/{project}/details', [JoinProjectController::class, 'getProjectDetails'])->name('project.details');
@@ -97,6 +100,46 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/projects/available', [JoinProjectController::class, 'getAvailableProjects'])->name('projects.available');
         });
 
+        Route::get('/project', [AffiliatorProjectController::class, 'index'])->name('affiliator.project.index');
+
+        Route::prefix('leads')->name('affiliator.leads.')->group(function () {
+            // List semua leads dari semua project
+            Route::get('/', [AffiliatorLeadsController::class, 'index'])->name('index');
+            
+            // Create lead form (pilih project dulu)
+            Route::get('/create', [App\Http\Controllers\Affiliator\LeadController::class, 'create'])->name('create');
+            
+            // Store lead
+            Route::post('/', [App\Http\Controllers\Affiliator\LeadController::class, 'store'])->name('store');
+            
+            // Leads per project (using slug)
+            Route::get('/project/{slug}', [App\Http\Controllers\Affiliator\LeadController::class, 'byProject'])->name('project');
+            
+            // Create lead untuk specific project
+            Route::get('/project/{slug}/create', [App\Http\Controllers\Affiliator\LeadController::class, 'createForProject'])->name('project.create');
+            
+            // View single lead
+            Route::get('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'show'])->name('show');
+            
+            // Edit lead (only if still pending)
+            Route::get('/{lead}/edit', [App\Http\Controllers\Affiliator\LeadController::class, 'edit'])->name('edit');
+            Route::put('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'update'])->name('update');
+            
+            // Delete lead (only if still pending)
+            Route::delete('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'destroy'])->name('destroy');
+            
+            // AJAX routes
+            Route::prefix('ajax')->name('ajax.')->group(function () {
+                // Get units by project
+                Route::get('/project/{project}/units', [App\Http\Controllers\Affiliator\LeadController::class, 'getProjectUnits'])->name('project.units');
+                
+                // Check duplicate lead
+                Route::post('/check-duplicate', [App\Http\Controllers\Affiliator\LeadController::class, 'checkDuplicate'])->name('check-duplicate');
+                
+                // Get lead statistics
+                Route::get('/statistics', [App\Http\Controllers\Affiliator\LeadController::class, 'statistics'])->name('statistics');
+            });
+        });
     });
 
     /*
@@ -124,27 +167,9 @@ Route::middleware(['web', 'auth'])->group(function () {
                 Route::prefix('{project}')->group(function () {
                     // Affiliator Management per Project
                     Route::prefix('affiliators')->name('affiliators.')->group(function () {
-                        Route::get('/', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'index'])->name('index');
-                        Route::get('/export', [AdminAffiliatorController::class, 'export'])->name('export');
-                        Route::get('{affiliator}', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'show'])->name('show');
-                        Route::get('{affiliator}/edit', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'edit'])->name('edit');
-                        Route::put('{affiliator}', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'update'])->name('update');
+                        Route::get('/', [AdminProjectAffiliatorController::class, 'index'])->name('index');
+                        Route::get('/export', [AdminProjectAffiliatorController::class, 'export'])->name('export');
                         
-                        // AJAX Routes
-                        Route::post('{affiliator}/toggle-status', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'toggleStatus'])->name('toggle-status');
-                        Route::post('{affiliator}/verify-ktp', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'verifyKtp'])->name('verify-ktp');
-                        Route::post('{affiliator}/reject-ktp', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'rejectKtp'])->name('reject-ktp');
-                        Route::post('{affiliator}/reset-password', [App\Http\Controllers\Admin\ProjectAffiliatorController::class, 'resetPassword'])->name('reset-password');
-                    });
-                    
-                    // Lead Management per Project
-                    Route::prefix('leads')->name('leads.')->group(function () {
-                        Route::get('/', [App\Http\Controllers\Admin\AdminLeadController::class, 'index'])->name('index');
-                        Route::get('/{lead}', [App\Http\Controllers\Admin\AdminLeadController::class, 'show'])->name('show');
-                        Route::post('/{lead}/verify', [App\Http\Controllers\Admin\AdminLeadController::class, 'verify'])->name('verify');
-                        Route::post('/{lead}/reject', [App\Http\Controllers\Admin\AdminLeadController::class, 'reject'])->name('reject');
-                        Route::post('/{lead}/update-deal-value', [App\Http\Controllers\Admin\AdminLeadController::class, 'updateDealValue'])->name('update-deal-value');
-                        Route::get('/export/csv', [App\Http\Controllers\Admin\AdminLeadController::class, 'export'])->name('export');
                     });
                     
                     // Commission Withdrawal Management per Project
@@ -177,17 +202,6 @@ Route::middleware(['web', 'auth'])->group(function () {
                 
                 // Statistics
                 Route::get('/affiliators/statistics', [AdminAffiliatorController::class, 'statistics'])->name('statistics');
-            });
-            
-            // Lead Management
-            Route::prefix('leads')->name('leads.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Admin\AdminLeadController::class, 'index'])->name('index');
-                Route::get('/{lead}', [App\Http\Controllers\Admin\AdminLeadController::class, 'show'])->name('show');
-                Route::post('/{lead}/verify', [App\Http\Controllers\Admin\AdminLeadController::class, 'verify'])->name('verify');
-                Route::post('/{lead}/reject', [App\Http\Controllers\Admin\AdminLeadController::class, 'reject'])->name('reject');
-                Route::post('/{lead}/update-deal-value', [App\Http\Controllers\Admin\AdminLeadController::class, 'updateDealValue'])->name('update-deal-value');
-                Route::get('/statistics/data', [App\Http\Controllers\Admin\AdminLeadController::class, 'statistics'])->name('statistics');
-                Route::get('/export/csv', [App\Http\Controllers\Admin\AdminLeadController::class, 'export'])->name('export');
             });
             
             // Commission Withdrawal Management

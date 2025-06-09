@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Services\GeneralService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -159,4 +161,9 @@ class User extends Authenticatable
         }
         return substr($initials, 0, 2);
     }    
+
+    public function setPhoneAttribute($value)
+    {
+        $this->attributes['phone'] = GeneralService::formatPhoneNumber($value);
+    }
 }

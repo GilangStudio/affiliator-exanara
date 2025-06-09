@@ -16,7 +16,7 @@
             </div>
             <div class="col">
                 <h1 class="mb-1">{{ $affiliator->user->name }}</h1>
-                <div class="text-secondary mb-2">{{ $affiliator->user->email }} • {{ $affiliator->user->phone }}</div>
+                <div class="text-secondary mb-2">{{ $affiliator->user->email }} • {{ $affiliator->user->country_code }} {{ $affiliator->user->phone }}</div>
                 <div class="row">
                     <div class="col-auto">
                         <span class="badge bg-{{ $affiliator->verification_status == 'verified' ? 'success' : ($affiliator->verification_status == 'rejected' ? 'danger' : 'warning') }}-lt me-2">
@@ -116,7 +116,7 @@
                     </tr>
                     <tr>
                         <td>Telepon:</td>
-                        <td>{{ $affiliator->user->phone }}</td>
+                        <td>{{ $affiliator->user->country_code }} {{ $affiliator->user->phone }}</td>
                     </tr>
                     <tr>
                         <td>Status User:</td>

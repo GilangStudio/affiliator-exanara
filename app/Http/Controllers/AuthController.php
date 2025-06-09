@@ -415,4 +415,11 @@ class AuthController extends Controller
                 ->with('error', 'Terjadi kesalahan. Silakan coba lagi.');
         }
     }
+
+    public function show($username)
+    {
+        $user = User::affiliators()->active()->where('username', $username)->firstOrFail();
+        dd($user);
+        return view('pages.auth.profile', compact('user'));
+    }
 }

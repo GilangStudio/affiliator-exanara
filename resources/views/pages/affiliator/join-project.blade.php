@@ -753,7 +753,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.error) {
-            showAlert(data.error, 'danger');
+            showToast(data.error, 'danger');
             return;
           }
           
@@ -1066,7 +1066,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            showAlert(data.message, 'success');
+            showToast(data.message, 'success');
             // **HIGHLIGHT: Use appropriate final step based on signature requirement**
             currentStep = requireDigitalSignature ? 7 : 6;
             updateProgress(currentStep);
@@ -1079,7 +1079,7 @@
               }
             }, 2000);
           } else {
-            showAlert(data.message || 'Terjadi kesalahan', 'danger');
+            showToast(data.message || 'Terjadi kesalahan', 'danger');
             joinButton.disabled = false;
             joinButton.innerHTML = '<i class="ti ti-user-plus me-1"></i>Bergabung Project';
           }
@@ -1093,7 +1093,7 @@
       });
 
       // Alert helper function
-      // function showAlert(message, type = 'info') {
+      // function showToast(message, type = 'info') {
       //   const alertContainer = document.querySelector('.container-tight');
       //   const alertHtml = `
       //     <div class="alert alert-${type} alert-dismissible" role="alert">
