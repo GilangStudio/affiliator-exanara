@@ -145,6 +145,11 @@ class User extends Authenticatable
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
     }
 
+    public function getPhoneNumberAttribute()
+    {
+        return '0' . $this->phone;
+    }
+
     public function getInitialsAttribute()
     {
         $words = explode(' ', $this->name);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Models\User;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use App\Services\GeneralService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogService;
@@ -79,7 +80,8 @@ class ProjectAdminController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $project) {
-            $data = $request->only(['name', 'email', 'phone']);
+            $data = $request->only(['name', 'email']);
+            $data['phone'] = GeneralService::formatPhoneNumber($request->phone);
             $data['username'] = strtolower($request->username);
             $data['password'] = Hash::make($request->password);
             $data['role'] = 'admin';
@@ -184,7 +186,8 @@ class ProjectAdminController extends Controller
 
         $oldData = $admin->only(['name', 'email', 'phone', 'is_active']);
         
-        $data = $request->only(['name', 'email', 'phone']);
+        $data = $request->only(['name', 'email']);
+        $data['phone'] = GeneralService::formatPhoneNumber($request->phone);
         $data['username'] = strtolower($request->username);
         $data['country_code'] = '+62'; // default Indonesia
         $data['is_active'] = $request->boolean('is_active', true);

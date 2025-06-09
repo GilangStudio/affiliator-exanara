@@ -31,12 +31,15 @@ class JoinProjectController extends Controller
     /**
      * Display available projects to join
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = User::find(Auth::user()->id);
         
         // Get joined project IDs
         $joinedProjectIds = $user->affiliatorProjects()->pluck('project_id');
+
+        // **TAMBAHAN**: Cek parameter project dari URL atau session
+        $autoSelectProjectSlug = $request->get('project') ?? session('auto_select_project');
         
         // Get available projects with additional info
         // Only show projects that are active AND have at least one active unit
@@ -68,7 +71,15 @@ class JoinProjectController extends Controller
                     'units_count' => $project->units->count(),
                     'commission_preview' => $commissionInfo['range'],
                 ];
-            });
+            })->sortBy([
+                function ($project) use ($autoSelectProjectSlug) {
+                    return !($autoSelectProjectSlug && $project['slug'] === $autoSelectProjectSlug);
+                },
+                function ($project) {
+                    return $project['name'];
+                }
+            ])
+            ->values();
 
         // Get user's current projects with status
         $userProjects = $user->affiliatorProjects()
@@ -82,7 +93,7 @@ class JoinProjectController extends Controller
                 ];
             });
 
-        return view('pages.affiliator.join-project', compact('availableProjects', 'userProjects'));
+        return view('pages.affiliator.join-project', compact('availableProjects', 'userProjects', 'autoSelectProjectSlug'));
     }
 
     /**
@@ -387,7 +398,6 @@ class JoinProjectController extends Controller
             
         }
 
-
         // Additional validation
         $existingProject = $user->affiliatorProjects()
             ->where('project_id', $project->id)
@@ -494,6 +504,8 @@ class JoinProjectController extends Controller
             );
 
             DB::commit();
+
+            session()->forget('auto_select_project');
 
             return response()->json([
                 'success' => true,

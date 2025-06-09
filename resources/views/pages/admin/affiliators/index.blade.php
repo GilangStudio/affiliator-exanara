@@ -3,324 +3,356 @@
 @section('title', 'Kelola Affiliator')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
+
+@include('components.alert')
+@include('components.toast')
+
+<!-- Stats Cards -->
+<div class="row mb-3">
+    <div class="col-sm-6 col-lg-2">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Daftar Affiliator</h3>
-                <div class="btn-list">
-                    <button type="button" class="btn btn-outline-secondary" id="export-btn">
-                        <i class="ti ti-download me-1"></i>
-                        Export Data
-                    </button>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Total</div>
+                </div>
+                <div class="h1 mb-0">{{ number_format($stats['total']) }}</div>
+                <div class="text-secondary">Affiliator</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Pending</div>
+                </div>
+                <div class="h1 mb-0 text-warning">{{ number_format($stats['pending']) }}</div>
+                <div class="text-secondary">Verifikasi</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Verified</div>
+                </div>
+                <div class="h1 mb-0 text-success">{{ number_format($stats['verified']) }}</div>
+                <div class="text-secondary">Affiliator</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Active</div>
+                </div>
+                <div class="h1 mb-0 text-blue">{{ number_format($stats['active']) }}</div>
+                <div class="text-secondary">Affiliator</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Suspended</div>
+                </div>
+                <div class="h1 mb-0 text-danger">{{ number_format($stats['suspended']) }}</div>
+                <div class="text-secondary">Affiliator</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-2">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="subheader">Quick Action</div>
+                </div>
+                <div class="h1 mb-0">
+                    @if($stats['pending'] > 0)
+                        <a href="?verification_status=pending" class="text-warning text-decoration-none">
+                            <i class="ti ti-alert-triangle"></i>
+                        </a>
+                    @else
+                        <i class="ti ti-check text-success"></i>
+                    @endif
+                </div>
+                <div class="text-secondary">
+                    @if($stats['pending'] > 0)
+                        Perlu Verifikasi
+                    @else
+                        Semua Terverifikasi
+                    @endif
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Filters -->
-            <div class="card-body border-bottom">
-                <form method="GET" class="row g-2">
-                    <div class="col-md-3">
-                        <input type="text" class="form-control" name="search" placeholder="Cari affiliator..." 
-                               value="{{ request('search') }}">
+<div class="col-12">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Daftar Affiliator</h3>
+            <a href="{{ route('admin.affiliators.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
+                <i class="ti ti-download me-1"></i>
+                Export CSV
+            </a>
+            {{-- <div class="btn-group">
+                <a href="{{ route('admin.affiliators.export', request()->query()) }}" class="btn btn-outline-success btn-sm">
+                    <i class="ti ti-download me-1"></i>
+                    Export CSV
+                </a>
+                <div class="text-secondary ms-3">
+                    <small>{{ $affiliators->total() }} affiliator dari {{ $projects->count() }} project</small>
+                </div>
+            </div> --}}
+        </div>
+
+        <!-- Filters -->
+        <div class="card-body border-bottom">
+            <form method="GET" class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="search" placeholder="Cari affiliator atau project..." 
+                           value="{{ request('search') }}">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="project_id">
+                        <option value="">Semua Project</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
+                                {{ $project->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="verification_status">
+                        <option value="">Semua Status Verifikasi</option>
+                        <option value="pending" {{ request('verification_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="verified" {{ request('verification_status') == 'verified' ? 'selected' : '' }}>Verified</option>
+                        <option value="rejected" {{ request('verification_status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="status">
+                        <option value="">Semua Status</option>
+                        <option value="incomplete" {{ request('status') == 'incomplete' ? 'selected' : '' }}>Incomplete</option>
+                        <option value="pending_verification" {{ request('status') == 'pending_verification' ? 'selected' : '' }}>Pending Verification</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="ti ti-search me-1"></i>
+                            Filter
+                        </button>
+                        <a href="{{ route('admin.affiliators.index') }}" class="btn btn-outline-secondary">
+                            <i class="ti ti-x me-1"></i>
+                            Reset
+                        </a>
                     </div>
-                    <div class="col-md-2">
-                        <select class="form-select" name="status">
-                            <option value="">Semua Status</option>
-                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
-                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
-                        </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            @if($affiliators->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>Affiliator</th>
+                            <th>Project</th>
+                            <th>Status Verifikasi</th>
+                            <th>Status</th>
+                            <th>Lead</th>
+                            <th>Komisi</th>
+                            <th>Bergabung</th>
+                            <th width="120">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($affiliators as $affiliator)
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar avatar-sm me-2">
+                                        {{ $affiliator->user->initials }}
+                                    </span>
+                                    <div>
+                                        <div class="fw-bold">{{ $affiliator->user->name }} {!! $affiliator->user->is_active ? '' : '<i class="ti ti-user-off text-danger"></i>' !!}</div>
+                                        <div class="text-secondary small">{{ $affiliator->user->email }}</div>
+                                        <div class="text-secondary small">{{ $affiliator->user->phone }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-bold">{{ $affiliator->project->name }}</div>
+                                    @if($affiliator->project->location)
+                                        <div class="text-secondary small">{{ $affiliator->project->location }}</div>
+                                    @endif
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ $affiliator->verification_status == 'verified' ? 'success' : ($affiliator->verification_status == 'rejected' ? 'danger' : 'warning') }}-lt">
+                                    {{ ucfirst($affiliator->verification_status) }}
+                                </span>
+                                @if($affiliator->verified_at)
+                                    <div class="text-secondary small">{{ $affiliator->verified_at->format('d/m/Y') }}</div>
+                                @endif
+                            </td>
+                            <td>
+                                @if(!$affiliator->user->is_active)
+                                    <span class="badge bg-danger-lt small">User Nonaktif</span>
+                                @else
+                                    <span class="badge bg-{{ $affiliator->status == 'active' ? 'success' : ($affiliator->status == 'suspended' ? 'danger' : 'secondary') }}-lt">
+                                        {{ $affiliator->status_label }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                @php
+                                    $totalLeads = $affiliator->leads()->count();
+                                    $verifiedLeads = $affiliator->leads()->verified()->count();
+                                @endphp
+                                <div>
+                                    <span class="badge bg-success-lt">{{ $verifiedLeads }}</span>
+                                    /
+                                    <span class="badge bg-secondary-lt">{{ $totalLeads }}</span>
+                                </div>
+                                <div class="text-secondary small">Verified/Total</div>
+                            </td>
+                            <td>
+                                @php
+                                    $totalCommission = $affiliator->leads()->verified()->sum('commission_earned');
+                                @endphp
+                                @if($totalCommission > 0)
+                                    <div class="fw-bold text-success">Rp {{ number_format($totalCommission, 0, ',', '.') }}</div>
+                                @else
+                                    <span class="text-secondary">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="small">{{ $affiliator->created_at->format('d/m/Y') }}</div>
+                                <div class="text-secondary small">{{ $affiliator->created_at->diffForHumans() }}</div>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-icon bg-light" data-bs-toggle="dropdown">
+                                        <i class="ti ti-dots-vertical"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="{{ route('admin.affiliators.show', $affiliator) }}" class="dropdown-item">
+                                            <i class="ti ti-eye me-2"></i>
+                                            Lihat Detail
+                                        </a>
+                                        <a href="{{ route('admin.affiliators.edit', $affiliator) }}" class="dropdown-item">
+                                            <i class="ti ti-edit me-2"></i>
+                                            Edit Data
+                                        </a>
+                                        
+                                        @if($affiliator->ktp_number && $affiliator->ktp_photo && $affiliator->verification_status != 'verified')
+                                            <button type="button" class="dropdown-item" 
+                                                    onclick="showKtpVerificationModal({{ $affiliator->id }}, '{{ $affiliator->user->name }}', '{{ $affiliator->ktp_photo_url }}', '{{ $affiliator->ktp_number }}')">
+                                                <i class="ti ti-id me-2"></i>
+                                                Verifikasi KTP
+                                            </button>
+                                        @endif
+                                        
+                                        <button type="button" class="dropdown-item" 
+                                                onclick="resetPassword({{ $affiliator->id }}, '{{ $affiliator->user->name }}')">
+                                            <i class="ti ti-key me-2"></i>
+                                            Reset Password
+                                        </button>
+                                        
+                                        <div class="dropdown-divider"></div>
+                                        
+                                        <button type="button" class="dropdown-item {{ $affiliator->user->is_active ? 'text-danger' : 'text-success' }}" 
+                                                onclick="toggleStatus({{ $affiliator->id }}, '{{ $affiliator->user->name }}', {{ $affiliator->user->is_active ? 'false' : 'true' }})">
+                                            <i class="ti ti-{{ $affiliator->user->is_active ? 'user-off' : 'user-check' }} me-2"></i>
+                                            {{ $affiliator->user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} User
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">
+                    Menampilkan {{ $affiliators->firstItem() ?? 0 }} hingga {{ $affiliators->lastItem() ?? 0 }} 
+                    dari {{ $affiliators->total() }} affiliator
+                </p>
+                @include('components.pagination', ['paginator' => $affiliators])
+            </div>
+            @else
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="ti ti-users-off icon icon-xl text-secondary"></i>
+                </div>
+                <h3 class="text-secondary">Belum ada affiliator</h3>
+                <p class="text-secondary">Belum ada affiliator yang terdaftar di project yang Anda kelola.</p>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- KTP Verification Modal -->
+<div class="modal modal-blur fade" id="ktp-verification-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verifikasi KTP</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Foto KTP</h6>
+                        <img id="ktp-image" src="" alt="KTP" class="img-fluid rounded border">
                     </div>
-                    <div class="col-md-2">
-                        <select class="form-select" name="verification">
-                            <option value="">Status Verifikasi</option>
-                            <option value="pending" {{ request('verification') == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="verified" {{ request('verification') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
-                            <option value="rejected" {{ request('verification') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select class="form-select" name="project">
-                            <option value="">Semua Project</option>
-                            @foreach($projects as $project)
-                                <option value="{{ $project->id }}" {{ request('project') == $project->id ? 'selected' : '' }}>
-                                    {{ $project->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="btn-group w-100">
-                            <button type="submit" class="btn btn-outline-primary">
-                                <i class="ti ti-search me-1"></i>
-                                Filter
-                            </button>
-                            <a href="{{ route('admin.affiliators.index') }}" class="btn btn-outline-secondary">
-                                <i class="ti ti-x me-1"></i>
-                                Reset
-                            </a>
+                    <div class="col-md-6">
+                        <h6>Informasi</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td>Nama:</td>
+                                <td><strong id="affiliator-name"></strong></td>
+                            </tr>
+                            <tr>
+                                <td>No. KTP:</td>
+                                <td><strong id="ktp-number"></strong></td>
+                            </tr>
+                        </table>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Catatan Verifikasi</label>
+                            <textarea class="form-control" id="verification-notes" rows="3" 
+                                      placeholder="Masukkan catatan verifikasi (opsional)..."></textarea>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
-
-            <div class="card-body p-0">
-                @if($affiliators->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-vcenter">
-                        <thead>
-                            <tr>
-                                <th>Affiliator</th>
-                                <th>Contact</th>
-                                <th>Project</th>
-                                <th>Status</th>
-                                <th>Verifikasi</th>
-                                <th>Lead</th>
-                                <th>Komisi</th>
-                                <th>Bergabung</th>
-                                <th width="120">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($affiliators as $affiliator)
-                            @php
-                                // Get first affiliator project for this admin's projects
-                                $affiliatorProject = $affiliator->affiliatorProjects->first();
-                                
-                                // Count leads using relationship
-                                $totalLeads = $affiliator->leads ? $affiliator->leads->count() : 0;
-                                $verifiedLeads = $affiliator->leads ? $affiliator->leads->where('verification_status', 'verified')->count() : 0;
-                                
-                                // Get commission data
-                                $totalCommission = $affiliator->commissions ? $affiliator->commissions->where('type', 'earned')->sum('amount') : 0;
-                                $withdrawnCommission = $affiliator->withdrawals ? $affiliator->withdrawals->where('status', 'processed')->sum('amount') : 0;
-                            @endphp
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ $affiliator->profile_photo_url }}" alt="{{ $affiliator->name }}" 
-                                             class="avatar avatar-sm me-2">
-                                        <div>
-                                            <div class="fw-bold">{{ $affiliator->name }}</div>
-                                            <div class="text-secondary small">{{ $affiliator->initials }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <div class="fw-bold">{{ $affiliator->email }}</div>
-                                        <div class="text-secondary small">
-                                            {{ $affiliator->country_code }} {{ $affiliator->phone }}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if($affiliatorProject)
-                                        <div class="d-flex align-items-center">
-                                            @if($affiliatorProject->project->logo)
-                                                <img src="{{ $affiliatorProject->project->logo_url }}" 
-                                                     alt="{{ $affiliatorProject->project->name }}" 
-                                                     class="avatar avatar-xs me-1">
-                                            @else
-                                                <div class="avatar avatar-xs bg-primary-lt me-1">
-                                                    {{ substr($affiliatorProject->project->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                            <span class="text-truncate" style="max-width: 120px;">
-                                                {{ $affiliatorProject->project->name }}
-                                            </span>
-                                        </div>
-                                    @else
-                                        <span class="text-secondary">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ $affiliator->is_active ? 'success' : 'secondary' }}-lt">
-                                        {{ $affiliator->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($affiliatorProject)
-                                        @php
-                                            $verificationColor = match($affiliatorProject->verification_status) {
-                                                'verified' => 'success',
-                                                'rejected' => 'danger',
-                                                default => 'warning'
-                                            };
-                                            $verificationLabel = match($affiliatorProject->verification_status) {
-                                                'verified' => 'Terverifikasi',
-                                                'rejected' => 'Ditolak',
-                                                default => 'Pending'
-                                            };
-                                        @endphp
-                                        <span class="badge bg-{{ $verificationColor }}-lt">
-                                            {{ $verificationLabel }}
-                                        </span>
-                                    @else
-                                        <span class="text-secondary">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div>
-                                        <span class="badge bg-success-lt">{{ $verifiedLeads }}</span>
-                                        /
-                                        <span class="badge bg-secondary-lt">{{ $totalLeads }}</span>
-                                    </div>
-                                    <div class="text-secondary small">Verified/Total</div>
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-success">Rp {{ number_format($totalCommission, 0, ',', '.') }}</div>
-                                    <div class="text-secondary small">Ditarik: Rp {{ number_format($withdrawnCommission, 0, ',', '.') }}</div>
-                                </td>
-                                <td>
-                                    <div class="small">{{ $affiliator->created_at->format('d/m/Y') }}</div>
-                                    <div class="text-secondary small">{{ $affiliator->created_at->diffForHumans() }}</div>
-                                </td>
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-icon bg-light" 
-                                                data-bs-toggle="dropdown">
-                                            <i class="ti ti-dots-vertical"></i>
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <a href="{{ route('admin.affiliators.show', $affiliator) }}" 
-                                               class="dropdown-item">
-                                                <i class="ti ti-eye me-2"></i>
-                                                Lihat Detail
-                                            </a>
-                                            <a href="{{ route('admin.affiliators.edit', $affiliator) }}" 
-                                               class="dropdown-item">
-                                                <i class="ti ti-edit me-2"></i>
-                                                Edit Profile
-                                            </a>
-                                            @if($affiliatorProject && $affiliatorProject->verification_status == 'pending')
-                                            <button type="button" class="dropdown-item" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#verification-modal"
-                                                    data-affiliator-id="{{ $affiliator->id }}"
-                                                    data-affiliator-name="{{ $affiliator->name }}"
-                                                    data-project-id="{{ $affiliatorProject->project_id }}">
-                                                <i class="ti ti-check me-2"></i>
-                                                Verifikasi
-                                            </button>
-                                            @endif
-                                            <button type="button" class="dropdown-item" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#reset-password-modal"
-                                                    data-affiliator-id="{{ $affiliator->id }}"
-                                                    data-affiliator-name="{{ $affiliator->name }}">
-                                                <i class="ti ti-key me-2"></i>
-                                                Reset Password
-                                            </button>
-                                            <form action="{{ route('admin.affiliators.toggle-status', $affiliator) }}" 
-                                                  method="POST" class="d-inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="dropdown-item">
-                                                    <i class="ti ti-{{ $affiliator->is_active ? 'eye-off' : 'eye' }} me-2"></i>
-                                                    {{ $affiliator->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="card-footer d-flex align-items-center">
-                    <p class="m-0 text-secondary">
-                        Menampilkan {{ $affiliators->firstItem() ?? 0 }} hingga {{ $affiliators->lastItem() ?? 0 }} 
-                        dari {{ $affiliators->total() }} affiliator
-                    </p>
-                    {{-- {{ $affiliators->withQueryString()->links() }} --}}
-                    @include('components.pagination', ['paginator' => $affiliators])
-                </div>
-                @else
-                <div class="text-center py-5">
-                    <div class="mb-3">
-                        <i class="ti ti-users-off icon icon-xl text-secondary"></i>
-                    </div>
-                    <h3 class="text-secondary">Belum ada affiliator</h3>
-                    <p class="text-secondary">Project Anda belum memiliki affiliator yang bergabung.</p>
-                </div>
-                @endif
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="verifyKtp('reject')">
+                    <i class="ti ti-x me-1"></i>
+                    Tolak
+                </button>
+                <button type="button" class="btn btn-success" onclick="verifyKtp('verify')">
+                    <i class="ti ti-check me-1"></i>
+                    Verifikasi
+                </button>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Verification Modal -->
-<div class="modal fade" id="verification-modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="verification-form" method="POST">
-                @csrf
-                @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title">Verifikasi Affiliator</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Status Verifikasi <span class="text-danger">*</span></label>
-                        <select class="form-select" name="verification_status" required>
-                            <option value="">Pilih Status</option>
-                            <option value="verified">Terverifikasi</option>
-                            <option value="rejected">Ditolak</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Catatan Verifikasi</label>
-                        <textarea class="form-control" name="verification_notes" rows="3"
-                                  placeholder="Berikan catatan untuk affiliator (opsional)"></textarea>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>
-                        Affiliator akan menerima notifikasi tentang status verifikasi ini.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Verifikasi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Reset Password Modal -->
-<div class="modal fade" id="reset-password-modal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="reset-password-form" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Reset Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Password Baru <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="new_password" required minlength="8">
-                        <div class="form-hint">Minimal 8 karakter</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="new_password_confirmation" required>
-                    </div>
-                    <div class="alert alert-warning">
-                        <i class="ti ti-alert-triangle me-2"></i>
-                        Affiliator akan menerima notifikasi bahwa password mereka telah direset.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning">Reset Password</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -328,68 +360,119 @@
 @endsection
 
 @push('scripts')
-@include('components.alert')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Verification modal handler
-    const verificationModal = document.getElementById('verification-modal');
-    const verificationForm = document.getElementById('verification-form');
+let currentAffiliatorId = null;
+
+function showKtpVerificationModal(affiliatorId, name, ktpPhotoUrl, ktpNumber) {
+    currentAffiliatorId = affiliatorId;
     
-    verificationModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const affiliatorId = button.getAttribute('data-affiliator-id');
-        const affiliatorName = button.getAttribute('data-affiliator-name');
-        const projectId = button.getAttribute('data-project-id');
-        
-        // Update form action
-        verificationForm.action = `{{ route('admin.affiliators.verify', ':id') }}`;
-        verificationForm.action = verificationForm.action.replace(':id', affiliatorId);
-        
-        // Add hidden project ID input
-        let projectInput = verificationForm.querySelector('input[name="project_id"]');
-        if (!projectInput) {
-            projectInput = document.createElement('input');
-            projectInput.type = 'hidden';
-            projectInput.name = 'project_id';
-            verificationForm.appendChild(projectInput);
+    document.getElementById('affiliator-name').textContent = name;
+    document.getElementById('ktp-number').textContent = ktpNumber;
+    document.getElementById('ktp-image').src = ktpPhotoUrl;
+    document.getElementById('verification-notes').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('ktp-verification-modal'));
+    modal.show();
+}
+
+function verifyKtp(action) {
+    if (!currentAffiliatorId) return;
+    
+    const notes = document.getElementById('verification-notes').value;
+    
+    if (action === 'reject' && !notes.trim()) {
+        alert('Catatan wajib diisi untuk penolakan KTP');
+        return;
+    }
+    
+    const confirmMessage = action === 'verify' 
+        ? 'Apakah Anda yakin ingin memverifikasi KTP ini?' 
+        : 'Apakah Anda yakin ingin menolak KTP ini?';
+    
+    if (!confirm(confirmMessage)) return;
+    
+    // Show loading
+    const modal = bootstrap.Modal.getInstance(document.getElementById('ktp-verification-modal'));
+    
+    fetch(`{{ route('admin.affiliators.verify-ktp', ':id') }}`.replace(':id', currentAffiliatorId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            action: action,
+            verification_notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            modal.hide();
+            showToast(data.message, 'success');
+            location.reload();
+        } else {
+            showToast(data.message || 'Terjadi kesalahan', 'error');
         }
-        projectInput.value = projectId;
-        
-        // Update modal title
-        verificationModal.querySelector('.modal-title').textContent = `Verifikasi - ${affiliatorName}`;
-        
-        // Clear form
-        verificationForm.querySelector('select[name="verification_status"]').value = '';
-        verificationForm.querySelector('textarea[name="verification_notes"]').value = '';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan jaringan', 'error');
     });
+}
+
+function resetPassword(affiliatorId, name) {
+    if (!confirm(`Apakah Anda yakin ingin mereset password untuk ${name}?`)) return;
     
-    // Reset password modal handler
-    const resetPasswordModal = document.getElementById('reset-password-modal');
-    const resetPasswordForm = document.getElementById('reset-password-form');
-    
-    resetPasswordModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const affiliatorId = button.getAttribute('data-affiliator-id');
-        const affiliatorName = button.getAttribute('data-affiliator-name');
-        
-        // Update form action
-        resetPasswordForm.action = `{{ route('admin.affiliators.reset-password', ':id') }}`;
-        resetPasswordForm.action = resetPasswordForm.action.replace(':id', affiliatorId);
-        
-        // Update modal title
-        resetPasswordModal.querySelector('.modal-title').textContent = `Reset Password - ${affiliatorName}`;
-        
-        // Clear form
-        resetPasswordForm.reset();
+    fetch(`{{ route('admin.affiliators.reset-password', ':id') }}`.replace(':id', affiliatorId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            
+            // Show password in alert
+            alert(`Password baru untuk ${name}: ${data.password}\n\nPassword telah dikirim ke affiliator melalui notifikasi.`);
+        } else {
+            showToast(data.message || 'Terjadi kesalahan', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan jaringan', 'error');
     });
+}
+
+function toggleStatus(affiliatorId, name, newStatus) {
+    const action = newStatus === 'true' ? 'mengaktifkan' : 'menonaktifkan';
     
-    // Export functionality
-    const exportBtn = document.getElementById('export-btn');
-    exportBtn.addEventListener('click', function() {
-        const currentUrl = new URL(window.location);
-        currentUrl.pathname = '{{ route('admin.affiliators.export') }}';
-        window.open(currentUrl.toString(), '_blank');
+    if (!confirm(`Apakah Anda yakin ingin ${action} user ${name}?`)) return;
+    
+    fetch(`{{ route('admin.affiliators.toggle-status', ':id') }}`.replace(':id', affiliatorId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            location.reload();
+        } else {
+            showToast(data.message || 'Terjadi kesalahan', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan jaringan', 'error');
     });
-});
+}
 </script>
 @endpush

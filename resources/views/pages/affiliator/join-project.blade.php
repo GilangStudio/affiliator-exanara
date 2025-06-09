@@ -55,7 +55,8 @@
     }
 
     .commission-info-card {
-      background: linear-gradient(135deg, #54d12b 0%, #1d7a1a 100%);
+      /* background: linear-gradient(135deg, #54d12b 0%, #1d7a1a 100%); */
+      background: #000;
       color: white;
       border: none;
     }
@@ -131,7 +132,7 @@
     </div>
     @endif
 
-    <form class="container container-tight py-4" id="join-project-form">
+    <form class="container py-4" id="join-project-form">
       <div class="text-center mb-4">
         <!-- BEGIN NAVBAR LOGO -->
         <div class="navbar-brand navbar-brand-autodark">
@@ -192,10 +193,54 @@
           </div>
           <div class="card-body">
             <div class="mb-3">
+              <div class="row g-2">
+                @foreach($availableProjects as $project)
+                <div class="col-6 col-md-4 col-xl-3">
+                  <div class="card border-0">
+                    <label class="form-imagecheck mb-2">
+                      <input type="radio" 
+                              name="selected_project" 
+                              value="{{ $project['id'] }}" 
+                              class="form-imagecheck-input" 
+                              data-project-id="{{ $project['id'] }}" 
+                              @if(!empty($autoSelectProjectSlug) && $project['slug'] === $autoSelectProjectSlug) checked @endif />
+                      <span class="form-imagecheck-figure">
+                        {{-- <img src="{{ $project['logo_url'] }}" alt="Project {{ $project['name'] }}" class="form-imagecheck-image"/> --}}
+                        
+                          <!-- Photo -->
+                          <div class="img-responsive img-responsive-21x9 card-img-top" style="background-image: url('{{ $project['logo_url'] }}')"></div>
+                            <div class="card-body d-flex flex-column h-100">
+                              <h3 class="card-title mb-0">{{ $project['name'] }}</h3>
+                              <div class="text-secondary small mb-1">{{ $project['location'] }}</div>
+                              <div class="gap-2">
+                                <div class="badge badge-sm bg-primary-lt">
+                                  {{ $project['commission_preview'] }}
+                                </div>
+                                @if($project['require_digital_signature'])
+                                  <div class="badge badge-sm bg-info-lt">
+                                    <i class="ti ti-writing"></i>
+                                    Tanda tangan digital
+                                  </div>
+                                @endif
+                              </div>
+                            </div>
+                          </div>
+                      </span>
+                    </label>
+                </div>
+                @endforeach
+              </div>
+            </div>
+            {{-- <div class="mb-3">
               <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
                 @foreach($availableProjects as $project)
                 <label class="form-selectgroup-item flex-fill">
-                  <input type="radio" name="selected_project" value="{{ $project['id'] }}" class="form-selectgroup-input" data-project-id="{{ $project['id'] }}" />
+                  <input type="radio" 
+                          name="selected_project" 
+                          value="{{ $project['id'] }}" 
+                          class="form-selectgroup-input" 
+                          data-project-id="{{ $project['id'] }}" 
+                          @if(!empty($autoSelectProjectSlug) && $project['slug'] === $autoSelectProjectSlug) checked @endif />
                   <div class="form-selectgroup-label d-flex align-items-center p-3">
                     <div class="me-3">
                       <span class="form-selectgroup-check"></span>
@@ -207,9 +252,6 @@
                         <div class="font-weight-medium">{{ strtoupper($project['name']) }}</div>
                         <div class="text-secondary small mb-1">{{ $project['location'] }}</div>
                         <div class="d-flex gap-2">
-                          {{-- <div class="badge badge-sm bg-primary-lt">
-                            Komisi tersedia
-                          </div> --}}
                           @if($project['require_digital_signature'])
                             <div class="badge badge-sm bg-info-lt">
                               <i class="ti ti-writing"></i>
@@ -223,7 +265,7 @@
                 </label>
                 @endforeach
               </div>
-            </div>
+            </div> --}}
           </div>
         </div>
 
@@ -404,6 +446,7 @@
   </div>
 
   @include('partials.script')
+  @include('components.toast')
   <script src="{{ asset('libs/signature_pad/dist/signature_pad.umd.min.js') }}" defer></script>
 
   <script>
@@ -469,6 +512,32 @@
         welcomeCard.style.display = step === 1 ? 'block' : 'none';
       }
 
+      // nextButton.disabled = false; 
+      @if($autoSelectProjectSlug ?? false)
+        // Cari project berdasarkan slug
+        const targetProjectSlug = '{{ $autoSelectProjectSlug }}';
+        const targetProject = @json($availableProjects->firstWhere('slug', $autoSelectProjectSlug ?? ''));
+        
+        if (targetProject) {
+          // Auto select radio button
+          const targetRadio = document.querySelector(`input[name="selected_project"][value="${targetProject.id}"]`);
+          if (targetRadio) {
+            targetRadio.checked = true;
+            selectedProjectId = targetProject.id;
+            nextButton.disabled = false;
+            
+            // Scroll ke project yang dipilih
+            setTimeout(() => {
+              targetRadio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+            
+            // Tampilkan notifikasi
+            showToast('Project berdasarkan pilihan Anda telah dipilih otomatis', 'info');
+          }
+        }
+      @endif
+
+
       // Project selection handler
       radioButtons.forEach(radio => {
         radio.addEventListener('change', function () {
@@ -494,7 +563,7 @@
           currentStep = 1;
           updateProgress(currentStep);
           nextButton.disabled = true;
-          document.getElementById('join-project-form').classList.add('container-tight');
+          // document.getElementById('join-project-form').classList.add('container-tight');
           
         } else if (currentStep === 3) {
           // Back to project details
@@ -511,6 +580,7 @@
           currentStep = 3;
           updateProgress(currentStep);
           nextButton.disabled = !termsCheckbox.checked;
+          document.getElementById('join-project-form').classList.remove('container-tight');
           
         } else if (currentStep === 5 && requireDigitalSignature) {
           // **HIGHLIGHT: Back from signature to KTP (when signature required)**
@@ -614,7 +684,7 @@
         if (file) {
           // Validate file size (2MB)
           if (file.size > 2 * 1024 * 1024) {
-            showAlert('File terlalu besar. Maksimal 2MB.', 'danger');
+            showToast('File terlalu besar. Maksimal 2MB.', 'danger');
             this.value = '';
             ktpPreview.innerHTML = '';
             validateKtpStep();
@@ -623,7 +693,7 @@
 
           // Validate file type
           if (!file.type.startsWith('image/')) {
-            showAlert('Pilih file gambar yang valid.', 'danger');
+            showToast('Pilih file gambar yang valid.', 'danger');
             this.value = '';
             ktpPreview.innerHTML = '';
             validateKtpStep();
@@ -701,7 +771,7 @@
         })
         .catch(error => {
           console.error('Error:', error);
-          showAlert('Gagal memuat detail project', 'danger');
+          showToast('Gagal memuat detail project', 'danger');
         });
       }
 
@@ -952,23 +1022,23 @@
         e.preventDefault();
         
         if (!selectedProjectId) {
-          showAlert('Pilih project terlebih dahulu', 'warning');
+          showToast('Pilih project terlebih dahulu', 'warning');
           return;
         }
 
         if (!termsCheckbox.checked) {
-          showAlert('Anda harus menyetujui syarat & ketentuan', 'warning');
+          showToast('Anda harus menyetujui syarat & ketentuan', 'warning');
           return;
         }
 
         if (!validateKtpStep()) {
-          showAlert('Lengkapi data KTP', 'warning');
+          showToast('Lengkapi data KTP', 'warning');
           return;
         }
 
         // **HIGHLIGHT: Only validate signature if required**
         if (requireDigitalSignature && (!signaturePad || signaturePad.isEmpty())) {
-          showAlert('Berikan tanda tangan digital', 'warning');
+          showToast('Berikan tanda tangan digital', 'warning');
           return;
         }
 
@@ -1016,39 +1086,39 @@
         })
         .catch(error => {
           console.error('Error:', error);
-          showAlert('Terjadi kesalahan saat bergabung project', 'danger');
+          showToast('Terjadi kesalahan saat bergabung project', 'danger');
           joinButton.disabled = false;
           joinButton.innerHTML = '<i class="ti ti-user-plus me-1"></i>Bergabung Project';
         });
       });
 
       // Alert helper function
-      function showAlert(message, type = 'info') {
-        const alertContainer = document.querySelector('.container-tight');
-        const alertHtml = `
-          <div class="alert alert-${type} alert-dismissible" role="alert">
-            <div class="d-flex">
-              <div>
-                <i class="ti ti-${type === 'success' ? 'check' : type === 'danger' ? 'x' : 'info-circle'} me-2"></i>
-              </div>
-              <div>${message}</div>
-            </div>
-            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-          </div>
-        `;
+      // function showAlert(message, type = 'info') {
+      //   const alertContainer = document.querySelector('.container-tight');
+      //   const alertHtml = `
+      //     <div class="alert alert-${type} alert-dismissible" role="alert">
+      //       <div class="d-flex">
+      //         <div>
+      //           <i class="ti ti-${type === 'success' ? 'check' : type === 'danger' ? 'x' : 'info-circle'} me-2"></i>
+      //         </div>
+      //         <div>${message}</div>
+      //       </div>
+      //       <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+      //     </div>
+      //   `;
         
-        const existingAlerts = alertContainer.querySelectorAll('.alert');
-        existingAlerts.forEach(alert => alert.remove());
+      //   const existingAlerts = alertContainer.querySelectorAll('.alert');
+      //   existingAlerts.forEach(alert => alert.remove());
         
-        alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+      //   alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
         
-        setTimeout(() => {
-          const newAlert = alertContainer.querySelector('.alert');
-          if (newAlert) {
-            newAlert.remove();
-          }
-        }, 5000);
-      }
+      //   setTimeout(() => {
+      //     const newAlert = alertContainer.querySelector('.alert');
+      //     if (newAlert) {
+      //       newAlert.remove();
+      //     }
+      //   }, 5000);
+      // }
 
       // Initialize tooltips
       if (typeof bootstrap !== 'undefined') {

@@ -313,11 +313,18 @@
                     </table>
                 </div>
                 
-                @if(method_exists($activities, 'links'))
+                {{-- @if(method_exists($activities, 'links'))
                 <div class="card-footer d-flex align-items-center">
                     {{ $activities->appends(request()->query())->links() }}
                 </div>
-                @endif
+                @endif --}}
+                <div class="card-footer d-flex align-items-center">
+                    <p class="m-0 text-secondary">
+                        Menampilkan {{ $activities->firstItem() ?? 0 }} hingga {{ $activities->lastItem() ?? 0 }} 
+                        dari {{ $activities->total() }} affiliator
+                    </p>
+                    @include('components.pagination', ['paginator' => $activities->appends(request()->query())])
+                </div>
                 @else
                 <div class="text-center py-5">
                     <i class="ti ti-activity icon icon-xl text-secondary mb-3"></i>

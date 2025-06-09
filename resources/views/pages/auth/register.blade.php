@@ -62,6 +62,9 @@
 
                     <form action="{{ route('register') }}" method="POST" autocomplete="off">
                         @csrf
+                        @if(request('project'))
+                            <input type="hidden" name="project" value="{{ request('project') }}">
+                        @endif
                         <div class="mb-3">
                             <label class="form-label">Nama Lengkap</label>
                             <input type="text" name="name" class="form-control" placeholder="Masukkan nama lengkap"

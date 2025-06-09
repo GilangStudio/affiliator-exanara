@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Services\UserService;
+use App\Services\GeneralService;
 use Illuminate\Support\Facades\Log;
 use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +59,7 @@ class AuthController extends Controller
 
             // Format phone number jika diperlukan
             if ($loginField === 'phone') {
-                $emailOrPhone = $this->formatPhoneNumber($emailOrPhone);
+                $emailOrPhone =GeneralService::formatPhoneNumber($emailOrPhone);
             }
 
             $credentials = [
@@ -144,10 +145,10 @@ class AuthController extends Controller
 
         try {
             // Format phone number
-            $phone = $this->formatPhoneNumber($request->phone);
+            $phone = GeneralService::formatPhoneNumber($request->phone);
 
             // Generate username
-            $username = $this->processUsername($request->email);
+            $username = GeneralService::processUsername($request->email);
 
             // Create user using service
             $userData = [
@@ -167,6 +168,10 @@ class AuthController extends Controller
 
             // Send welcome notification
             $this->notificationService->sendWelcomeNotification($user->id);
+
+            $projectSlug = $request->input('project');
+            
+            session(['auto_select_project' => $projectSlug]);
 
             return redirect()->route('dashboard')
                 ->with('success', 'Registrasi berhasil! Selamat datang di sistem affiliator.');
@@ -308,52 +313,6 @@ class AuthController extends Controller
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan saat reset password. Silakan coba lagi.');
         }
-    }
-
-    /**
-     * Process username
-     */
-    private function processUsername($email)
-    {
-        $username = strtolower(substr(explode('@', $email)[0], 0, 20));
-        
-        while (User::where('username', $username)->exists()) {
-            $username .= rand(100, 999);
-        }
-        return $username;
-    }
-
-    /**
-     * Format phone number to consistent format
-     */
-    private function formatPhoneNumber($phone)
-    {
-        // Remove all non-numeric characters
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-
-        // // Handle different formats
-        // if (substr($phone, 0, 2) === '62') {
-        //     // Already has country code 62
-        //     return $phone;
-        // } elseif (substr($phone, 0, 1) === '0') {
-        //     // Remove leading 0 and add country code
-        //     return '62' . substr($phone, 1);
-        // } else {
-        //     // Add country code
-        //     return '62' . $phone;
-        // }
-
-        // if start with 62, remove it
-        if (substr($phone, 0, 2) === '62') {
-            $phone = substr($phone, 2);
-        }
-
-        // if start with 0, remove it
-        if (substr($phone, 0, 1) === '0') {
-            $phone = substr($phone, 1);
-        }
-
-        return $phone;
     }
 
     /**

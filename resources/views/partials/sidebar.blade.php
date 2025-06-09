@@ -284,6 +284,14 @@
             <i class="ti ti-folder icon icon-1"></i>
         </span>
         <span class="nav-link-title">Kelola Project</span>
+        @php
+            $userProjects = auth()->user()->adminProjects();
+            $totalProjects = $userProjects->count();
+            $inactiveProjects = $userProjects->where('projects.is_active', false)->count();
+        @endphp
+        @if($inactiveProjects > 0)
+            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $inactiveProjects }}</span>
+        @endif
     </a>
 </li>
 
@@ -295,7 +303,8 @@
         </span>
         <span class="nav-link-title">Kelola Affiliator</span>
         @php
-            $pendingAffiliators = \App\Models\AffiliatorProject::whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'))
+            $adminProjects = auth()->user()->adminProjects()->pluck('projects.id');
+            $pendingAffiliators = \App\Models\AffiliatorProject::whereIn('project_id', $adminProjects)
                 ->where('verification_status', 'pending')->count();
         @endphp
         @if($pendingAffiliators > 0)

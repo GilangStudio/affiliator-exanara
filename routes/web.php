@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\WithdrawalManagementController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\AffiliatorController as AdminAffiliatorController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
@@ -113,26 +114,65 @@ Route::middleware(['web', 'auth'])->group(function () {
             
             // Project Management
             Route::prefix('projects')->name('projects.')->group(function () {
-                Route::get('/', [App\Http\Controllers\Admin\AdminProjectController::class, 'index'])->name('index');
-                Route::get('/{project}', [App\Http\Controllers\Admin\AdminProjectController::class, 'show'])->name('show');
-                Route::get('/{project}/edit', [App\Http\Controllers\Admin\AdminProjectController::class, 'edit'])->name('edit');
-                Route::put('/{project}', [App\Http\Controllers\Admin\AdminProjectController::class, 'update'])->name('update');
-                Route::patch('/{project}/toggle-status', [App\Http\Controllers\Admin\AdminProjectController::class, 'toggleStatus'])->name('toggle-status');
-                Route::get('/{project}/statistics', [App\Http\Controllers\Admin\AdminProjectController::class, 'statistics'])->name('statistics');
+                Route::get('/', [AdminProjectController::class, 'index'])->name('index');
+                Route::get('/{project}', [AdminProjectController::class, 'show'])->name('show');
+                Route::get('/{project}/edit', [AdminProjectController::class, 'edit'])->name('edit');
+                Route::put('/{project}', [AdminProjectController::class, 'update'])->name('update');
+                Route::patch('/{project}/toggle-status', [AdminProjectController::class, 'toggleStatus'])->name('toggle-status');
+                Route::get('/{project}/statistics', [AdminProjectController::class, 'statistics'])->name('statistics');
+
+                Route::prefix('{project}')->group(function () {
+                    // Affiliator Management per Project
+                    Route::prefix('affiliators')->name('affiliators.')->group(function () {
+                        Route::get('/', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'index'])->name('index');
+                        Route::get('/{affiliatorProject}', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'show'])->name('show');
+                        Route::post('/{affiliatorProject}/verify', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'verify'])->name('verify');
+                        Route::post('/{affiliatorProject}/reject', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'reject'])->name('reject');
+                        Route::post('/{affiliatorProject}/suspend', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'suspend'])->name('suspend');
+                        Route::post('/{affiliatorProject}/activate', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'activate'])->name('activate');
+                        Route::patch('/{user}/toggle-status', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'toggleStatus'])->name('toggle-status');
+                    });
+                    
+                    // Lead Management per Project
+                    Route::prefix('leads')->name('leads.')->group(function () {
+                        Route::get('/', [App\Http\Controllers\Admin\AdminLeadController::class, 'index'])->name('index');
+                        Route::get('/{lead}', [App\Http\Controllers\Admin\AdminLeadController::class, 'show'])->name('show');
+                        Route::post('/{lead}/verify', [App\Http\Controllers\Admin\AdminLeadController::class, 'verify'])->name('verify');
+                        Route::post('/{lead}/reject', [App\Http\Controllers\Admin\AdminLeadController::class, 'reject'])->name('reject');
+                        Route::post('/{lead}/update-deal-value', [App\Http\Controllers\Admin\AdminLeadController::class, 'updateDealValue'])->name('update-deal-value');
+                        Route::get('/export/csv', [App\Http\Controllers\Admin\AdminLeadController::class, 'export'])->name('export');
+                    });
+                    
+                    // Commission Withdrawal Management per Project
+                    Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
+                        Route::get('/', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'index'])->name('index');
+                        Route::get('/pending', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'pending'])->name('pending');
+                        Route::get('/{withdrawal}', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'show'])->name('show');
+                        Route::post('/{withdrawal}/approve', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'approve'])->name('approve');
+                        Route::post('/{withdrawal}/reject', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'reject'])->name('reject');
+                        Route::post('/{withdrawal}/process', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'process'])->name('process');
+                        Route::post('/bulk-approve', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'bulkApprove'])->name('bulk-approve');
+                        Route::post('/bulk-reject', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'bulkReject'])->name('bulk-reject');
+                        Route::get('/export/csv', [App\Http\Controllers\Admin\AdminWithdrawalController::class, 'export'])->name('export');
+                    });
+                });
             });
             
             // Affiliator Management
             Route::prefix('affiliators')->name('affiliators.')->group(function () {
-                Route::get('/', [AdminAffiliatorController::class, 'index'])->name('index');
-                Route::get('/{affiliatorProject}', [AdminAffiliatorController::class, 'show'])->name('show');
-                Route::post('/{affiliatorProject}/verify', [AdminAffiliatorController::class, 'verify'])->name('verify');
-                Route::post('/{affiliatorProject}/reject', [AdminAffiliatorController::class, 'reject'])->name('reject');
-                Route::post('/{affiliatorProject}/suspend', [AdminAffiliatorController::class, 'suspend'])->name('suspend');
-                Route::post('/{affiliatorProject}/activate', [AdminAffiliatorController::class, 'activate'])->name('activate');
-                Route::post('/{affiliatorProject}/reset-password', [AdminAffiliatorController::class, 'resetPassword'])->name('reset-password');
-                Route::get('/export/data', [App\Http\Controllers\Admin\AffiliatorController::class, 'export'])->name('export');
-                Route::patch('/{user}/toggle-status', [AdminAffiliatorController::class, 'toggleStatus'])->name('toggle-status');
-                // Route::get('/statistics/data', [App\Http\Controllers\Admin\AdminAffiliatorController::class, 'statistics'])->name('statistics');
+                Route::get('/', [App\Http\Controllers\Admin\AffiliatorController::class, 'index'])->name('index');
+                Route::get('/export', [App\Http\Controllers\Admin\AffiliatorController::class, 'export'])->name('export');
+                Route::get('/{affiliator}', [App\Http\Controllers\Admin\AffiliatorController::class, 'show'])->name('show');
+                Route::get('/{affiliator}/edit', [App\Http\Controllers\Admin\AffiliatorController::class, 'edit'])->name('edit');
+                Route::put('/{affiliator}', [App\Http\Controllers\Admin\AffiliatorController::class, 'update'])->name('update');
+                
+                // AJAX Actions
+                Route::post('/{affiliator}/verify-ktp', [App\Http\Controllers\Admin\AffiliatorController::class, 'verifyKtp'])->name('verify-ktp');
+                Route::post('/{affiliator}/reset-password', [App\Http\Controllers\Admin\AffiliatorController::class, 'resetPassword'])->name('reset-password');
+                Route::post('/{affiliator}/toggle-status', [App\Http\Controllers\Admin\AffiliatorController::class, 'toggleStatus'])->name('toggle-status');
+                
+                // Statistics
+                Route::get('/affiliators/statistics', [App\Http\Controllers\Admin\AffiliatorController::class, 'statistics'])->name('statistics');
             });
             
             // Lead Management

@@ -10,7 +10,7 @@
     function showToast(message, type) {
         const toastContainer = createToastContainer();
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        toast.className = `alert alert-${type} alert-dismissible fade show`;
         toast.style.cssText = 'margin-bottom: 0.5rem;';
         toast.innerHTML = `
             <div class="d-flex">
@@ -29,6 +29,6 @@
             if (toast.parentNode) {
                 toast.remove();
             }
-        }, 3000);
+        }, 5000);
     }
 </script>
