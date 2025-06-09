@@ -29,14 +29,7 @@
                 <div class="nav-item dropdown d-none d-md-flex">
                     <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1"
                         aria-label="Show notifications" data-bs-auto-close="outside" aria-expanded="false">
-                        <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="icon icon-1">
-                            <path
-                                d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
-                            <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
-                        </svg>
+                        <i class="ti ti-bell icon icon-1"></i>
                         <span class="badge bg-red"></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
@@ -130,7 +123,7 @@
         <div class="collapse navbar-collapse" id="sidebar-menu">
             <!-- BEGIN NAVBAR MENU -->
             <ul class="navbar-nav pt-lg-3">
-                @if(auth()->user()->role ==='affiliator')
+                @if(auth()->user()->role === 'affiliator')
                 <li class="nav-item {{ Route::is('affiliator.dashboard') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('affiliator.dashboard') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -139,6 +132,101 @@
                         <span class="nav-link-title"> Dashboard </span>
                     </a>
                 </li>
+                <li class="nav-item {{ Route::is('affiliator.project.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('affiliator.project.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-folder icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title"> Project </span>
+                    </a>
+                </li>
+                    @php
+                        $activeProjects = auth()->user()->affiliatorProjects()
+                            // ->active()->pending()->verified()
+                            ->with(['project' => function($q) {
+                                $q->active();
+                            }])
+                            ->get()
+                            ->filter(function($affiliatorProject) {
+                                return $affiliatorProject->project !== null;
+                            });
+                    @endphp
+
+                    @if($activeProjects->count() > 0)
+                        <!-- Leads Menu dengan Dropdown Projects -->
+                        <li class="nav-item dropdown {{ request()->routeIs('affiliator.leads.*') ? 'active' : '' }}">
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('affiliator.leads.*') ? 'show' : '' }}" 
+                            href="#navbar-leads" 
+                            data-bs-toggle="dropdown" 
+                            data-bs-auto-close="false" 
+                            role="button" 
+                            aria-expanded="{{ request()->routeIs('affiliator.leads.*') ? 'true' : 'false' }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <i class="ti ti-users icon icon-1"></i>
+                                </span>
+                                <span class="nav-link-title">Leads</span>
+                                @php
+                                    // Count total pending leads across all projects
+                                    $totalPendingLeads = 0;
+                                    foreach($activeProjects as $affiliatorProject) {
+                                        $totalPendingLeads += $affiliatorProject->leads()->pending()->count();
+                                    }
+                                @endphp
+                                @if($totalPendingLeads > 0)
+                                    <span class="badge badge-sm bg-orange text-white ms-1">{{ $totalPendingLeads }}</span>
+                                @endif
+                            </a>
+                            {{-- <div class="dropdown-menu {{ request()->routeIs('affiliator.leads.*') ? 'show' : '' }}"> --}}
+                            <div class="dropdown-menu show">
+                                <div class="dropdown-menu-columns">
+                                    <div class="dropdown-menu-column">
+                                        <!-- All Leads -->
+                                        <a class="dropdown-item {{ request()->routeIs('affiliator.leads.index') ? 'active' : '' }}" 
+                                            href="{{ route('affiliator.leads.index') }}">
+                                            <i class="ti ti-users-group me-2"></i>
+                                            Semua Leads
+                                        </a>
+                                        @foreach($activeProjects as $affiliatorProject)
+                                            @php
+                                                $project = $affiliatorProject->project;
+                                                $pendingLeads = $affiliatorProject->leads()
+                                                    ->where('verification_status', 'pending')
+                                                    ->count();
+                                                $totalLeads = $affiliatorProject->leads()->count();
+                                            @endphp
+                                            <a class="dropdown-item d-flex align-items-center {{ $affiliatorProject->isVerified && $affiliatorProject->isActive ? '' : 'disabled' }} {{ request()->routeIs('affiliator.leads.project', $project->slug) ? 'isActive' : '' }}" 
+                                            href="{{ route('affiliator.leads.project', $project->slug) }}">
+                                                <div class="flex-fill">
+                                                    <div class="d-flex align-items-center">
+                                                        @if($project->logo)
+                                                            <img src="{{ $project->logo_url }}" 
+                                                                alt="{{ $project->name }}" 
+                                                                class="avatar avatar-xs me-2">
+                                                        @else
+                                                            <div class="avatar avatar-xs bg-primary-lt me-2">
+                                                                {{ substr($project->name, 0, 1) }}
+                                                            </div>
+                                                        @endif
+                                                        <div>
+                                                            <div class="font-weight-medium">{{ $project->name }}</div>
+                                                            @if ($affiliatorProject->isVerified && $affiliatorProject->isActive)
+                                                            <div class="text-secondary small">
+                                                                {{ $totalLeads }} leads
+                                                            </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @if($pendingLeads > 0)
+                                                    <span class="badge badge-sm bg-orange text-white ms-2">{{ $pendingLeads }}</span>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    @endif
 
                 @elseif(auth()->user()->role === 'superadmin')
 
@@ -267,117 +355,117 @@
                     </div>
                 </li>
                 @elseif(auth()->user()->role === 'admin')
-<!-- Admin Dashboard -->
-<li class="nav-item {{ Route::is('admin.dashboard') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('admin.dashboard') }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-dashboard icon icon-1"></i>
-        </span>
-        <span class="nav-link-title">Dashboard</span>
-    </a>
-</li>
+                <!-- Admin Dashboard -->
+                <li class="nav-item {{ Route::is('admin.dashboard') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-dashboard icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Dashboard</span>
+                    </a>
+                </li>
 
-<!-- Project Management -->
-<li class="nav-item {{ Route::is('admin.projects.*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('admin.projects.index') }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-folder icon icon-1"></i>
-        </span>
-        <span class="nav-link-title">Kelola Project</span>
-        @php
-            $userProjects = auth()->user()->adminProjects();
-            $totalProjects = $userProjects->count();
-            $inactiveProjects = $userProjects->where('projects.is_active', false)->count();
-        @endphp
-        @if($inactiveProjects > 0)
-            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $inactiveProjects }}</span>
-        @endif
-    </a>
-</li>
+                <!-- Project Management -->
+                <li class="nav-item {{ Route::is('admin.projects.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.projects.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-folder icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Kelola Project</span>
+                        @php
+                            $userProjects = auth()->user()->adminProjects();
+                            $totalProjects = $userProjects->count();
+                            $inactiveProjects = $userProjects->where('projects.is_active', false)->count();
+                        @endphp
+                        @if($inactiveProjects > 0)
+                            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $inactiveProjects }}</span>
+                        @endif
+                    </a>
+                </li>
 
-<!-- Affiliator Management -->
-<li class="nav-item {{ Route::is('admin.affiliators.*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('admin.affiliators.index') }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-users-group icon icon-1"></i>
-        </span>
-        <span class="nav-link-title">Kelola Affiliator</span>
-        @php
-            $adminProjects = auth()->user()->adminProjects()->pluck('projects.id');
-            $pendingAffiliators = \App\Models\AffiliatorProject::whereIn('project_id', $adminProjects)
-                ->where('verification_status', 'pending')->count();
-        @endphp
-        @if($pendingAffiliators > 0)
-            <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAffiliators }}</span>
-        @endif
-    </a>
-</li>
+                <!-- Affiliator Management -->
+                <li class="nav-item {{ Route::is('admin.affiliators.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.affiliators.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-users-group icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Kelola Affiliator</span>
+                        @php
+                            $adminProjects = auth()->user()->adminProjects()->pluck('projects.id');
+                            $pendingAffiliators = \App\Models\AffiliatorProject::whereIn('project_id', $adminProjects)
+                                ->where('verification_status', 'pending')->count();
+                        @endphp
+                        @if($pendingAffiliators > 0)
+                            <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAffiliators }}</span>
+                        @endif
+                    </a>
+                </li>
 
-<!-- Lead Management -->
-<li class="nav-item {{ Route::is('admin.leads.*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('admin.leads.index') }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-users icon icon-1"></i>
-        </span>
-        <span class="nav-link-title">Kelola Lead</span>
-        @php
-            $pendingLeads = \App\Models\Lead::whereHas('affiliatorProject', function($q) {
-                $q->whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'));
-            })->where('verification_status', 'pending')->count();
-        @endphp
-        @if($pendingLeads > 0)
-            <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
-        @endif
-    </a>
-</li>
+                <!-- Lead Management -->
+                <li class="nav-item {{ Route::is('admin.leads.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.leads.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-users icon icon-1"></i>
+                        </span>
+                        <span class="nav-link-title">Kelola Lead</span>
+                        @php
+                            $pendingLeads = \App\Models\Lead::whereHas('affiliatorProject', function($q) {
+                                $q->whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'));
+                            })->where('verification_status', 'pending')->count();
+                        @endphp
+                        @if($pendingLeads > 0)
+                            <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
+                        @endif
+                    </a>
+                </li>
 
-<!-- Withdrawal Management -->
-<li class="nav-item dropdown {{ request()->routeIs('admin.withdrawals.*') ? 'active' : '' }}">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}" 
-       href="#navbar-withdrawals" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" 
-       aria-expanded="{{ request()->routeIs('admin.withdrawals.*') ? 'true' : 'false' }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-credit-card"></i>
-        </span>
-        <span class="nav-link-title">Kelola Penarikan</span>
-        @php
-            $pendingWithdrawals = \App\Models\CommissionWithdrawal::whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'))
-                ->where('status', 'pending')->count();
-        @endphp
-        @if($pendingWithdrawals > 0)
-            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
-        @endif
-    </a>
-    <div class="dropdown-menu {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}">
-        <div class="dropdown-menu-columns">
-            <div class="dropdown-menu-column">
-                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.index') ? 'active' : '' }}" 
-                   href="{{ route('admin.withdrawals.index') }}">
-                    <i class="ti ti-list me-2"></i>
-                    Semua Penarikan
-                </a>
-                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.pending') ? 'active' : '' }}" 
-                   href="{{ route('admin.withdrawals.pending') }}">
-                    <i class="ti ti-clock me-2"></i>
-                    Menunggu Persetujuan
-                    @if($pendingWithdrawals > 0)
-                        <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
-                    @endif
-                </a>
-            </div>
-        </div>
-    </div>
-</li>
+                <!-- Withdrawal Management -->
+                <li class="nav-item dropdown {{ request()->routeIs('admin.withdrawals.*') ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}" 
+                    href="#navbar-withdrawals" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" 
+                    aria-expanded="{{ request()->routeIs('admin.withdrawals.*') ? 'true' : 'false' }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-credit-card"></i>
+                        </span>
+                        <span class="nav-link-title">Kelola Penarikan</span>
+                        @php
+                            $pendingWithdrawals = \App\Models\CommissionWithdrawal::whereIn('project_id', auth()->user()->adminProjects()->pluck('projects.id'))
+                                ->where('status', 'pending')->count();
+                        @endphp
+                        @if($pendingWithdrawals > 0)
+                            <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
+                        @endif
+                    </a>
+                    <div class="dropdown-menu {{ request()->routeIs('admin.withdrawals.*') ? 'show' : '' }}">
+                        <div class="dropdown-menu-columns">
+                            <div class="dropdown-menu-column">
+                                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.index') ? 'active' : '' }}" 
+                                href="{{ route('admin.withdrawals.index') }}">
+                                    <i class="ti ti-list me-2"></i>
+                                    Semua Penarikan
+                                </a>
+                                <a class="dropdown-item {{ request()->routeIs('admin.withdrawals.pending') ? 'active' : '' }}" 
+                                href="{{ route('admin.withdrawals.pending') }}">
+                                    <i class="ti ti-clock me-2"></i>
+                                    Menunggu Persetujuan
+                                    @if($pendingWithdrawals > 0)
+                                        <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWithdrawals }}</span>
+                                    @endif
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
 
-<!-- Profile & Settings - UPDATED MENU -->
-<li class="nav-item {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('admin.profile.index') }}">
-        <span class="nav-link-icon d-md-none d-lg-inline-block">
-            <i class="ti ti-user-circle"></i>
-        </span>
-        <span class="nav-link-title">Profil & Pengaturan</span>
-    </a>
-</li>
+                <!-- Profile & Settings - UPDATED MENU -->
+                <li class="nav-item {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.profile.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-user-circle"></i>
+                        </span>
+                        <span class="nav-link-title">Profil & Pengaturan</span>
+                    </a>
+                </li>
                 @endif
             </ul>
             <!-- END NAVBAR MENU -->
