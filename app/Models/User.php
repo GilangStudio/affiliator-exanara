@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Services\GeneralService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\Notifiable;
@@ -30,6 +28,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'is_pic',
     ];
 
     /**
@@ -53,6 +52,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'is_pic' => 'boolean',
         ];
     }
 
@@ -107,6 +108,30 @@ class User extends Authenticatable
         return $this->hasMany(LeadStatusHistory::class, 'changed_by');
     }
 
+    /**
+     * Projects where user is PIC
+     */
+    public function picProjects()
+    {
+        return $this->hasMany(Project::class, 'pic_user_id');
+    }
+
+    /**
+     * Project registrations submitted by user
+     */
+    public function submittedRegistrations()
+    {
+        return $this->hasMany(ProjectRegistration::class, 'submitted_by');
+    }
+
+    /**
+     * Project registrations reviewed by user
+     */
+    public function reviewedRegistrations()
+    {
+        return $this->hasMany(ProjectRegistration::class, 'reviewed_by');
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -121,6 +146,16 @@ class User extends Authenticatable
     public function scopeAdmins($query)
     {
         return $query->where('role', 'admin');
+    }
+
+    public function scopePic($query)
+    {
+        return $query->where('is_pic', true);
+    }
+
+    public function scopeNonPic($query)
+    {
+        return $query->where('is_pic', false);
     }
 
     // Accessors
@@ -160,10 +195,202 @@ class User extends Authenticatable
             $initials .= strtoupper(substr($word, 0, 1));
         }
         return substr($initials, 0, 2);
-    }    
+    }
 
+    /**
+     * Get user role label with PIC indicator
+     */
+    public function getRoleLabelWithPicAttribute()
+    {
+        $roleLabels = [
+            'superadmin' => 'Super Admin',
+            'admin' => 'Admin',
+            'affiliator' => 'Affiliator',
+        ];
+        
+        $role = $roleLabels[$this->role] ?? ucfirst($this->role);
+        
+        if ($this->is_pic) {
+            $role .= ' (PIC)';
+        }
+        
+        return $role;
+    }
+
+    /**
+     * Get user display name with role
+     */
+    public function getDisplayNameAttribute()
+    {
+        return "{$this->name} ({$this->role_label_with_pic})";
+    }
+
+    // Methods
+    /**
+     * Check if user can manage specific project
+     */
+    public function canManageProject($projectId)
+    {
+        // Superadmin can manage all projects
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+        
+        // Admin can manage projects they are assigned to or PIC of
+        if ($this->role === 'admin') {
+            return $this->adminProjects()->where('projects.id', $projectId)->exists() ||
+                   $this->picProjects()->where('id', $projectId)->exists();
+        }
+        
+        return false;
+    }
+
+    /**
+     * Get projects that user can manage
+     */
+    public function getManagedProjectsAttribute()
+    {
+        if ($this->role === 'superadmin') {
+            return Project::all();
+        }
+        
+        if ($this->role === 'admin') {
+            $adminProjects = $this->adminProjects;
+            $picProjects = $this->picProjects;
+            
+            return $adminProjects->merge($picProjects)->unique('id');
+        }
+        
+        return collect();
+    }
+
+    /**
+     * Check if user is PIC of any project
+     */
+    public function getHasPicProjectsAttribute()
+    {
+        return $this->is_pic && $this->picProjects()->exists();
+    }
+
+    /**
+     * Get total commission earned by affiliator
+     */
+    public function getTotalCommissionEarnedAttribute()
+    {
+        if ($this->role !== 'affiliator') {
+            return 0;
+        }
+
+        return $this->commissionHistories()
+                    ->where('type', 'earned')
+                    ->sum('amount');
+    }
+
+    /**
+     * Get available commission balance (earned - withdrawn)
+     */
+    public function getAvailableCommissionBalanceAttribute()
+    {
+        if ($this->role !== 'affiliator') {
+            return 0;
+        }
+
+        $earned = $this->commissionHistories()
+                       ->where('type', 'earned')
+                       ->sum('amount');
+                       
+        $withdrawn = $this->commissionHistories()
+                          ->where('type', 'withdrawn')
+                          ->sum('amount');
+                          
+        return $earned - $withdrawn;
+    }
+
+    /**
+     * Get total leads submitted by affiliator
+     */
+    public function getTotalLeadsAttribute()
+    {
+        if ($this->role !== 'affiliator') {
+            return 0;
+        }
+
+        return $this->affiliatorProjects()
+                    ->with('leads')
+                    ->get()
+                    ->sum(function ($ap) {
+                        return $ap->leads->count();
+                    });
+    }
+
+    /**
+     * Get verified leads count
+     */
+    public function getVerifiedLeadsCountAttribute()
+    {
+        if ($this->role !== 'affiliator') {
+            return 0;
+        }
+
+        return $this->affiliatorProjects()
+                    ->with('leads')
+                    ->get()
+                    ->sum(function ($ap) {
+                        return $ap->leads->where('verification_status', 'verified')->count();
+                    });
+    }
+
+    // Mutators
     public function setPhoneAttribute($value)
     {
         $this->attributes['phone'] = GeneralService::formatPhoneNumber($value);
+    }
+
+    // Static methods
+    /**
+     * Static method to create PIC user
+     */
+    public static function createPicUser($name, $email, $phone, $password = null)
+    {
+        return self::create([
+            'name' => $name,
+            'username' => GeneralService::processUsername($email),
+            'email' => $email,
+            'country_code' => '+62',
+            'phone' => GeneralService::formatPhoneNumber($phone),
+            'password' => bcrypt($password ?: 'password123'),
+            'role' => 'admin',
+            'is_active' => false, // Will be activated when project is approved
+            'is_pic' => true,
+        ]);
+    }
+
+    /**
+     * Get role options
+     */
+    public static function getRoles()
+    {
+        return [
+            'superadmin' => 'Super Admin',
+            'admin' => 'Admin',
+            'affiliator' => 'Affiliator',
+        ];
+    }
+
+    /**
+     * Get active admins for project assignment
+     */
+    public static function getAvailableAdmins($excludeProjectId = null)
+    {
+        $query = self::where('role', 'admin')
+                     ->where('is_active', true);
+
+        if ($excludeProjectId) {
+            $query->whereDoesntHave('adminProjects', function ($q) use ($excludeProjectId) {
+                $q->where('project_id', $excludeProjectId);
+            });
+        }
+
+        return $query->get();
     }
 }

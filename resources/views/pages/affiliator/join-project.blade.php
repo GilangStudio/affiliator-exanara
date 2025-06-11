@@ -164,7 +164,7 @@
             @endif
           </p>
           
-          @if($userProjects->count() > 0)
+          {{-- @if($userProjects->count() > 0)
             <div class="alert alert-info text-start">
               <strong>Project Anda Saat Ini:</strong>
               <ul class="mb-0 mt-2">
@@ -178,7 +178,7 @@
                 @endforeach
               </ul>
             </div>
-          @endif
+          @endif --}}
         </div>
       </div>
 

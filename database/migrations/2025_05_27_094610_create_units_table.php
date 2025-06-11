@@ -29,6 +29,9 @@ return new class extends Migration
             $table->integer('bathrooms')->nullable();
             $table->integer('carport')->nullable();
             $table->integer('floor')->nullable(); // Lantai
+            $table->integer('power_capacity')->nullable(); // Kapasitas daya listrik
+            $table->enum('certificate_type', ['SHM', 'HGB', 'AJB'])->nullable();
+            $table->enum('unit_status', ['ready', 'indent', 'sold_out'])->default('ready');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             

@@ -64,11 +64,6 @@ class Unit extends Model
         return $query->where('unit_type', $unitType);
     }
 
-    // public function scopeByCode($query, $code)
-    // {
-    //     return $query->where('code', $code);
-    // }
-
     public function scopeByCrmId($query, $crmUnitId)
     {
         return $query->where('crm_unit_id', $crmUnitId);
@@ -87,6 +82,32 @@ class Unit extends Model
     public function scopeOnFloor($query, $floor)
     {
         return $query->where('floor', $floor);
+    }
+
+    /**
+     * Scope for unit status
+     */
+    public function scopeReady($query)
+    {
+        return $query->where('unit_status', 'ready');
+    }
+
+    public function scopeIndent($query)
+    {
+        return $query->where('unit_status', 'indent');
+    }
+
+    public function scopeSoldOut($query)
+    {
+        return $query->where('unit_status', 'sold_out');
+    }
+
+    /**
+     * Scope for available units (ready + indent)
+     */
+    public function scopeAvailable($query)
+    {
+        return $query->whereIn('unit_status', ['ready', 'indent']);
     }
 
     // Accessors
@@ -111,7 +132,7 @@ class Unit extends Model
     public function getUnitTypeDisplayAttribute()
     {
         $types = [
-            'residential' => 'Residensial',
+            'residential' => 'Residential',
             'commercial' => 'Komersial',
             'office' => 'Perkantoran',
             'retail' => 'Retail',
@@ -160,6 +181,14 @@ class Unit extends Model
         
         if ($this->floor) {
             $specs[] = 'Lt. ' . $this->floor;
+        }
+
+        if ($this->power_capacity) {
+            $specs[] = $this->power_capacity . ' VA';
+        }
+    
+        if ($this->certificate_type) {
+            $specs[] = $this->certificate_type;
         }
         
         return implode(' • ', $specs);
@@ -229,6 +258,32 @@ class Unit extends Model
         return $this->commissionHistories()->where('type', 'earned')->sum('amount');
     }
 
+    /**
+     * Check if unit is available for sale
+     */
+    public function getIsAvailableAttribute()
+    {
+        return in_array($this->unit_status, ['ready', 'indent']) && $this->is_active;
+    }
+
+    /**
+     * Get availability status with color
+     */
+    public function getAvailabilityStatusAttribute()
+    {
+        if (!$this->is_active) {
+            return [
+                'label' => 'Tidak Aktif',
+                'color' => 'secondary'
+            ];
+        }
+
+        return [
+            'label' => $this->unit_status_label,
+            'color' => $this->unit_status_color
+        ];
+    }
+
     // public static function generateUniqueCode($projectId, $prefix = null)
     // {
     //     $project = Project::find($projectId);
@@ -257,7 +312,7 @@ class Unit extends Model
     public static function getUnitTypes()
     {
         return [
-            'residential' => 'Residensial',
+            'residential' => 'Residential',
             'commercial' => 'Komersial',
             'office' => 'Perkantoran',
             'retail' => 'Retail',
@@ -276,6 +331,30 @@ class Unit extends Model
         ];
     }
 
+    /**
+     * Static method to get unit status options
+     */
+    public static function getUnitStatuses()
+    {
+        return [
+            'ready' => 'Ready',
+            'indent' => 'Indent',
+            'sold_out' => 'Sold Out',
+        ];
+    }
+
+    /**
+     * Static method to get certificate type options
+     */
+    public static function getCertificateTypes()
+    {
+        return [
+            'SHM' => 'Sertifikat Hak Milik (SHM)',
+            'HGB' => 'Hak Guna Bangunan (HGB)', 
+            'AJB' => 'Akta Jual Beli (AJB)',
+        ];
+    }
+
     // Boot method untuk auto generate code
     // protected static function boot()
     // {
@@ -288,12 +367,7 @@ class Unit extends Model
     //     });
     // }
 
-    // // Mutators
-    // public function setCodeAttribute($value)
-    // {
-    //     $this->attributes['code'] = strtoupper($value);
-    // }
-
+    // Mutators
     public function setUnitTypeAttribute($value)
     {
         $this->attributes['unit_type'] = strtolower($value);

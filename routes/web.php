@@ -11,15 +11,16 @@ use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\ProjectRegistrationController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Affiliator\JoinProjectController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
+use App\Http\Controllers\Affiliator\AffiliatorProjectController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
-use App\Http\Controllers\Admin\ProjectAffiliatorController as AdminProjectAffiliatorController;
-use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\AffiliatorController as AdminAffiliatorController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\SuperAdmin\SettingsController as SuperAdminSettingsCont
 use App\Http\Controllers\Affiliator\DashboardController as AffiliatorDashboardController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\AffiliatorController as SuperAdminAffiliatorController;
+use App\Http\Controllers\Admin\ProjectAffiliatorController as AdminProjectAffiliatorController;
 use App\Http\Controllers\SuperAdmin\ProjectAdminController as SuperAdminProjectAdminController;
 
 /*
@@ -36,6 +38,17 @@ use App\Http\Controllers\SuperAdmin\ProjectAdminController as SuperAdminProjectA
 */
 
 Route::get('/@{username}', [AuthController::class, 'show'])->name('profile.show');
+
+Route::prefix('project')->name('affiliator.project-registration.')->group(function () {
+    Route::get('/register', [ProjectRegistrationController::class, 'index'])->name('index');
+    Route::post('/register', [ProjectRegistrationController::class, 'store'])->name('store');
+    
+    // AJAX Routes untuk mendapatkan data dropdown
+    Route::prefix('ajax')->name('ajax.')->group(function () {
+        Route::get('/unit-types', [ProjectRegistrationController::class, 'getUnitTypes'])->name('unit-types');
+        Route::get('/commission-types', [ProjectRegistrationController::class, 'getCommissionTypes'])->name('commission-types');
+    });
+});
 
 // Authentication routes
 Route::middleware(['guest'])->group(function () {
@@ -79,12 +92,6 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::middleware(['role:affiliator', 'active.user'])->group(function () {
 
-        Route::middleware('check.project.affiliator')->group(function () {
-            Route::name('affiliator.')->group(function () {
-                Route::get('/dashboard', [AffiliatorDashboardController::class, 'index'])->name('dashboard');               
-            });             
-        });
-
         // Main join project page
         Route::get('/project/join', [JoinProjectController::class, 'index'])->name('affiliator.project.join.index');
         // Submit join project
@@ -100,46 +107,64 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/projects/available', [JoinProjectController::class, 'getAvailableProjects'])->name('projects.available');
         });
 
-        Route::get('/project', [AffiliatorProjectController::class, 'index'])->name('affiliator.project.index');
+        Route::middleware('check.project.affiliator')->group(function () {
+            Route::name('affiliator.')->group(function () {
+                Route::get('/dashboard', [AffiliatorDashboardController::class, 'index'])->name('dashboard');
+                
+                Route::prefix('project')->name('project.')->group(function () {
+                    Route::get('/', [AffiliatorProjectController::class, 'index'])->name('index');
+                    Route::get('/{project}', [AffiliatorProjectController::class, 'show'])->name('show');
+                    Route::post('/{project}/toggle-status', [AffiliatorProjectController::class, 'toggleStatus'])->name('toggle-status');
 
-        Route::prefix('leads')->name('affiliator.leads.')->group(function () {
-            // List semua leads dari semua project
-            Route::get('/', [AffiliatorLeadsController::class, 'index'])->name('index');
-            
-            // Create lead form (pilih project dulu)
-            Route::get('/create', [App\Http\Controllers\Affiliator\LeadController::class, 'create'])->name('create');
-            
-            // Store lead
-            Route::post('/', [App\Http\Controllers\Affiliator\LeadController::class, 'store'])->name('store');
-            
-            // Leads per project (using slug)
-            Route::get('/project/{slug}', [App\Http\Controllers\Affiliator\LeadController::class, 'byProject'])->name('project');
-            
-            // Create lead untuk specific project
-            Route::get('/project/{slug}/create', [App\Http\Controllers\Affiliator\LeadController::class, 'createForProject'])->name('project.create');
-            
-            // View single lead
-            Route::get('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'show'])->name('show');
-            
-            // Edit lead (only if still pending)
-            Route::get('/{lead}/edit', [App\Http\Controllers\Affiliator\LeadController::class, 'edit'])->name('edit');
-            Route::put('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'update'])->name('update');
-            
-            // Delete lead (only if still pending)
-            Route::delete('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'destroy'])->name('destroy');
-            
-            // AJAX routes
-            Route::prefix('ajax')->name('ajax.')->group(function () {
-                // Get units by project
-                Route::get('/project/{project}/units', [App\Http\Controllers\Affiliator\LeadController::class, 'getProjectUnits'])->name('project.units');
-                
-                // Check duplicate lead
-                Route::post('/check-duplicate', [App\Http\Controllers\Affiliator\LeadController::class, 'checkDuplicate'])->name('check-duplicate');
-                
-                // Get lead statistics
-                Route::get('/statistics', [App\Http\Controllers\Affiliator\LeadController::class, 'statistics'])->name('statistics');
-            });
+                    // AJAX Routes
+                    Route::prefix('ajax')->name('ajax.')->group(function () {
+                        
+                        Route::get('/{project}/statistics', [App\Http\Controllers\Affiliator\AffiliatorProjectController::class, 'statistics'])->name('statistics');
+                        Route::get('/locations', [App\Http\Controllers\Affiliator\AffiliatorProjectController::class, 'getLocations'])->name('locations');
+                    });
+                });
+        
+                Route::prefix('leads')->name('leads.')->group(function () {
+                    // List semua leads dari semua project
+                    Route::get('/', [AffiliatorLeadsController::class, 'index'])->name('index');
+                    
+                    // Create lead form (pilih project dulu)
+                    Route::get('/create', [App\Http\Controllers\Affiliator\LeadController::class, 'create'])->name('create');
+                    
+                    // Store lead
+                    Route::post('/', [App\Http\Controllers\Affiliator\LeadController::class, 'store'])->name('store');
+                    
+                    // Leads per project (using slug)
+                    Route::get('/project/{slug}', [App\Http\Controllers\Affiliator\LeadController::class, 'byProject'])->name('project');
+                    
+                    // Create lead untuk specific project
+                    Route::get('/project/{slug}/create', [App\Http\Controllers\Affiliator\LeadController::class, 'createForProject'])->name('project.create');
+                    
+                    // View single lead
+                    Route::get('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'show'])->name('show');
+                    
+                    // Edit lead (only if still pending)
+                    Route::get('/{lead}/edit', [App\Http\Controllers\Affiliator\LeadController::class, 'edit'])->name('edit');
+                    Route::put('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'update'])->name('update');
+                    
+                    // Delete lead (only if still pending)
+                    Route::delete('/{lead}', [App\Http\Controllers\Affiliator\LeadController::class, 'destroy'])->name('destroy');
+                    
+                    // AJAX routes
+                    Route::prefix('ajax')->name('ajax.')->group(function () {
+                        // Get units by project
+                        Route::get('/project/{project}/units', [App\Http\Controllers\Affiliator\LeadController::class, 'getProjectUnits'])->name('project.units');
+                        
+                        // Check duplicate lead
+                        Route::post('/check-duplicate', [App\Http\Controllers\Affiliator\LeadController::class, 'checkDuplicate'])->name('check-duplicate');
+                        
+                        // Get lead statistics
+                        Route::get('/statistics', [App\Http\Controllers\Affiliator\LeadController::class, 'statistics'])->name('statistics');
+                    });
+                });
+            });             
         });
+        
     });
 
     /*
@@ -268,6 +293,12 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::resource('projects', SuperAdminProjectController::class);
             Route::prefix('projects')->name('projects.')->group(function () {
                 Route::patch('/{project}/toggle-status', [SuperAdminProjectController::class, 'toggleStatus'])->name('toggle-status');
+
+                // Registration Management Routes (integrated)
+                Route::post('/{project}/approve-registration', [SuperAdminProjectController::class, 'approveRegistration'])->name('approve-registration');
+                Route::post('/{project}/reject-registration', [SuperAdminProjectController::class, 'rejectRegistration'])->name('reject-registration');
+                Route::post('/bulk-approve-registrations', [SuperAdminProjectController::class, 'bulkApproveRegistrations'])->name('bulk-approve-registrations');
+                Route::get('/{project}/registration-detail', [SuperAdminProjectController::class, 'registrationDetail'])->name('registration-detail');
                 
                 Route::get('/api/crm-projects', [SuperAdminProjectController::class, 'getCrmProjects'])->name('crm-projects');
                 Route::get('/api/crm-project-details/{id}', [SuperAdminProjectController::class, 'getCrmProjectDetails'])->name('crm-project-details');

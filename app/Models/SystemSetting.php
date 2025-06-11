@@ -15,24 +15,41 @@ class SystemSetting extends Model
     // Static methods with caching
     public static function getValue($key, $default = null)
     {
-        return Cache::remember("system_setting_{$key}", 3600, function () use ($key, $default) {
-            $setting = self::where('key', $key)->first();
-            
-            if (!$setting) {
-                return $default;
-            }
+        // return Cache::remember("system_setting_{$key}", 3600, function () use ($key, $default) {
+        //     $setting = self::where('key', $key)->first();
 
-            switch ($setting->type) {
-                case 'boolean':
-                    return filter_var($setting->value, FILTER_VALIDATE_BOOLEAN);
-                case 'integer':
-                    return (int) $setting->value;
-                case 'json':
-                    return json_decode($setting->value, true);
-                default:
-                    return $setting->value;
-            }
-        });
+        //     if (!$setting) {
+        //         return $default;
+        //     }
+
+        //     switch ($setting->type) {
+        //         case 'boolean':
+        //             return filter_var($setting->value, FILTER_VALIDATE_BOOLEAN);
+        //         case 'integer':
+        //             return (int) $setting->value;
+        //         case 'json':
+        //             return json_decode($setting->value, true);
+        //         default:
+        //             return $setting->value;
+        //     }
+        // });
+
+        $setting = self::where('key', $key)->first();
+
+        if (!$setting) {
+            return $default;
+        }
+
+        switch ($setting->type) {
+            case 'boolean':
+                return filter_var($setting->value, FILTER_VALIDATE_BOOLEAN);
+            case 'integer':
+                return (int) $setting->value;
+            case 'json':
+                return json_decode($setting->value, true);
+            default:
+                return $setting->value;
+        }
     }
 
     public static function setValue($key, $value, $type = 'string', $description = null)

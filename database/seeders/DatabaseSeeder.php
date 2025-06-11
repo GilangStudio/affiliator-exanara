@@ -31,6 +31,8 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        //call ProjectRegistrationSeeder
+        $this->call(ProjectRegistrationSeeder::class);
         //call FaqSeeder
         $this->call(FaqSeeder::class);
         //call SystemSettingSeeder

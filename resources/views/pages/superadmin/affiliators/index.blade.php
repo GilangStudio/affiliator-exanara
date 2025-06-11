@@ -213,7 +213,7 @@
                     Menampilkan {{ $affiliators->firstItem() ?? 0 }} hingga {{ $affiliators->lastItem() ?? 0 }} 
                     dari {{ $affiliators->total() }} affiliator
                 </p>
-                @include('components.pagination', ['paginator' => $affiliators])
+                @include('components.pagination', ['paginator' => $affiliators->appends(request()->all())])
             </div>
             @else
             <div class="text-center py-5">

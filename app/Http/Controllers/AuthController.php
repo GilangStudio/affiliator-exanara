@@ -90,8 +90,8 @@ class AuthController extends Controller
                 // Redirect berdasarkan role
                 $redirectRoute = $this->getRedirectRouteByRole($user->role);
 
-                return redirect()->intended(route($redirectRoute))
-                    ->with('success', 'Selamat datang, ' . $user->name . '!');
+                // return redirect()->intended(route($redirectRoute))->with('success', 'Selamat datang, ' . $user->name . '!');
+                return redirect()->route($redirectRoute)->with('success', 'Selamat datang, ' . $user->name . '!');
             }
 
             return redirect()->back()

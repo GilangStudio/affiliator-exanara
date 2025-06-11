@@ -17,6 +17,9 @@ class Project extends Model
         'is_active' => 'boolean',
         'require_digital_signature' => 'boolean',
         'is_agreement_accepted' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'approved_at' => 'datetime',
     ];
 
     // Relationships
@@ -71,6 +74,38 @@ class Project extends Model
         return $this->hasMany(Unit::class);
     }
 
+    /**
+     * Get PIC user - updated relationship
+     */
+    public function picUser()
+    {
+        return $this->belongsTo(User::class, 'pic_user_id');
+    }
+
+    /**
+     * Project registrations
+     */
+    public function registrations()
+    {
+        return $this->hasMany(ProjectRegistration::class);
+    }
+
+    /**
+     * Latest registration
+     */
+    public function latestRegistration()
+    {
+        return $this->hasOne(ProjectRegistration::class)->latest();
+    }
+
+    /**
+     * Approved by user
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -80,6 +115,38 @@ class Project extends Model
     public function scopeByLocation($query, $location)
     {
         return $query->where('location', 'like', "%{$location}%");
+    }
+
+    /**
+     * Scope for internal projects (created by superadmin)
+     */
+    public function scopeInternalProjects($query)
+    {
+        return $query->where('registration_type', 'internal');
+    }
+
+    /**
+     * Scope for manual registration projects
+     */
+    public function scopeManualRegistration($query)
+    {
+        return $query->where('registration_type', 'manual');
+    }
+
+    /**
+     * Scope for CRM projects
+     */
+    public function scopeCrmProjects($query)
+    {
+        return $query->where('registration_type', 'crm');
+    }
+
+    /**
+     * Scope for pending registration
+     */
+    public function scopePendingRegistration($query)
+    {
+        return $query->where('registration_status', 'pending');
     }
 
     // Mutators
@@ -102,6 +169,119 @@ class Project extends Model
         return $this->logo ? asset('storage/' . $this->logo) : asset('img/default.jpg');
     }
 
+    /**
+     * Get brochure file URL
+     */
+    public function getBrochureFileUrlAttribute()
+    {
+        return $this->brochure_file ? asset('storage/' . $this->brochure_file) : null;
+    }
+
+    /**
+     * Get price list file URL
+     */
+    public function getPriceListFileUrlAttribute()
+    {
+        return $this->price_list_file ? asset('storage/' . $this->price_list_file) : null;
+    }
+
+    /**
+     * Get commission payment trigger label
+     */
+    public function getCommissionPaymentTriggerLabelAttribute()
+    {
+        return match($this->commission_payment_trigger) {
+            'booking_fee' => 'Booking Fee',
+            'akad_kredit' => 'Akad Kredit',
+            'spk' => 'SPK (Surat Perjanjian Kerja)',
+            default => '-'
+        };
+    }
+
+    /**
+     * Get registration status label
+     */
+    public function getRegistrationStatusLabelAttribute()
+    {
+        return match($this->registration_status) {
+            'draft' => 'Draft',
+            'pending' => 'Menunggu Persetujuan',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+            default => 'Tidak Diketahui'
+        };
+    }
+
+    /**
+     * Get registration status color
+     */
+    public function getRegistrationStatusColorAttribute()
+    {
+        return match($this->registration_status) {
+            'draft' => 'secondary',
+            'pending' => 'warning',
+            'approved' => 'success',
+            'rejected' => 'danger',
+            default => 'secondary'
+        };
+    }
+
+    /**
+     * Get registration type label
+     */
+    public function getRegistrationTypeLabelAttribute()
+    {
+        return match($this->registration_type) {
+            'internal' => 'Internal',
+            'crm' => 'CRM',
+            'manual' => 'Manual',
+            default => 'Unknown'
+        };
+    }
+
+    /**
+     * Get project period formatted
+     */
+    public function getProjectPeriodAttribute()
+    {
+        if (!$this->start_date) {
+            return '-';
+        }
+
+        $start = $this->start_date->format('d/m/Y');
+        
+        if ($this->end_date) {
+            $end = $this->end_date->format('d/m/Y');
+            return "{$start} - {$end}";
+        }
+
+        return "{$start} - Tidak terbatas";
+    }
+
+    /**
+     * Check if project is manually registered
+     */
+    public function getIsManualRegistrationAttribute()
+    {
+        return $this->registration_type === 'manual';
+    }
+
+    /**
+     * Check if project is internal (created by superadmin)
+     */
+    public function getIsInternalProjectAttribute()
+    {
+        return $this->registration_type === 'internal';
+    }
+
+    /**
+     * Check if project is from CRM
+     */
+    public function getIsCrmProjectAttribute()
+    {
+        return $this->registration_type === 'crm';
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';
@@ -110,7 +290,6 @@ class Project extends Model
     // remove br in terms and conditions
     public function getTermsAndConditionsAttribute($value)
     {
-        // dd(str_replace(["\r\n", "\n", "\r"], '', $value));
         return str_replace(["\r\n", "\n", "\r"], '', $value);
     }
 
@@ -295,6 +474,43 @@ class Project extends Model
             'total_units' => $this->units()->count(),
             'active_units' => $this->units()->active()->count(),
             'commission_info' => $this->commission_info
+        ];
+    }
+
+    /**
+     * Static method to get commission payment trigger options
+     */
+    public static function getCommissionPaymentTriggers()
+    {
+        return [
+            'booking_fee' => 'Booking Fee',
+            'akad_kredit' => 'Akad Kredit', 
+            'spk' => 'SPK (Surat Perjanjian Kerja)',
+        ];
+    }
+
+    /**
+     * Static method to get registration status options
+     */
+    public static function getRegistrationStatuses()
+    {
+        return [
+            'draft' => 'Draft',
+            'pending' => 'Menunggu Persetujuan',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+        ];
+    }
+
+    /**
+     * Static method to get registration types
+     */
+    public static function getRegistrationTypes()
+    {
+        return [
+            'internal' => 'Internal (SuperAdmin)',
+            'crm' => 'CRM System',
+            'manual' => 'Manual Registration',
         ];
     }
 }

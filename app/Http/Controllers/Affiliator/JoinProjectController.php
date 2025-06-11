@@ -200,7 +200,7 @@ class JoinProjectController extends Controller
         }
         
         // Check max affiliators per project if setting exists
-        $maxAffiliators = \App\Models\SystemSetting::getValue('max_affiliators_per_project', null);
+        $maxAffiliators = \App\Models\SystemSetting::getValue('max_projects_per_affiliator', null);
         if ($maxAffiliators) {
             $currentAffiliators = $project->affiliatorProjects()->count();
             
