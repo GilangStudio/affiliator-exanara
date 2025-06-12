@@ -190,6 +190,7 @@ class ProjectController extends Controller
             'leads',
             'units',
             'latestRegistration.submittedBy',
+            'latestRegistration.reviewedBy',
             'picUser'
         ]);
 
@@ -200,6 +201,7 @@ class ProjectController extends Controller
             'verified_leads' => $project->leads()->verified()->count(),
             'total_units' => $project->units()->count(),
             'active_units' => $project->units()->active()->count(),
+            'total_commission_paid' => $project->commissionHistories()->where('type', 'earned')->sum('amount'),
         ];
 
         $recentLeads = $project->leads()
@@ -610,17 +612,17 @@ class ProjectController extends Controller
     /**
      * Show registration detail for manual projects
      */
-    public function registrationDetail(Project $project)
-    {
-        if ($project->registration_type !== 'manual' || !$project->latestRegistration) {
-            return redirect()->route('superadmin.projects.show', $project);
-        }
+    // public function registrationDetail(Project $project)
+    // {
+    //     if ($project->registration_type !== 'manual' || !$project->latestRegistration) {
+    //         return redirect()->route('superadmin.projects.show', $project);
+    //     }
 
-        $registration = $project->latestRegistration;
-        $registration->load(['submittedBy', 'reviewedBy']);
+    //     $registration = $project->latestRegistration;
+    //     $registration->load(['submittedBy', 'reviewedBy']);
 
-        return view('pages.superadmin.projects.registration-detail', compact('project', 'registration'));
-    }
+    //     return view('pages.superadmin.projects.registration-detail', compact('project', 'registration'));
+    // }
 
     /**
      * Get CRM projects for Select2 with pagination and search

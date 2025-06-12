@@ -284,6 +284,32 @@ class Unit extends Model
         ];
     }
 
+    /**
+     * Get unit status label
+     */
+    public function getUnitStatusLabelAttribute()
+    {
+        return match($this->unit_status) {
+            'ready' => 'Ready',
+            'indent' => 'Indent',
+            'sold_out' => 'Sold Out',
+            default => 'Unknown'
+        };
+    }
+
+    /**
+     * Get unit status color
+     */
+    public function getUnitStatusColorAttribute()
+    {
+        return match($this->unit_status) {
+            'ready' => 'success',
+            'indent' => 'warning',
+            'sold_out' => 'danger',
+            default => 'secondary'
+        };
+    }
+
     // public static function generateUniqueCode($projectId, $prefix = null)
     // {
     //     $project = Project::find($projectId);

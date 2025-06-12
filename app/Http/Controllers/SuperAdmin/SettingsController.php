@@ -423,8 +423,47 @@ class SettingsController extends Controller
     private function getCacheSize()
     {
         try {
-            // Simple cache size calculation
-            return '0 MB'; // Placeholder
+            $totalSize = 0;
+            
+            // Get framework cache directory size
+            $frameworkCachePath = storage_path('framework/cache');
+            if (is_dir($frameworkCachePath)) {
+                $totalSize += $this->getDirSize($frameworkCachePath);
+            }
+            
+            // Get application cache directory size (if using file driver)
+            $appCachePath = storage_path('app/cache');
+            if (is_dir($appCachePath)) {
+                $totalSize += $this->getDirSize($appCachePath);
+            }
+            
+            // Get views cache directory size
+            $viewsCachePath = storage_path('framework/views');
+            if (is_dir($viewsCachePath)) {
+                $totalSize += $this->getDirSize($viewsCachePath);
+            }
+            
+            // Get compiled views
+            $compiledViewsPath = storage_path('framework/views');
+            if (is_dir($compiledViewsPath)) {
+                $totalSize += $this->getDirSize($compiledViewsPath);
+            }
+            
+            // For Redis cache (if using Redis)
+            if (config('cache.default') === 'redis') {
+                try {
+                    $redis = app('redis')->connection();
+                    $info = $redis->info('memory');
+                    if (isset($info['used_memory'])) {
+                        $totalSize += (int) $info['used_memory'];
+                    }
+                } catch (\Exception $e) {
+                    // Redis connection failed, continue with file cache calculation
+                }
+            }
+            
+            return $this->formatBytes($totalSize);
+            
         } catch (\Exception $e) {
             return 'Unknown';
         }

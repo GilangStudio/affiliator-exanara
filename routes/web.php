@@ -298,29 +298,31 @@ Route::middleware(['web', 'auth'])->group(function () {
                 Route::post('/{project}/approve-registration', [SuperAdminProjectController::class, 'approveRegistration'])->name('approve-registration');
                 Route::post('/{project}/reject-registration', [SuperAdminProjectController::class, 'rejectRegistration'])->name('reject-registration');
                 Route::post('/bulk-approve-registrations', [SuperAdminProjectController::class, 'bulkApproveRegistrations'])->name('bulk-approve-registrations');
-                Route::get('/{project}/registration-detail', [SuperAdminProjectController::class, 'registrationDetail'])->name('registration-detail');
+                // Route::get('/{project}/registration-detail', [SuperAdminProjectController::class, 'registrationDetail'])->name('registration-detail');
                 
                 Route::get('/api/crm-projects', [SuperAdminProjectController::class, 'getCrmProjects'])->name('crm-projects');
                 Route::get('/api/crm-project-details/{id}', [SuperAdminProjectController::class, 'getCrmProjectDetails'])->name('crm-project-details');
 
-                // Project Admins Management
-                Route::get('/{project}/admins', [SuperAdminProjectAdminController::class, 'index'])->name('admins.index');
-                Route::get('/{project}/admins/create', [SuperAdminProjectAdminController::class, 'create'])->name('admins.create');
-                Route::post('/{project}/admins', [SuperAdminProjectAdminController::class, 'store'])->name('admins.store');
-                Route::get('/{project}/admins/{admin}/edit', [SuperAdminProjectAdminController::class, 'edit'])->name('admins.edit');
-                Route::put('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'update'])->name('admins.update');
-                Route::delete('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'destroy'])->name('admins.destroy');
-                Route::patch('/{project}/admins/{admin}/toggle-status', [SuperAdminProjectAdminController::class, 'toggleStatus'])->name('admins.toggle-status');
-                Route::post('/{project}/admins/{admin}/reset-password', [SuperAdminProjectAdminController::class, 'resetPassword'])->name('admins.reset-password');
+                Route::middleware(['approved.project'])->group(function () {
+                    // Project Admins Management
+                    Route::get('/{project}/admins', [SuperAdminProjectAdminController::class, 'index'])->name('admins.index');
+                    Route::get('/{project}/admins/create', [SuperAdminProjectAdminController::class, 'create'])->name('admins.create');
+                    Route::post('/{project}/admins', [SuperAdminProjectAdminController::class, 'store'])->name('admins.store');
+                    Route::get('/{project}/admins/{admin}/edit', [SuperAdminProjectAdminController::class, 'edit'])->name('admins.edit');
+                    Route::put('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'update'])->name('admins.update');
+                    Route::delete('/{project}/admins/{admin}', [SuperAdminProjectAdminController::class, 'destroy'])->name('admins.destroy');
+                    Route::patch('/{project}/admins/{admin}/toggle-status', [SuperAdminProjectAdminController::class, 'toggleStatus'])->name('admins.toggle-status');
+                    Route::post('/{project}/admins/{admin}/reset-password', [SuperAdminProjectAdminController::class, 'resetPassword'])->name('admins.reset-password');
 
-                // Project Units Management
-                Route::get('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'index'])->name('units.index');
-                Route::get('/{project}/units/create', [App\Http\Controllers\SuperAdmin\UnitController::class, 'create'])->name('units.create');
-                Route::post('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'store'])->name('units.store');
-                Route::get('/{project}/units/{unit}/edit', [App\Http\Controllers\SuperAdmin\UnitController::class, 'edit'])->name('units.edit');
-                Route::put('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'update'])->name('units.update');
-                Route::delete('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'destroy'])->name('units.destroy');
-                Route::patch('/{project}/units/{unit}/toggle-status', [App\Http\Controllers\SuperAdmin\UnitController::class, 'toggleStatus'])->name('units.toggle-status');
+                    // Project Units Management
+                    Route::get('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'index'])->name('units.index');
+                    Route::get('/{project}/units/create', [App\Http\Controllers\SuperAdmin\UnitController::class, 'create'])->name('units.create');
+                    Route::post('/{project}/units', [App\Http\Controllers\SuperAdmin\UnitController::class, 'store'])->name('units.store');
+                    Route::get('/{project}/units/{unit}/edit', [App\Http\Controllers\SuperAdmin\UnitController::class, 'edit'])->name('units.edit');
+                    Route::put('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'update'])->name('units.update');
+                    Route::delete('/{project}/units/{unit}', [App\Http\Controllers\SuperAdmin\UnitController::class, 'destroy'])->name('units.destroy');
+                    Route::patch('/{project}/units/{unit}/toggle-status', [App\Http\Controllers\SuperAdmin\UnitController::class, 'toggleStatus'])->name('units.toggle-status');
+                });
             });
 
             Route::resource('faqs', SuperAdminFaqController::class);

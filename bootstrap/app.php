@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active.user' => \App\Http\Middleware\ActiveUserMiddleware::class,
             'maintenance' => \App\Http\Middleware\MaintenanceMiddleware::class,
             'check.project.affiliator' => \App\Http\Middleware\CheckProjectAffiliatorMiddleware::class,
+            'approved.project' => \App\Http\Middleware\EnsureProjectApproved::class,
         ]);
 
         $middleware->group('affiliator', [

@@ -42,7 +42,7 @@ class AffiliatorProject extends Model
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where($this->getTable() . '.status', 'active');
     }
 
     public function scopeVerified($query)
@@ -57,7 +57,7 @@ class AffiliatorProject extends Model
 
     public function scopeRejected($query)
     {
-        return $query->where($this->getTable().'ve.rification_status', 'rejected');
+        return $query->where($this->getTable().'.verification_status', 'rejected');
     }
 
     // Accessors

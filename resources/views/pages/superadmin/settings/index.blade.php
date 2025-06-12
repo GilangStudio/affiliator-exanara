@@ -736,6 +736,7 @@
                                 <div>
                                     <div class="fw-bold">Bersihkan Cache</div>
                                     <div class="text-secondary small">Hapus semua cache sistem untuk meningkatkan performa</div>
+                                    <div class="text-secondary small">Ukuran cache: {{ $stats['cache_size'] }}</div>
                                 </div>
                                 <form action="{{ route('superadmin.settings.cache.clear') }}" method="POST" class="d-inline">
                                     @csrf

@@ -136,9 +136,6 @@
                 <table class="table table-vcenter">
                     <thead>
                         <tr>
-                            <th width="50">
-                                <input type="checkbox" class="form-check-input" id="select-all">
-                            </th>
                             <th>Project</th>
                             <th>Tipe & Status</th>
                             <th>Developer/Pendaftar</th>
@@ -153,12 +150,6 @@
                     <tbody>
                         @foreach($projects as $project)
                         <tr>
-                            <td>
-                                @if($project->registration_status === 'pending')
-                                    <input type="checkbox" class="form-check-input project-checkbox" 
-                                           value="{{ $project->id }}" name="project_ids[]">
-                                @endif
-                            </td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($project->logo)
@@ -212,9 +203,11 @@
                                 <!-- Registration Status untuk Manual Projects -->
                                 @if($project->is_manual_registration)
                                     <div>
+                                        @if($project->registration_status !== 'approved')
                                         <span class="badge bg-{{ $project->registration_status_color }}-lt">
                                             {{ $project->registration_status_label }}
                                         </span>
+                                        @endif
                                         
                                         @if($project->registration_status === 'pending')
                                             <div class="text-warning small mt-1">
@@ -235,12 +228,12 @@
                                 @if($project->is_manual_registration)
                                     <!-- Developer info untuk manual registration -->
                                     <div class="fw-bold">{{ $project->developer_name ?: '-' }}</div>
-                                    @if($project->latestRegistration)
+                                    {{-- @if($project->latestRegistration)
                                         <div class="text-secondary small">
                                             Pendaftar: {{ $project->latestRegistration->submittedBy->name }}
                                         </div>
                                         <div class="text-secondary small">{{ $project->latestRegistration->submittedBy->email }}</div>
-                                    @endif
+                                    @endif --}}
                                     
                                     <!-- PIC Info -->
                                     @if($project->pic_name)
@@ -265,7 +258,7 @@
                                 </span>
                                 @if($project->units_count > 0)
                                     <div class="text-secondary small">
-                                        {{ $project->units->where('is_active', true)->count() }} aktif
+                                        {{ $project->units()->active()->count() }} aktif
                                     </div>
                                 @endif
                             </td>
@@ -284,19 +277,19 @@
                                 </div>
                                 
                                 <!-- PIC Badge untuk manual projects -->
-                                @if($project->is_manual_registration && $project->picUser)
+                                {{-- @if($project->is_manual_registration && $project->picUser)
                                     <div class="mt-1">
                                         <span class="badge badge-sm bg-info-lt">
                                             <i class="ti ti-star me-1"></i>PIC
                                         </span>
                                     </div>
-                                @endif
+                                @endif --}}
                             </td>
                             <td>
                                 <span class="badge bg-secondary-lt">{{ $project->affiliatorProjects()->count() }}</span>
-                                @if($project->affiliatorProjects()->count() > 0)
+                                @if($project->affiliatorProjects()->active()->verified()->count() > 0)
                                     <div class="text-secondary small">
-                                        {{ $project->affiliatorProjects()->where('status', 'active')->count() }} aktif
+                                        {{ $project->affiliatorProjects()->active()->verified()->count() }} aktif
                                     </div>
                                 @endif
                             </td>
@@ -350,13 +343,13 @@
                                                 <div class="dropdown-divider"></div>
                                             @endif
                                             
-                                            @if($project->latestRegistration)
+                                            {{-- @if($project->latestRegistration)
                                                 <a href="{{ route('superadmin.projects.registration-detail', $project) }}" 
                                                    class="dropdown-item">
                                                     <i class="ti ti-file-text me-2"></i>
                                                     Detail Registration
                                                 </a>
-                                            @endif
+                                            @endif --}}
                                         @endif
                                         
                                         <!-- Standard Project Actions -->
@@ -507,7 +500,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.getElementById('select-all');
     const projectCheckboxes = document.querySelectorAll('.project-checkbox');
     const bulkApproveBtn = document.getElementById('bulk-approve-btn');
     const selectedCountSpan = document.getElementById('selected-count');
@@ -536,19 +528,6 @@ document.addEventListener('DOMContentLoaded', function() {
             bulkApproveBtn.style.display = 'none';
         }
     }
-
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            projectCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            updateBulkActions();
-        });
-    }
-
-    projectCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateBulkActions);
-    });
 
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

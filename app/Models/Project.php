@@ -112,6 +112,8 @@ class Project extends Model
         return $query->where('is_active', true);
     }
 
+    //scope term and condition is true
+
     public function scopeByLocation($query, $location)
     {
         return $query->where('location', 'like', "%{$location}%");

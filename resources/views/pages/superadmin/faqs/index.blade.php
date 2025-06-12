@@ -51,7 +51,7 @@
 </div>
 
 <!-- Stats Cards -->
-<div class="row gy-2">
+<div class="row gy-2 mb-3">
     <div class="col-sm-6 col-lg-3">
         <div class="card">
             <div class="card-body">

@@ -1,7 +1,7 @@
 <div class="col-12">
     {{-- Alert Messages --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible w-100" role="alert">
+    <div class="alert alert-success alert-dismissible alert-global w-100" role="alert">
         <div class="d-flex">
             <div>
                 <i class="ti ti-check me-2"></i>
@@ -13,7 +13,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible w-100" role="alert">
+    <div class="alert alert-danger alert-dismissible alert-global w-100" role="alert">
         <div class="d-flex">
             <div>
                 <i class="ti ti-exclamation-circle me-2"></i>
@@ -25,7 +25,7 @@
     @endif
 
     @if(session('info'))
-    <div class="alert alert-info alert-dismissible w-100" role="alert">
+    <div class="alert alert-info alert-dismissible alert-global w-100" role="alert">
         <div class="d-flex">
             <div>
                 <i class="ti ti-info me-2"></i>
@@ -37,7 +37,7 @@
     @endif
 
     @if ($errors->any())
-    <div class="alert alert-danger alert-dismissible w-100" role="alert">
+    <div class="alert alert-danger alert-dismissible alert-global w-100" role="alert">
         <div class="d-flex">
             <div>
                 <i class="ti ti-exclamation-circle me-2"></i>

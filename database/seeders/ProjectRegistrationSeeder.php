@@ -15,15 +15,15 @@ class ProjectRegistrationSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create sample affiliator for testing
-        $affiliator = User::create([
-            'name' => 'Developer Test',
+        // Create sample admin for testing
+        $admin = User::create([
+            'name' => 'Admin Test',
             'username' => 'developer_test',
             'email' => 'developer@example.com',
             'country_code' => '+62',
             'phone' => '81234567892',
             'password' => bcrypt('password'),
-            'role' => 'affiliator',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -122,7 +122,7 @@ class ProjectRegistrationSeeder extends Seeder
         // Create project registration record
         ProjectRegistration::create([
             'project_id' => $project->id,
-            'submitted_by' => $affiliator->id,
+            'submitted_by' => $picUser->id,
             'form_data' => [
                 'project_name' => $project->name,
                 'developer_name' => $project->developer_name,
@@ -197,7 +197,7 @@ class ProjectRegistrationSeeder extends Seeder
         // Create approved registration record
         ProjectRegistration::create([
             'project_id' => $approvedProject->id,
-            'submitted_by' => $affiliator->id,
+            'submitted_by' => $approvedPicUser->id,
             'form_data' => [
                 'project_name' => $approvedProject->name,
                 'developer_name' => $approvedProject->developer_name,
