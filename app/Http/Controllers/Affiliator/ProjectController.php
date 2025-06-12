@@ -13,7 +13,7 @@ use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\NotificationService;
 
-class AffiliatorProjectController extends Controller
+class ProjectController extends Controller
 {
     protected $activityLogService;
     protected $notificationService;
@@ -38,12 +38,15 @@ class AffiliatorProjectController extends Controller
             ->withCount([
                 'affiliatorProjects as total_affiliators',
                 'affiliatorProjects as active_affiliators' => function($query) {
-                    $query->where('status', 'active');
+                    $query->active();
                 },
                 'units as total_units' => function($query) {
-                    $query->where('is_active', true);
-                }
-            ]);
+                    $query->active();
+                },
+            ])
+            ->whereHas('units', function ($query) {
+                $query->active();
+            });
 
         // Apply search filter
         if ($request->filled('search')) {
@@ -74,7 +77,7 @@ class AffiliatorProjectController extends Controller
                 $q->withCount([
                     'affiliatorProjects as total_affiliators',
                     'units as total_units' => function($query) {
-                        $query->where('is_active', true);
+                        $query->active();
                     }
                 ]);
             }])

@@ -168,7 +168,7 @@
 @endif
 
 <!-- Stats Cards -->
-<div class="row mb-3">
+<div class="row g-3 mb-3">
     <div class="col-sm-6 col-lg-3">
         <div class="card">
             <div class="card-body">
@@ -252,7 +252,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row g-3">
     <!-- Project Information -->
     <div class="col-lg-8">
         <div class="card">
@@ -436,7 +436,7 @@
                             Bergabung dengan project ini untuk mulai mendapatkan komisi dari lead yang Anda kumpulkan.
                         </div>
                         <button type="button" class="btn btn-primary w-100" 
-                                onclick="joinProject({{ $project->id }}, '{{ $project->name }}')">
+                                onclick="joinProject('{{ $project->slug }}', '{{ $project->name }}')">
                             <i class="ti ti-plus me-1"></i>
                             Bergabung Sekarang
                         </button>
@@ -504,7 +504,7 @@
                     
                     <div class="mt-3">
                         <button type="button" class="btn btn-outline-{{ $userProject->status == 'active' ? 'warning' : 'success' }} w-100" 
-                                onclick="toggleProjectStatus({{ $project->id }}, '{{ $project->name }}', '{{ $userProject->status }}')">
+                                onclick="toggleProjectStatus('{{ $project->slug }}', '{{ $project->name }}', '{{ $userProject->status }}')">
                             <i class="ti ti-{{ $userProject->status == 'active' ? 'pause' : 'play' }} me-1"></i>
                             {{ $userProject->status == 'active' ? 'Nonaktifkan Project' : 'Aktifkan Project' }}
                         </button>
@@ -601,17 +601,19 @@
     </div>
 </div>
 
+@include('components.toast')
+
 @endsection
 
 @push('scripts')
 <script>
-let currentProjectId = null;
+let currentProjectSlug = null;
 let currentProjectStatus = null;
 let toggleStatusModal = null;
 let joinProjectModal = null;
 
-function joinProject(projectId, projectName) {
-    currentProjectId = projectId;
+function joinProject(projectSlug, projectName) {
+    currentProjectSlug = projectSlug;
     const projectNameEl = document.getElementById('join-project-name');
     if (projectNameEl) {
         projectNameEl.textContent = projectName;
@@ -624,7 +626,7 @@ function joinProject(projectId, projectName) {
 }
 
 function toggleProjectStatus(projectId, projectName, currentStatus) {
-    currentProjectId = projectId;
+    currentProjectSlug = projectId;
     currentProjectStatus = currentStatus;
     
     const isActive = currentStatus === 'active';
@@ -660,14 +662,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmJoinBtn = document.getElementById('confirm-join-btn');
     if (confirmJoinBtn) {
         confirmJoinBtn.addEventListener('click', function() {
-            if (!currentProjectId) return;
+            if (!currentProjectSlug) return;
             
             const btn = this;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Bergabung...';
             btn.disabled = true;
             
-            fetch(`/affiliator/project/${currentProjectId}/join`, {
+            fetch(`/project/${currentProjectSlug}/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -680,7 +682,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(data.message, 'success');
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 500);
                 } else {
                     showToast(data.message, 'error');
                 }
@@ -703,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmToggleBtn = document.getElementById('confirm-toggle-btn');
     if (confirmToggleBtn) {
         confirmToggleBtn.addEventListener('click', function() {
-            if (!currentProjectId) return;
+            if (!currentProjectSlug) return;
             
             const btn = this;
             const originalText = btn.innerHTML;
@@ -713,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${loadingText}`;
             btn.disabled = true;
             
-            fetch(`/affiliator/project/${currentProjectId}/toggle-status`, {
+            fetch(`/project/${currentProjectSlug}/toggle-status`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -726,7 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showToast(data.message, 'success');
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 500);
                 } else {
                     showToast(data.message, 'error');
                 }
@@ -743,7 +745,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 // Clean up modal state
                 setTimeout(() => {
-                    currentProjectId = null;
+                    currentProjectSlug = null;
                     currentProjectStatus = null;
                 }, 500);
             });

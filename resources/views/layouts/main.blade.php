@@ -24,8 +24,10 @@
             <!-- BEGIN PAGE BODY -->
             <div class="page-body">
                 <div class="container-xl">
-                    <div class="row row-deck row-cards">
-                        @yield('content')
+                    <div class="row">
+                        <div class="col-12">
+                            @yield('content')
+                        </div>
                     </div>
                 </div>
             </div>

@@ -16,7 +16,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Affiliator\JoinProjectController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
-use App\Http\Controllers\Affiliator\AffiliatorProjectController;
+use App\Http\Controllers\Affiliator\ProjectController as AffiliatorProjectController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
