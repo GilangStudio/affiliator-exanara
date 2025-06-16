@@ -115,7 +115,7 @@
                         </div>
                         <div class="col-6">
                             <div class="text-secondary small">Status Affiliator</div>
-                            <span class="badge bg-{{ $userProject->status == 'active' ? 'success' : ($userProject->status == 'suspended' ? 'danger' : 'secondary') }}-lt">
+                            <span class="badge bg-{{ $userProject->status == 'active' ? 'success' : ($userProject->status == 'suspended' ? 'danger' : ($userProject->status == 'deactive' ? 'danger' : 'secondary')) }}-lt">
                                 {{ $userProject->status_label }}
                             </span>
                         </div>
@@ -293,6 +293,10 @@
                                         <td><strong>{{ $project->name }}</strong></td>
                                     </tr>
                                     <tr>
+                                        <td width="140">Developer:</td>
+                                        <td><strong>{{ $project->developer_name }}</strong></td>
+                                    </tr>
+                                    <tr>
                                         <td>Lokasi:</td>
                                         <td>{{ $project->location ?: '-' }}</td>
                                     </tr>
@@ -308,7 +312,7 @@
                                         <td>Tanda Tangan Digital:</td>
                                         <td>
                                             <span class="badge bg-{{ $project->require_digital_signature ? 'blue' : 'secondary' }}-lt">
-                                                {{ $project->require_digital_signature ? 'Wajib' : 'Opsional' }}
+                                                {{ $project->require_digital_signature ? 'Wajib' : 'Tidak Perlu' }}
                                             </span>
                                         </td>
                                     </tr>
@@ -316,8 +320,16 @@
                             </div>
                             <div class="col-md-6">
                                 <h4>Informasi Komisi</h4>
-                                <div class="alert alert-success">
-                                    <div class="h4 mb-1">{{ $stats['commission_info']['range'] }}</div>
+
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td>Komisi Dibayar Setelah:</td>
+                                        <td>{{ $project->commission_payment_trigger_label }}</td>
+                                    </tr>
+                                </table>
+
+                                <div class="alert alert-success d-inline-block">
+                                    <div class="h4 mb-0">{{ $stats['commission_info']['range'] }}</div>
                                     <div class="text-secondary">{{ $stats['commission_info']['description'] }}</div>
                                 </div>
                                 
@@ -435,7 +447,7 @@
                             <i class="ti ti-info-circle me-2"></i>
                             Bergabung dengan project ini untuk mulai mendapatkan komisi dari lead yang Anda kumpulkan.
                         </div>
-                        <button type="button" class="btn btn-primary w-100" 
+                        <button type="button" class="btn btn-success w-100" 
                                 onclick="joinProject('{{ $project->slug }}', '{{ $project->name }}')">
                             <i class="ti ti-plus me-1"></i>
                             Bergabung Sekarang
@@ -462,6 +474,7 @@
                     </h3>
                 </div>
                 <div class="card-body">
+                    @if (in_array($userProject->status, ['active', 'inactive']))
                     <div class="list-group list-group-flush list-group-hoverable">
                         @if($userProject->can_add_leads)
                             <a href="{{ route('affiliator.leads.project.create', $project->slug) }}" class="list-group-item list-group-item-action">
@@ -505,10 +518,10 @@
                     <div class="mt-3">
                         <button type="button" class="btn btn-outline-{{ $userProject->status == 'active' ? 'warning' : 'success' }} w-100" 
                                 onclick="toggleProjectStatus('{{ $project->slug }}', '{{ $project->name }}', '{{ $userProject->status }}')">
-                            <i class="ti ti-{{ $userProject->status == 'active' ? 'pause' : 'play' }} me-1"></i>
                             {{ $userProject->status == 'active' ? 'Nonaktifkan Project' : 'Aktifkan Project' }}
                         </button>
                     </div>
+                    @endif
                 </div>
             </div>
         @endif
@@ -565,8 +578,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="confirm-join-btn">
+                <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" id="confirm-join-btn">
                     <i class="ti ti-plus me-1"></i>
                     Bergabung
                 </button>

@@ -78,10 +78,15 @@ class AffiliatorProject extends Model
 
     public function getCanAddLeadsAttribute()
     {
-        return $this->status === 'active' && 
-               $this->verification_status === 'verified' && 
-               $this->terms_accepted && 
-               $this->digital_signature;
+        $baseConditions = $this->status === 'active' && 
+                         $this->verification_status === 'verified' && 
+                         $this->terms_accepted;
+
+        if ($this->project && $this->project->require_digital_signature == 1) {
+            return $baseConditions && $this->digital_signature;
+        }
+
+        return $baseConditions;
     }
 
     public function getCompletionProgressAttribute()
@@ -89,9 +94,12 @@ class AffiliatorProject extends Model
         $steps = [
             'ktp_uploaded' => !empty($this->ktp_number) && !empty($this->ktp_photo),
             'verified' => $this->verification_status === 'verified',
-            'terms_accepted' => $this->terms_accepted,
-            'digital_signature' => !empty($this->digital_signature)
+            'terms_accepted' => $this->terms_accepted
         ];
+
+        if ($this->project && $this->project->require_digital_signature == 1) {
+            $steps['digital_signature'] = !empty($this->digital_signature);
+        }
 
         $completed = array_filter($steps);
         return (count($completed) / count($steps)) * 100;
@@ -103,6 +111,7 @@ class AffiliatorProject extends Model
             'incomplete' => 'Belum Lengkap',
             'pending_verification' => 'Menunggu Verifikasi',
             'active' => 'Aktif',
+            'inactive' => 'Tidak Aktif',
             'suspended' => 'Disuspend',
             default => 'Tidak Diketahui'
         };

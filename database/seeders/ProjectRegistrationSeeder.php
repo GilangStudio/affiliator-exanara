@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\Unit;
+use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Project;
-use Illuminate\Database\Seeder;
+use App\Models\Unit;
 use App\Models\ProjectRegistration;
+use Faker\Factory as Faker;
 
 class ProjectRegistrationSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Seed the application's database.
      */
     public function run(): void
     {
-        // Create sample admin for testing
+        // 1. Buat user Admin untuk pengujian
         $admin = User::create([
             'name' => 'Admin Test',
             'username' => 'developer_test',
@@ -27,190 +28,115 @@ class ProjectRegistrationSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // Create sample manual project
-        $project = Project::create([
-            'name' => 'Green Valley Residence',
-            'developer_name' => 'PT Hunian Harmonis Ceria',
-            'location' => 'Jakarta Selatan',
-            'website_url' => 'https://greenvalley.example.com',
-            'description' => '<p>Green Valley Residence adalah project perumahan modern dengan konsep eco-friendly yang berlokasi strategis di Jakarta Selatan. Dilengkapi dengan berbagai fasilitas modern seperti taman bermain, kolam renang, dan area jogging.</p>',
-            'terms_and_conditions' => '<p>Syarat dan ketentuan akan diatur setelah project disetujui.</p>',
-            'commission_payment_trigger' => 'booking_fee',
-            'pic_name' => 'Budi Santoso',
-            'pic_phone' => '081987654321',
-            'pic_email' => 'budi.santoso@greenvalley.com',
-            'start_date' => now()->addDays(30),
-            'end_date' => now()->addYear(),
-            'registration_type' => 'manual',
-            'registration_status' => 'pending',
-            'is_active' => false,
-            'require_digital_signature' => true,
-        ]);
+        // Inisialisasi Faker untuk data Indonesia
+        $faker = Faker::create('id_ID');
 
-        // Create sample units
-        $units = [
-            [
-                'name' => 'Type A - Minimalist',
-                'price' => 850000000,
-                'unit_type' => 'residential',
-                'commission_type' => 'percentage',
-                'commission_value' => 2.5,
-                'description' => 'Rumah minimalis 2 lantai dengan desain modern',
-                'building_area' => 80,
-                'land_area' => 100,
-                'bedrooms' => 3,
-                'bathrooms' => 2,
-                'carport' => 1,
-                'floor' => 2,
-                'power_capacity' => 2200,
-                'certificate_type' => 'SHM',
-                'unit_status' => 'ready',
-                'is_active' => false,
-            ],
-            [
-                'name' => 'Type B - Family',
-                'price' => 1200000000,
-                'unit_type' => 'residential',
-                'commission_type' => 'percentage',
-                'commission_value' => 3.0,
-                'description' => 'Rumah keluarga dengan ruang yang lebih luas',
-                'building_area' => 120,
-                'land_area' => 150,
-                'bedrooms' => 4,
-                'bathrooms' => 3,
-                'carport' => 2,
-                'floor' => 2,
-                'power_capacity' => 3500,
-                'certificate_type' => 'SHM',
-                'unit_status' => 'ready',
-                'is_active' => false,
-            ],
-            [
-                'name' => 'Type C - Premium',
-                'price' => 1800000000,
-                'unit_type' => 'residential',
-                'commission_type' => 'fixed',
-                'commission_value' => 45000000,
-                'description' => 'Rumah premium dengan fasilitas lengkap',
-                'building_area' => 180,
-                'land_area' => 200,
-                'bedrooms' => 5,
-                'bathrooms' => 4,
-                'carport' => 3,
-                'floor' => 2,
-                'power_capacity' => 5500,
-                'certificate_type' => 'SHM',
-                'unit_status' => 'indent',
-                'is_active' => false,
-            ],
-        ];
+        // 2. Loop untuk membuat 20 project yang sudah disetujui
+        for ($i = 1; $i <= 20; $i++) {
+            
+            // --- Data Dinamis untuk Setiap Project ---
+            $projectName = $faker->company . ' Residence';
+            $developerName = $faker->company;
+            $location = $faker->randomElement(['Jakarta Selatan', 'Bandung', 'Surabaya', 'Yogyakarta', 'Semarang', 'Medan', 'Denpasar']);
+            $picName = $faker->name;
+            // Pastikan email unik dengan menambahkan nomor iterasi
+            $picEmail = strtolower(str_replace(' ', '.', $picName)) . $i . '@example.com'; 
+            $picPhone = $faker->unique()->numerify('081#########');
+            $startDate = now()->subDays(rand(10, 100));
+            $approvedAt = $startDate->copy()->subDays(rand(1, 5));
 
-        foreach ($units as $unitData) {
-            Unit::create(array_merge($unitData, ['project_id' => $project->id]));
+            // --- Buat Project ---
+            $project = Project::create([
+                'name' => str_replace(['PT ', 'CV ', 'Fa ', 'Yayasan ', 'UD ', 'PD ', 'PJ ', 'Tbk', '(Persero)'], '', $projectName),
+                'developer_name' => 'PT ' . str_replace(['PT ', 'CV ', 'Fa ', 'Yayasan ', 'UD ', 'PD ', 'PJ ', 'Perum '], '', $developerName),
+                'location' => $location,
+                'website_url' => 'https://' . strtolower(str_replace(' ', '', $faker->company)) . '.example.com',
+                'description' => '<p>' . $faker->paragraph(3) . '</p>',
+                'terms_and_conditions' => '<p>Syarat dan ketentuan telah disetujui dan berlaku untuk project ini.</p>',
+                'commission_payment_trigger' => $faker->randomElement(['booking_fee', 'akad_kredit', 'spk']),
+                'pic_name' => $picName,
+                'pic_phone' => $picPhone,
+                'pic_email' => $picEmail,
+                'start_date' => $startDate,
+                'end_date' => now()->addYears(rand(1, 3)),
+                'registration_type' => 'manual',
+                'registration_status' => 'approved', // Status disetujui
+                'is_active' => true,                 // Project aktif
+                'require_digital_signature' => $faker->boolean,
+                'approved_by' => $admin->id,         // Disetujui oleh admin yang kita buat
+                'approved_at' => $approvedAt,
+            ]);
+
+            // --- Buat beberapa unit (2-4 unit per project) ---
+            $unitsDataForJson = [];
+            $unitCount = rand(2, 4);
+            for ($j = 1; $j <= $unitCount; $j++) {
+
+                $commissionType = $faker->randomElement(['percentage', 'fixed']);
+                $commissionValue = $commissionType === 'percentage' ? $faker->randomElement([2, 2.5, 3]) : $faker->randomElement([30000000, 50000000]);
+
+                $unitData = [
+                    'project_id' => $project->id,
+                    'name' => 'Tipe ' . chr(64 + $j) . ' ' . $faker->word, // Tipe A, Tipe B, dst.
+                    'price' => $faker->numberBetween(500, 4000) * 1000000,
+                    'unit_type' => 'residential',
+                    'commission_type' => $commissionType,
+                    'commission_value' => $commissionValue,
+                    'description' => 'Unit modern dengan ' . $faker->sentence(4),
+                    'building_area' => $faker->numberBetween(40, 200),
+                    'land_area' => $faker->numberBetween(60, 300),
+                    'bedrooms' => $faker->numberBetween(2, 5),
+                    'bathrooms' => $faker->numberBetween(1, 4),
+                    'carport' => $faker->numberBetween(1, 3),
+                    'floor' => $faker->numberBetween(1, 2),
+                    'power_capacity' => $faker->randomElement([1300, 2200, 3500, 5500]),
+                    'certificate_type' => 'SHM',
+                    'unit_status' => $faker->randomElement(['ready', 'indent']),
+                    'is_active' => true, // Unit aktif
+                ];
+                Unit::create($unitData);
+                $unitsDataForJson[] = $unitData; // Simpan untuk form_data registrasi
+            }
+
+            // --- Buat User PIC dan aktifkan ---
+            $picUser = User::createPicUser($picName, $picEmail, $picPhone);
+            $picUser->update(['is_active' => true]);
+
+            // --- Hubungkan PIC ke Project ---
+            $project->update(['pic_user_id' => $picUser->id]);
+
+            // --- Buat Catatan Registrasi yang Disetujui ---
+            ProjectRegistration::create([
+                'project_id' => $project->id,
+                'submitted_by' => $picUser->id,
+                'form_data' => [ // Simulasikan data formulir yang dikirim
+                    'project_name' => $project->name,
+                    'developer_name' => $project->developer_name,
+                    'location' => $project->location,
+                    'pic_name' => $project->pic_name,
+                    'pic_phone' => $project->pic_phone,
+                    'pic_email' => $project->pic_email,
+                    'units' => $unitsDataForJson, // Data unit yang dibuat di atas
+                ],
+                'status' => 'approved', // Status disetujui
+                'reviewed_by' => $admin->id,
+                'reviewed_at' => $approvedAt,
+                'review_notes' => 'Project disetujui via seeder.',
+            ]);
+
+            // --- Buat Admin yang Mengelola Project ---
+            $admin = User::create([
+                'name' => $faker->name,
+                'username' => strtolower($faker->userName),
+                'email' => $faker->unique()->safeEmail,
+                'phone' => $faker->unique()->numerify('081#########'),
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+                'country_code' => '+62', // default Indonesia
+                'is_active' => true,
+            ]);
+
+            $project->admins()->attach([$admin->id, $picUser->id]);
         }
-
-        // Create PIC user
-        $picUser = User::createPicUser(
-            'Budi Santoso',
-            'budi.santoso@greenvalley.com', 
-            '081987654321'
-        );
-
-        // Link PIC to project
-        $project->update(['pic_user_id' => $picUser->id]);
-
-        // Create project registration record
-        ProjectRegistration::create([
-            'project_id' => $project->id,
-            'submitted_by' => $picUser->id,
-            'form_data' => [
-                'project_name' => $project->name,
-                'developer_name' => $project->developer_name,
-                'location' => $project->location,
-                'website_url' => $project->website_url,
-                'description' => $project->description,
-                'commission_payment_trigger' => $project->commission_payment_trigger,
-                'pic_name' => $project->pic_name,
-                'pic_phone' => $project->pic_phone,
-                'pic_email' => $project->pic_email,
-                'start_date' => $project->start_date->format('Y-m-d'),
-                'end_date' => $project->end_date ? $project->end_date->format('Y-m-d') : null,
-                'units' => $units,
-                'data_accuracy' => true,
-                'terms_agreement' => true,
-            ],
-            'status' => 'pending',
-        ]);
-
-        // Create another approved project example
-        $approvedProject = Project::create([
-            'name' => 'Urban Heights',
-            'developer_name' => 'PT Pembangunan Urban',
-            'location' => 'Bandung',
-            'website_url' => 'https://urbanheights.example.com',
-            'description' => '<p>Urban Heights adalah apartemen modern di pusat kota Bandung dengan akses mudah ke berbagai fasilitas umum.</p>',
-            'terms_and_conditions' => '<p>Syarat dan ketentuan telah disetujui dan berlaku.</p>',
-            'commission_payment_trigger' => 'spk',
-            'pic_name' => 'Sari Wijaya',
-            'pic_phone' => '081234567899',
-            'pic_email' => 'sari.wijaya@urbanheights.com',
-            'start_date' => now()->subDays(10),
-            'end_date' => now()->addMonths(18),
-            'registration_type' => 'manual',
-            'registration_status' => 'approved',
-            'is_active' => true,
-            'require_digital_signature' => true,
-            'approved_by' => 1, // Assuming superadmin ID is 1
-            'approved_at' => now()->subDays(5),
-        ]);
-
-        // Create unit for approved project
-        Unit::create([
-            'project_id' => $approvedProject->id,
-            'name' => 'Studio Premium',
-            'price' => 650000000,
-            'unit_type' => 'residential',
-            'commission_type' => 'percentage',
-            'commission_value' => 3.5,
-            'description' => 'Studio apartemen dengan view kota',
-            'building_area' => 35,
-            'bedrooms' => 1,
-            'bathrooms' => 1,
-            'floor' => 15,
-            'power_capacity' => 1300,
-            'certificate_type' => 'SHM',
-            'unit_status' => 'ready',
-            'is_active' => true,
-        ]);
-
-        // Create approved PIC user
-        $approvedPicUser = User::createPicUser(
-            'Sari Wijaya',
-            'sari.wijaya@urbanheights.com',
-            '081234567899'
-        );
-        $approvedPicUser->update(['is_active' => true]);
-
-        // Link PIC to approved project
-        $approvedProject->update(['pic_user_id' => $approvedPicUser->id]);
-
-        // Create approved registration record
-        ProjectRegistration::create([
-            'project_id' => $approvedProject->id,
-            'submitted_by' => $approvedPicUser->id,
-            'form_data' => [
-                'project_name' => $approvedProject->name,
-                'developer_name' => $approvedProject->developer_name,
-                'location' => $approvedProject->location,
-                'commission_payment_trigger' => $approvedProject->commission_payment_trigger,
-                'pic_name' => $approvedProject->pic_name,
-                'pic_phone' => $approvedProject->pic_phone,
-                'pic_email' => $approvedProject->pic_email,
-            ],
-            'status' => 'approved',
-            'reviewed_by' => 1, // Assuming superadmin ID is 1
-            'reviewed_at' => now()->subDays(5),
-            'review_notes' => 'Project sangat bagus dan sesuai dengan standar. Disetujui.',
-        ]);
     }
 }

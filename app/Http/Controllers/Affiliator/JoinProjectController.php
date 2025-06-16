@@ -29,7 +29,7 @@ class JoinProjectController extends Controller
     }
 
     /**
-     * Display available projects to join
+     * Display available projects to join with pagination and filters
      */
     public function index(Request $request)
     {
@@ -41,25 +41,93 @@ class JoinProjectController extends Controller
         // **TAMBAHAN**: Cek parameter project dari URL atau session
         $autoSelectProjectSlug = $request->get('project') ?? session('auto_select_project');
         
-        // Get available projects with additional info
-        // Only show projects that are active AND have at least one active unit
-        $availableProjects = Project::active()
+        // Build query for available projects
+        $query = Project::active()
             ->whereNotIn('id', $joinedProjectIds)
             ->whereHas('units', function ($query) {
                 $query->where('is_active', true);
             })
             ->with(['units' => function ($query) {
                 $query->where('is_active', true);
-            }])
-            ->orderBy('name')
-            ->get()
-            ->map(function ($project) {
+            }]);
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('developer_name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply location filter
+        if ($request->filled('location')) {
+            $location = $request->get('location');
+            $query->where('location', 'like', "%{$location}%");
+        }
+
+        // Apply commission filter
+        if ($request->filled('commission_type')) {
+            $commissionType = $request->get('commission_type');
+            $query->whereHas('units', function($q) use ($commissionType) {
+                $q->where('commission_type', $commissionType);
+            });
+        }
+
+        // Apply commission range filter
+        if ($request->filled('min_commission') || $request->filled('max_commission')) {
+            $minCommission = $request->get('min_commission');
+            $maxCommission = $request->get('max_commission');
+            
+            $query->whereHas('units', function($q) use ($minCommission, $maxCommission) {
+                if ($minCommission) {
+                    $q->where('commission_value', '>=', $minCommission);
+                }
+                if ($maxCommission) {
+                    $q->where('commission_value', '<=', $maxCommission);
+                }
+            });
+        }
+
+        // Apply sorting with auto-select priority
+        $sort = $request->get('sort', 'name');
+        
+        // If there's an auto-select project, prioritize it first
+        if ($autoSelectProjectSlug) {
+            $query->orderByRaw("CASE WHEN slug = ? THEN 0 ELSE 1 END", [$autoSelectProjectSlug]);
+        }
+        
+        // Then apply regular sorting
+        switch ($sort) {
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                $query->orderBy('name', 'asc');
+        }
+
+        // Get pagination size
+        $perPage = $request->get('per_page', 12);
+        $perPage = in_array($perPage, [12, 24, 48]) ? $perPage : 12;
+
+        // Get paginated results
+        $availableProjects = $query->paginate($perPage)
+            ->through(function ($project) {
                 $commissionInfo = $this->calculateCommissionInfoFromUnits($project->units);
                 
                 return [
                     'id' => $project->id,
                     'name' => $project->name,
                     'slug' => $project->slug,
+                    'developer_name' => $project->developer_name,
                     'location' => $project->location,
                     'description' => $project->description,
                     'logo_url' => $project->logo_url ?: asset('images/default-project.png'),
@@ -71,15 +139,25 @@ class JoinProjectController extends Controller
                     'units_count' => $project->units->count(),
                     'commission_preview' => $commissionInfo['range'],
                 ];
-            })->sortBy([
-                function ($project) use ($autoSelectProjectSlug) {
-                    return !($autoSelectProjectSlug && $project['slug'] === $autoSelectProjectSlug);
-                },
-                function ($project) {
-                    return $project['name'];
-                }
-            ])
-            ->values();
+            });
+
+        // Get unique locations for filter dropdown
+        $locations = Project::active()
+            ->whereNotIn('id', $joinedProjectIds)
+            ->whereHas('units', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->whereNotNull('location')
+            ->where('location', '!=', '')
+            ->distinct()
+            ->pluck('location')
+            ->sort();
+
+        // Get commission types for filter
+        $commissionTypes = [
+            'percentage' => 'Persentase (%)',
+            'fixed' => 'Nominal Tetap (Rp)'
+        ];
 
         // Get user's current projects with status
         $userProjects = $user->affiliatorProjects()
@@ -93,44 +171,193 @@ class JoinProjectController extends Controller
                 ];
             });
 
-        return view('pages.affiliator.join-project', compact('availableProjects', 'userProjects', 'autoSelectProjectSlug'));
+        return view('pages.affiliator.join-project', compact(
+            'availableProjects', 
+            'userProjects', 
+            'autoSelectProjectSlug',
+            'locations',
+            'commissionTypes'
+        ));
     }
 
     /**
-     * Get available projects for AJAX
+     * Get available projects for AJAX with filters
      */
-    public function getAvailableProjects()
+    public function getAvailableProjects(Request $request)
     {
         $user = User::findOrFail(Auth::user()->id);
         $joinedProjectIds = $user->affiliatorProjects()->pluck('project_id');
         
-        // Only show projects that are active AND have at least one active unit
-        $projects = Project::active()
+        // Get auto-select project slug from session or request
+        $autoSelectProjectSlug = $request->get('auto_select_project') ?? session('auto_select_project');
+        
+        // Build query
+        $query = Project::active()
             ->whereNotIn('id', $joinedProjectIds)
             ->whereHas('units', function ($query) {
                 $query->where('is_active', true);
             })
             ->with(['units' => function ($query) {
                 $query->where('is_active', true);
-            }])
-            ->select('id', 'name', 'description', 'logo', 'location')
-            ->get()
-            ->map(function($project) {
+            }]);
+
+        // Apply filters (same as index method)
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('developer_name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('location')) {
+            $location = $request->get('location');
+            $query->where('location', 'like', "%{$location}%");
+        }
+
+        if ($request->filled('commission_type')) {
+            $commissionType = $request->get('commission_type');
+            $query->whereHas('units', function($q) use ($commissionType) {
+                $q->where('commission_type', $commissionType);
+            });
+        }
+
+        if ($request->filled('min_commission') || $request->filled('max_commission')) {
+            $minCommission = $request->get('min_commission');
+            $maxCommission = $request->get('max_commission');
+            
+            $query->whereHas('units', function($q) use ($minCommission, $maxCommission) {
+                if ($minCommission) {
+                    $q->where('commission_value', '>=', $minCommission);
+                }
+                if ($maxCommission) {
+                    $q->where('commission_value', '<=', $maxCommission);
+                }
+            });
+        }
+
+        // Apply sorting with auto-select priority
+        $sort = $request->get('sort', 'name');
+        
+        // If there's an auto-select project, prioritize it first
+        if ($autoSelectProjectSlug) {
+            $query->orderByRaw("CASE WHEN slug = ? THEN 0 ELSE 1 END", [$autoSelectProjectSlug]);
+        }
+        
+        // Then apply regular sorting
+        switch ($sort) {
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                $query->orderBy('name', 'asc');
+        }
+
+        // Get pagination size
+        $perPage = $request->get('per_page', 12);
+        $perPage = in_array($perPage, [12, 24, 48]) ? $perPage : 12;
+
+        $projects = $query->paginate($perPage)
+            ->through(function($project) {
                 $commissionInfo = $this->calculateCommissionInfoFromUnits($project->units);
                 
                 return [
                     'id' => $project->id,
                     'name' => $project->name,
+                    'slug' => $project->slug,
+                    'developer_name' => $project->developer_name,
                     'description' => $project->description,
                     'location' => $project->location,
                     'logo_url' => $project->logo_url,
                     'units_count' => $project->units->count(),
                     'commission_preview' => $commissionInfo['range'],
+                    'require_digital_signature' => $project->require_digital_signature,
                 ];
             });
         
-        return response()->json($projects);
+        // If AJAX request, return JSON with pagination data
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'data' => $projects->items(),
+                'pagination' => [
+                    'current_page' => $projects->currentPage(),
+                    'last_page' => $projects->lastPage(),
+                    'per_page' => $projects->perPage(),
+                    'total' => $projects->total(),
+                    'from' => $projects->firstItem(),
+                    'to' => $projects->lastItem(),
+                    'has_more_pages' => $projects->hasMorePages(),
+                    'on_first_page' => $projects->onFirstPage(),
+                ]
+            ]);
+        }
+        
+        // If regular HTTP request, return view (for initial page load)
+        return $projects;
     }
+
+    /**
+     * Get filter options for AJAX
+     */
+    public function getFilterOptions(Request $request)
+    {
+        $user = User::findOrFail(Auth::user()->id);
+        $joinedProjectIds = $user->affiliatorProjects()->pluck('project_id');
+        
+        // Get unique locations
+        $locations = Project::active()
+            ->whereNotIn('id', $joinedProjectIds)
+            ->whereHas('units', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->whereNotNull('location')
+            ->where('location', '!=', '')
+            ->distinct()
+            ->pluck('location')
+            ->sort()
+            ->values();
+
+        // Get commission ranges
+        $commissionRanges = DB::table('units')
+            ->join('projects', 'units.project_id', '=', 'projects.id')
+            ->where('projects.is_active', true)
+            ->where('units.is_active', true)
+            ->whereNotIn('projects.id', $joinedProjectIds)
+            ->selectRaw('
+                MIN(CASE WHEN commission_type = "percentage" THEN commission_value END) as min_percentage,
+                MAX(CASE WHEN commission_type = "percentage" THEN commission_value END) as max_percentage,
+                MIN(CASE WHEN commission_type = "fixed" THEN commission_value END) as min_fixed,
+                MAX(CASE WHEN commission_type = "fixed" THEN commission_value END) as max_fixed
+            ')
+            ->first();
+
+        return response()->json([
+            'locations' => $locations,
+            'commission_types' => [
+                'percentage' => 'Persentase (%)',
+                'fixed' => 'Nominal Tetap (Rp)'
+            ],
+            'commission_ranges' => [
+                'percentage' => [
+                    'min' => $commissionRanges->min_percentage ?? 0,
+                    'max' => $commissionRanges->max_percentage ?? 100
+                ],
+                'fixed' => [
+                    'min' => $commissionRanges->min_fixed ?? 0,
+                    'max' => $commissionRanges->max_fixed ?? 100000000
+                ]
+            ]
+        ]);
+    }
+
+    // ... rest of the methods remain the same (no changes to other methods)
 
     /**
      * Check if user can join more projects
@@ -358,7 +585,6 @@ class JoinProjectController extends Controller
             'project_id' => 'required|exists:projects,id',
             'ktp_number' => 'required|string|size:16',
             'ktp_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            // 'digital_signature' => 'required|string',
             'terms_accepted' => 'required|accepted'
         ], [
             'project_id.required' => 'Pilih project terlebih dahulu',
@@ -369,7 +595,6 @@ class JoinProjectController extends Controller
             'ktp_photo.image' => 'File harus berupa gambar',
             'ktp_photo.mimes' => 'Format gambar harus JPEG, PNG, atau JPG',
             'ktp_photo.max' => 'Ukuran file maksimal 2MB',
-            // 'digital_signature.required' => 'Tanda tangan digital diperlukan',
             'terms_accepted.required' => 'Anda harus menyetujui syarat & ketentuan',
             'terms_accepted.accepted' => 'Anda harus menyetujui syarat & ketentuan'
         ]);

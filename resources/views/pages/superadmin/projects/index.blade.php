@@ -69,7 +69,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Daftar Project</h3>
             <div class="btn-list">
-                @if($statistics['pending_registrations'] > 0)
+                {{-- @if($statistics['pending_registrations'] > 0)
                     <form action="{{ route('superadmin.projects.bulk-approve-registrations') }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-success" id="bulk-approve-btn" style="display: none;">
@@ -77,7 +77,7 @@
                             Setujui Terpilih (<span id="selected-count">0</span>)
                         </button>
                     </form>
-                @endif
+                @endif --}}
                 <a href="{{ route('superadmin.projects.create') }}" class="btn btn-primary">
                     <i class="ti ti-plus me-1"></i>
                     Tambah Project
@@ -225,7 +225,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if($project->is_manual_registration)
+                                @if($project->is_manual_registration || $project->is_internal_registration)
                                     <!-- Developer info untuk manual registration -->
                                     <div class="fw-bold">{{ $project->developer_name ?: '-' }}</div>
                                     {{-- @if($project->latestRegistration)
@@ -245,7 +245,7 @@
                                 @else
                                     <!-- Internal/CRM project info -->
                                     <div class="text-secondary">
-                                        {{ $project->registration_type === 'internal' ? 'Project Internal' : 'Project CRM' }}
+                                        {{ $project->registration_type === 'crm' ? 'Project CRM' : '' }}
                                     </div>
                                     @if($project->registration_type === 'crm' && $project->projectCrm)
                                         <div class="small">{{ $project->projectCrm->nama_project }}</div>

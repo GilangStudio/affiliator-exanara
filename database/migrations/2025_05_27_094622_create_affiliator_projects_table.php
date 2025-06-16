@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('terms_accepted_at')->nullable();
             $table->text('digital_signature')->nullable();
             $table->timestamp('digital_signature_at')->nullable();
-            $table->enum('status', ['incomplete', 'pending_verification', 'active', 'suspended'])->default('incomplete');
+            $table->enum('status', ['incomplete', 'pending_verification', 'active', 'inactive', 'suspended'])->default('incomplete');
             $table->timestamps();
             
             $table->unique(['user_id', 'project_id']);

@@ -235,6 +235,7 @@ class ProjectController extends Controller
         $user = User::findOrFail(Auth::id());
         
         $affiliatorProject = $user->affiliatorProjects()
+            ->verified()
             ->where('project_id', $project->id)
             ->first();
 
@@ -260,7 +261,7 @@ class ProjectController extends Controller
         try {
             DB::transaction(function () use ($user, $project, $affiliatorProject) {
                 // Toggle status
-                $newStatus = $affiliatorProject->status === 'active' ? 'suspended' : 'active';
+                $newStatus = $affiliatorProject->status === 'active' ? 'inactive' : 'active';
                 $affiliatorProject->update(['status' => $newStatus]);
 
                 $statusText = $newStatus === 'active' ? 'diaktifkan' : 'dinonaktifkan';

@@ -32,40 +32,6 @@
             </div>
         </div>
     
-        <!-- Filter Section -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <form method="GET" class="row g-2">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="search" placeholder="Cari project..." 
-                               value="{{ request('search') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="location">
-                            <option value="">Semua Lokasi</option>
-                            @foreach($locations as $location)
-                                <option value="{{ $location }}" {{ request('location') == $location ? 'selected' : '' }}>
-                                    {{ $location }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-search me-1"></i>
-                            Cari
-                        </button>
-                    </div>
-                    <div class="col-auto">
-                        <a href="{{ route('affiliator.project.index') }}" class="btn btn-outline-secondary">
-                            <i class="ti ti-x me-1"></i>
-                            Reset Filter
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    
         <!-- My Projects Section -->
         @if($userProjects->count() > 0)
         <div class="card mb-4">
@@ -167,15 +133,15 @@
                                             Lihat Detail
                                         </a>
                                         @if($userProject->can_add_leads)
-                                            {{-- <a href="{{ route('affiliator.leads.project.create', $project->slug) }}" class="btn btn-success w-100">
+                                            <a href="{{ route('affiliator.leads.project.create', $project->slug) }}" class="btn btn-success w-100">
                                                 <i class="ti ti-plus me-1"></i>
                                                 Tambah Lead
-                                            </a> --}}
-                                        @else
+                                            </a>
+                                        {{-- @else
                                             <span class="btn btn-outline-secondary w-100 disabled">
                                                 <i class="ti ti-lock me-1"></i>
                                                 Perlu Verifikasi
-                                            </span>
+                                            </span> --}}
                                         @endif
                                     </div>
                                 </div>
@@ -187,6 +153,40 @@
             </div>
         </div>
         @endif
+
+        <!-- Filter Section -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="search" placeholder="Cari project..." 
+                               value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="location">
+                            <option value="">Semua Lokasi</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location }}" {{ request('location') == $location ? 'selected' : '' }}>
+                                    {{ $location }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-search me-1"></i>
+                            Cari
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ route('affiliator.project.index') }}" class="btn btn-outline-secondary">
+                            <i class="ti ti-x me-1"></i>
+                            Reset Filter
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     
         <!-- Available Projects Section -->
         <div class="card">
@@ -218,14 +218,9 @@
                                     
                                     <!-- Project Image -->
                                     @if($project->logo)
-                                        <img src="{{ $project->logo_url }}" alt="{{ $project->name }}" 
-                                             class="card-img-top" style="height: 200px; object-fit: cover;">
+                                        <img src="{{ $project->logo_url }}" alt="{{ $project->name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                                     @else
-                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                            <div class="avatar avatar-xl" style="box-shadow: none;">
-                                                <i class="ti ti-building-skyscraper"></i>
-                                            </div>
-                                        </div>
+                                         <img src="{{ $project['logo_url'] }}" alt="{{ $project->name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                                     @endif
                                     
                                     <div class="card-body">
@@ -255,7 +250,7 @@
                                         <div class="mb-3">
                                             <div class="text-secondary small mb-1">Komisi</div>
                                             <div class="fw-bold text-success">{{ $project->commission_info['range'] }}</div>
-                                            <div class="text-secondary small">{{ $project->commission_info['description'] }}</div>
+                                            {{-- <div class="text-secondary small">{{ $project->commission_info['description'] }}</div> --}}
                                         </div>
     
                                         <!-- Project Stats -->

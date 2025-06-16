@@ -112,6 +112,11 @@ class Project extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeApproved($query)
+    {
+        return $query->where('registration_status', 'approved');
+    }
+
     //scope term and condition is true
 
     public function scopeByLocation($query, $location)
@@ -271,7 +276,7 @@ class Project extends Model
     /**
      * Check if project is internal (created by superadmin)
      */
-    public function getIsInternalProjectAttribute()
+    public function getIsInternalRegistrationAttribute()
     {
         return $this->registration_type === 'internal';
     }

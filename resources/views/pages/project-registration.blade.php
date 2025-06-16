@@ -11,59 +11,6 @@
   
   <!-- Custom styles -->
   <style>
-    /* .step-indicator {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-
-    .step-item {
-      display: flex;
-      align-items: center;
-      color: #6c757d;
-    }
-
-    .step-item.active {
-      color: #0054a6;
-    }
-
-    .step-item.completed {
-      color: #28a745;
-    }
-
-    .step-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 2rem;
-      height: 2rem;
-      border-radius: 50%;
-      background: #e9ecef;
-      font-weight: 600;
-      margin-right: 0.5rem;
-    }
-
-    .step-item.active .step-number {
-      background: #0054a6;
-      color: white;
-    }
-
-    .step-item.completed .step-number {
-      background: #28a745;
-      color: white;
-    }
-
-    .step-line {
-      width: 3rem;
-      height: 2px;
-      background: #e9ecef;
-      margin: 0 1rem;
-    }
-
-    .step-item.completed + .step-line {
-      background: #28a745;
-    } */
-
     .card-step {
       display: none;
       animation: slideIn 0.3s ease-in-out;
@@ -131,11 +78,6 @@
 
 <body>
   <div class="page page-center">
-    {{-- <div class="position-fixed top-0 end-0 p-3" style="z-index: 1000;">
-      <a href="{{ route('affiliator.dashboard') }}" class="btn btn-link" title="Kembali ke dashboard">
-        Dashboard
-      </a>
-    </div> --}}
 
     <form class="container py-4" id="project-registration-form">
       <div class="text-center mb-4">
@@ -163,34 +105,6 @@
           Lengkapi formulir berikut untuk mendaftarkan project baru ke dalam sistem affiliator
         </p>
       </div>
-
-      <!-- Step Indicator -->
-      {{-- <div class="step-indicator">
-        <div class="step-item active" id="step-indicator-1">
-          <div class="step-number">1</div>
-          <span class="d-none d-sm-inline">Info Project</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step-item" id="step-indicator-2">
-          <div class="step-number">2</div>
-          <span class="d-none d-sm-inline">File</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step-item" id="step-indicator-3">
-          <div class="step-number">3</div>
-          <span class="d-none d-sm-inline">Unit</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step-item" id="step-indicator-4">
-          <div class="step-number">4</div>
-          <span class="d-none d-sm-inline">Komisi & PIC</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step-item" id="step-indicator-5">
-          <div class="step-number">5</div>
-          <span class="d-none d-sm-inline">Periode</span>
-        </div>
-      </div> --}}
 
       <!-- Step 1: Project Information -->
       <div class="card card-md card-step active" id="step-1">
@@ -238,7 +152,7 @@
 
           <div class="mb-3">
             <label class="form-label">Deskripsi Project <span class="text-danger">*</span></label>
-            <textarea class="form-control" id="description" name="description" required rows="6"
+            <textarea class="form-control" id="description" name="description" rows="6"
                       placeholder="Jelaskan detail project, fasilitas, dan keunggulan yang ditawarkan..."></textarea>
           </div>
         </div>
@@ -255,7 +169,7 @@
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-12">
               <div class="mb-3">
                 <label class="form-label">Logo Project</label>
                 <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
@@ -263,7 +177,7 @@
                 <div class="file-preview" id="logo-preview"></div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12">
               <div class="mb-3">
                 <label class="form-label">File Brosur</label>
                 <input type="file" class="form-control" id="brochure_file" name="brochure_file" accept=".pdf">
@@ -271,7 +185,7 @@
                 <div class="file-preview" id="brochure-preview"></div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12">
               <div class="mb-3">
                 <label class="form-label">File Price List</label>
                 <input type="file" class="form-control" id="price_list_file" name="price_list_file" accept=".pdf">
@@ -328,21 +242,19 @@
           </div>
 
           <h4 class="mb-3">Informasi PIC (Person In Charge)</h4>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Nama PIC <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="pic_name" name="pic_name" required
-                       placeholder="Nama lengkap PIC">
-                <small class="form-hint">PIC akan dibuatkan akun admin untuk mengelola project ini</small>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Phone PIC <span class="text-danger">*</span></label>
-                <input type="tel" class="form-control" id="pic_phone" name="pic_phone" required
-                       placeholder="08123456789">
-              </div>
+          <div class="mb-3">
+            <label class="form-label">Nama PIC <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="pic_name" name="pic_name" required
+                    placeholder="Nama lengkap PIC">
+            <small class="form-hint">PIC akan dibuatkan akun admin untuk mengelola project ini</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone PIC <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="pic_phone" name="pic_phone" required
+                    placeholder="08123456789" pattern="^08[0-9]{8,13}$">
+            <small class="form-hint">Format: 08xxxxxxxxx (dimulai dengan 08)</small>
+            <div class="invalid-feedback">
+              Nomor telepon harus dimulai dengan 08 dan berisi 10-15 digit
             </div>
           </div>
 
@@ -351,6 +263,9 @@
             <input type="email" class="form-control" id="pic_email" name="pic_email" required
                    placeholder="pic@example.com">
             <small class="form-hint">Email ini akan digunakan untuk login sebagai admin project</small>
+            <div class="invalid-feedback">
+              Format email tidak valid
+            </div>
           </div>
         </div>
       </div>
@@ -429,7 +344,7 @@
       <div class="row align-items-center mt-3">
         <div class="d-flex align-items-center justify-content-between gap-3">
           <div class="progress" style="width: 150px;">
-            <div class="progress-bar" id="progress-bar" style="width: 20%" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" id="progress-bar" style="width: 16%" role="progressbar" aria-valuenow="16" aria-valuemin="0" aria-valuemax="100">
             </div>
           </div>
 
@@ -437,10 +352,10 @@
             <button type="button" class="btn btn-link link-secondary" id="back-btn" style="display: none;">
               Kembali
             </button>
-            <button type="button" class="btn btn-primary" id="next-btn">
+            <button type="button" class="btn btn-primary" id="next-btn" disabled>
               Lanjut
             </button>
-            <button type="submit" class="btn btn-success" id="submit-btn" style="display: none;">
+            <button type="submit" class="btn btn-success" id="submit-btn" style="display: none;" disabled>
               <i class="ti ti-send me-1"></i>
               Daftar Project
             </button>
@@ -457,7 +372,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       let currentStep = 1;
-      let totalSteps = 5;
+      const totalSteps = 5;
       let unitCounter = 0;
 
       // Initialize HugeRTE for description
@@ -472,28 +387,36 @@
       const addUnitBtn = document.getElementById('add-unit-btn');
       const unitsContainer = document.getElementById('units-container');
 
+      // Progress configuration
+      function getStepsConfig() {
+        return [
+          { progress: 16, showBack: false },   // Step 1
+          { progress: 32, showBack: true },    // Step 2
+          { progress: 48, showBack: true },    // Step 3
+          { progress: 64, showBack: true },    // Step 4
+          { progress: 80, showBack: true }     // Step 5 (not full yet)
+        ];
+      }
+
       // Step navigation functions
       function updateProgress(step) {
-        const progress = (step / totalSteps) * 100;
-        progressBar.style.width = progress + '%';
-        progressBar.setAttribute('aria-valuenow', progress);
+        const steps = getStepsConfig();
+        const stepData = steps[step - 1];
         
-        // Update step indicators
-        for (let i = 1; i <= totalSteps; i++) {
-          const indicator = document.getElementById(`step-indicator-${i}`);
-          indicator.classList.remove('active', 'completed');
-          
-          if (i < step) {
-            indicator.classList.add('completed');
-          } else if (i === step) {
-            indicator.classList.add('active');
-          }
+        progressBar.style.width = stepData.progress + '%';
+        progressBar.setAttribute('aria-valuenow', stepData.progress);
+        
+        // Show/hide back button
+        backButton.style.display = stepData.showBack ? 'inline-block' : 'none';
+        
+        // Show appropriate button
+        if (step < totalSteps) {
+          nextButton.style.display = 'inline-block';
+          submitButton.style.display = 'none';
+        } else {
+          nextButton.style.display = 'none';
+          submitButton.style.display = 'inline-block';
         }
-        
-        // Show/hide navigation buttons
-        backButton.style.display = step > 1 ? 'inline-block' : 'none';
-        nextButton.style.display = step < totalSteps ? 'inline-block' : 'none';
-        submitButton.style.display = step === totalSteps ? 'inline-block' : 'none';
       }
 
       function showStep(step) {
@@ -507,6 +430,14 @@
         if (currentStepCard) {
           currentStepCard.classList.add('active');
           currentStepCard.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Add/remove container-tight class based on step
+        const form = document.getElementById('project-registration-form');
+        if (step === 2 || step === 4) {
+          form.classList.add('container-tight');
+        } else {
+          form.classList.remove('container-tight');
         }
         
         updateProgress(step);
@@ -541,7 +472,28 @@
             const picPhone = document.getElementById('pic_phone').value.trim();
             const picEmail = document.getElementById('pic_email').value.trim();
             
-            isValid = trigger && picName && picPhone && picEmail;
+            // Validasi format email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValidEmail = emailRegex.test(picEmail);
+            
+            // Validasi format phone (harus dimulai dengan 08)
+            const phoneRegex = /^08[0-9]{8,13}$/;
+            const isValidPhone = phoneRegex.test(picPhone);
+            
+            isValid = trigger && picName && picPhone && picEmail && isValidEmail && isValidPhone;
+            
+            // Show specific error messages for invalid formats
+            if (picEmail && !isValidEmail) {
+              document.getElementById('pic_email').classList.add('is-invalid');
+            } else {
+              document.getElementById('pic_email').classList.remove('is-invalid');
+            }
+            
+            if (picPhone && !isValidPhone) {
+              document.getElementById('pic_phone').classList.add('is-invalid');
+            } else {
+              document.getElementById('pic_phone').classList.remove('is-invalid');
+            }
             break;
             
           case 5:
@@ -553,13 +505,20 @@
             break;
         }
         
-        nextButton.disabled = !isValid;
-        submitButton.disabled = !isValid;
+        // Enable/disable buttons based on validation
+        if (currentStep < totalSteps) {
+          nextButton.disabled = !isValid;
+        } else {
+          submitButton.disabled = !isValid;
+        }
+
+        // console.log(`Step ${currentStep} valid: ${isValid}`);
+        return isValid;
       }
 
       // Navigation handlers
       nextButton.addEventListener('click', function() {
-        if (currentStep < totalSteps) {
+        if (currentStep < totalSteps && !nextButton.disabled) {
           currentStep++;
           showStep(currentStep);
         }
@@ -579,10 +538,59 @@
         });
       });
 
+      // Listen to HugeRTE changes for description
+      setTimeout(() => {
+        if (hugeRTE.get('description')) {
+          hugeRTE.get('description').on('change', () => {
+            if (currentStep === 1) validateCurrentStep();
+          });
+          
+          hugeRTE.get('description').on('keyup', () => {
+            if (currentStep === 1) validateCurrentStep();
+          });
+        }
+      }, 1000);
+
       document.querySelectorAll('#step-4 input, #step-4 select').forEach(input => {
         input.addEventListener('input', () => {
           if (currentStep === 4) validateCurrentStep();
         });
+        input.addEventListener('blur', () => {
+          if (currentStep === 4) validateCurrentStep();
+        });
+      });
+
+      // Specific validation for phone input (only allow numbers and format 08)
+      document.getElementById('pic_phone').addEventListener('input', function(e) {
+        // Remove non-numeric characters
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        
+        // Ensure it starts with 08
+        if (value.length > 0 && !value.startsWith('08')) {
+          if (value.startsWith('8')) {
+            value = '0' + value;
+          } else if (!value.startsWith('0')) {
+            value = '08' + value;
+          }
+        }
+        
+        // Limit to 15 digits max
+        if (value.length > 15) {
+          value = value.substring(0, 15);
+        }
+        
+        e.target.value = value;
+        
+        if (currentStep === 4) validateCurrentStep();
+      });
+
+      // Real-time email validation
+      document.getElementById('pic_email').addEventListener('input', function(e) {
+        if (currentStep === 4) validateCurrentStep();
+      });
+
+      document.getElementById('pic_email').addEventListener('blur', function(e) {
+        if (currentStep === 4) validateCurrentStep();
       });
 
       document.querySelectorAll('#step-5 input').forEach(input => {
@@ -813,6 +821,9 @@
           field.addEventListener('input', () => {
             if (currentStep === 3) validateCurrentStep();
           });
+          field.addEventListener('change', () => {
+            if (currentStep === 3) validateCurrentStep();
+          });
         });
         
         // Unit image preview
@@ -853,7 +864,7 @@
         return true;
       }
 
-      // Add first unit and add unit button listener
+      // Add unit button listener
       addUnitBtn.addEventListener('click', createUnitForm);
       
       // Create first unit by default
@@ -862,6 +873,17 @@
       // Form submission
       document.getElementById('project-registration-form').addEventListener('submit', function(e) {
         e.preventDefault();
+
+        // Custom validation for HugeRTE content
+        const descriptionContent = hugeRTE.get('description').getContent().trim();
+        if (!descriptionContent || descriptionContent === '<p></p>' || descriptionContent === '<p><br></p>') {
+          showToast('Deskripsi project wajib diisi', 'warning');
+          // Go back to step 1 and focus on description
+          currentStep = 1;
+          showStep(currentStep);
+          hugeRTE.get('description').focus();
+          return;
+        }
         
         if (!validateCurrentStep()) {
           showToast('Lengkapi semua field yang wajib diisi', 'warning');
@@ -928,6 +950,10 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
+            // Update progress to 100% first
+            progressBar.style.width = '100%';
+            progressBar.setAttribute('aria-valuenow', '100');
+            
             // Show completion
             document.querySelectorAll('.card-step').forEach(card => {
               card.style.display = 'none';
@@ -939,17 +965,6 @@
             completionCard.scrollIntoView({ behavior: 'smooth' });
             
             showToast(data.message, 'success');
-            
-            // Update progress to 100%
-            progressBar.style.width = '100%';
-            progressBar.setAttribute('aria-valuenow', '100');
-            
-            // Update all step indicators to completed
-            for (let i = 1; i <= totalSteps; i++) {
-              const indicator = document.getElementById(`step-indicator-${i}`);
-              indicator.classList.remove('active');
-              indicator.classList.add('completed');
-            }
             
             setTimeout(() => {
               if (data.redirect_url) {
@@ -980,6 +995,16 @@
       // Update end_date minimum when start_date changes
       document.getElementById('start_date').addEventListener('change', function() {
         document.getElementById('end_date').setAttribute('min', this.value);
+        if (currentStep === 5) validateCurrentStep();
+      });
+
+      // Additional event listeners for step 5 validation
+      document.getElementById('data_accuracy').addEventListener('change', () => {
+        if (currentStep === 5) validateCurrentStep();
+      });
+
+      document.getElementById('terms_agreement').addEventListener('change', () => {
+        if (currentStep === 5) validateCurrentStep();
       });
     });
   </script>

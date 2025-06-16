@@ -76,8 +76,10 @@ class ProjectRegistrationController extends Controller
             // Step 4 - Commission & PIC
             'commission_payment_trigger' => 'required|in:booking_fee,akad_kredit,spk',
             'pic_name' => 'required|string|max:255',
-            'pic_phone' => 'required|string|max:20',
-            'pic_email' => 'required|email|max:255',
+            // 'pic_phone' => 'required|string|max:20',
+            // 'pic_email' => 'required|email|max:255',
+            'pic_phone' => ['required','string','min:10','max:15','regex:/^08[0-9]{8,13}$/'],
+            'pic_email' => ['required','email','max:255','unique:users,email'],
             
             // Step 5 - Period
             'start_date' => 'required|date|after_or_equal:today',
@@ -113,8 +115,6 @@ class ProjectRegistrationController extends Controller
         try {
             DB::beginTransaction();
 
-            $userId = Auth::id();
-            
             // Handle file uploads
             $logoPath = null;
             $brochurePath = null;
@@ -195,17 +195,19 @@ class ProjectRegistrationController extends Controller
             // Link PIC to project
             $project->update(['pic_user_id' => $picUser->id]);
 
+            $project->admins()->attach($picUser->id);
+
             // Create project registration record
             ProjectRegistration::create([
                 'project_id' => $project->id,
-                'submitted_by' => $userId,
+                'submitted_by' => $picUser->id,
                 'form_data' => $request->all(),
                 'status' => 'pending',
             ]);
 
             // Log activity
             $this->activityLogService->log(
-                $userId,
+                $picUser->id,
                 'submit_project_registration',
                 "Mengajukan pendaftaran project: {$project->name}",
                 $project->id,
@@ -224,11 +226,11 @@ class ProjectRegistrationController extends Controller
                 $this->notificationService->createForUser(
                     $admin->id,
                     'Pendaftaran Project Baru',
-                    "Project '{$project->name}' telah didaftarkan oleh " . Auth::user()->name . " dan menunggu persetujuan",
+                    "Project '{$project->name}' telah didaftarkan oleh " . $picUser->name . " dan menunggu persetujuan",
                     'info',
                     [
                         'project_id' => $project->id,
-                        'submitter_id' => $userId,
+                        'submitter_id' => $picUser->id,
                         'action_url' => route('superadmin.projects.show', $project)
                     ]
                 );
@@ -236,7 +238,7 @@ class ProjectRegistrationController extends Controller
 
             // Send confirmation to submitter
             $this->notificationService->createForUser(
-                $userId,
+                $picUser->id,
                 'Pendaftaran Project Terkirim',
                 "Pendaftaran project '{$project->name}' telah berhasil dikirim dan sedang menunggu persetujuan admin",
                 'success',
@@ -271,7 +273,7 @@ class ProjectRegistrationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mendaftarkan project: ' . $e->getMessage()
+                'message' => 'Gagal mendaftarkan project: ' . $e->getMessage(),
             ], 500);
         }
     }

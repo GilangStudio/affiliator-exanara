@@ -358,9 +358,9 @@ class User extends Authenticatable
             'email' => $email,
             'country_code' => '+62',
             'phone' => GeneralService::formatPhoneNumber($phone),
-            'password' => bcrypt($password ?: 'password123'),
+            'password' => bcrypt($password ?: 'password'),
             'role' => 'admin',
-            'is_active' => false, // Will be activated when project is approved
+            'is_active' => true, // Will be activated when project is approved
             'is_pic' => true,
         ]);
     }

@@ -115,6 +115,9 @@
                                     <option value="active" {{ old('status', $affiliator->status) == 'active' ? 'selected' : '' }}>
                                         Active
                                     </option>
+                                    <option value="active" {{ old('status', $affiliator->status) == 'inactive' ? 'selected' : '' }}>
+                                        Inactive
+                                    </option>
                                     <option value="suspended" {{ old('status', $affiliator->status) == 'suspended' ? 'selected' : '' }}>
                                         Suspended
                                     </option>

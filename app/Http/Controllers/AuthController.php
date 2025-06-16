@@ -73,9 +73,16 @@ class AuthController extends Controller
                 // Cek apakah user aktif
                 if (!$user->is_active) {
                     Auth::logout();
-                    return redirect()->back()
-                        ->withInput($request->only('email_or_phone'))
-                        ->with('error', 'Akun Anda tidak aktif. Silakan hubungi administrator.');
+
+                    if ($user->is_pic) {
+                        return redirect()->back()
+                            ->withInput($request->only('email_or_phone'))
+                            ->with('error', 'Akun PIC Anda tidak aktif. Silakan hubungi administrator.');
+                    } else {
+                        return redirect()->back()
+                            ->withInput($request->only('email_or_phone'))
+                            ->with('error', 'Akun Anda tidak aktif. Silakan hubungi administrator.');
+                    }
                 }
 
                 // Update last login menggunakan service

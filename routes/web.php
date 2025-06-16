@@ -105,6 +105,15 @@ Route::middleware(['web', 'auth'])->group(function () {
             
             // Get available projects
             Route::get('/projects/available', [JoinProjectController::class, 'getAvailableProjects'])->name('projects.available');
+
+            // Get filter options
+            Route::get('/projects/filter-options', [JoinProjectController::class, 'getFilterOptions'])->name('projects.filter-options');
+            
+            // Check if user can join more projects
+            Route::get('/projects/check-can-join', [JoinProjectController::class, 'checkCanJoin'])->name('projects.check-can-join');
+            
+            // Validate project selection
+            Route::post('/projects/validate', [JoinProjectController::class, 'validateProject'])->name('projects.validate');
         });
 
         Route::middleware('check.project.affiliator')->group(function () {
@@ -194,6 +203,11 @@ Route::middleware(['web', 'auth'])->group(function () {
                     Route::prefix('affiliators')->name('affiliators.')->group(function () {
                         Route::get('/', [AdminProjectAffiliatorController::class, 'index'])->name('index');
                         Route::get('/export', [AdminProjectAffiliatorController::class, 'export'])->name('export');
+                        
+                    });
+
+                    Route::prefix('leads')->name('leads.')->group(function () {
+                        Route::get('/', [AAAA::class, 'index'])->name('index');
                         
                     });
                     
@@ -297,7 +311,7 @@ Route::middleware(['web', 'auth'])->group(function () {
                 // Registration Management Routes (integrated)
                 Route::post('/{project}/approve-registration', [SuperAdminProjectController::class, 'approveRegistration'])->name('approve-registration');
                 Route::post('/{project}/reject-registration', [SuperAdminProjectController::class, 'rejectRegistration'])->name('reject-registration');
-                Route::post('/bulk-approve-registrations', [SuperAdminProjectController::class, 'bulkApproveRegistrations'])->name('bulk-approve-registrations');
+                // Route::post('/bulk-approve-registrations', [SuperAdminProjectController::class, 'bulkApproveRegistrations'])->name('bulk-approve-registrations');
                 // Route::get('/{project}/registration-detail', [SuperAdminProjectController::class, 'registrationDetail'])->name('registration-detail');
                 
                 Route::get('/api/crm-projects', [SuperAdminProjectController::class, 'getCrmProjects'])->name('crm-projects');

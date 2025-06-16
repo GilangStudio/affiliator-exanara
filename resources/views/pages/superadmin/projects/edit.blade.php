@@ -110,17 +110,35 @@
 
                     <!-- New Project Fields -->
                     <div id="new-project-fields">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Project <span class="text-danger new-required">*</span></label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                   name="name" value="{{ old('name', $project->name) }}" id="project-name-input"
-                                   placeholder="Masukkan nama project">
-                            @error('name')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                            <small class="form-hint">
-                                <span id="name-count">{{ strlen($project->name) }}</span>/255 karakter
-                            </small>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nama Project <span class="text-danger new-required">*</span></label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                           name="name" value="{{ old('name', $project->name) }}" id="project-name-input"
+                                           placeholder="Masukkan nama project">
+                                    @error('name')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                    <small class="form-hint">
+                                        <span id="name-count">{{ strlen($project->name) }}</span>/255 karakter
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Developer</label>
+                                    <input type="text" class="form-control @error('developer_name') is-invalid @enderror" 
+                                           name="developer_name" value="{{ old('developer_name', $project->developer_name) }}"
+                                           placeholder="Nama perusahaan developer">
+                                    @error('developer_name')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                    <small class="form-hint">
+                                        Misal: PT Hunian Harmonis Ceria
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -131,7 +149,7 @@
                                 <input type="text" class="form-control @error('location') is-invalid @enderror" 
                                        name="location" value="{{ old('location', $project->location) }}"
                                        placeholder="Jakarta">
-                                @error('name')
+                                @error('location')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
                                 <small class="form-hint">
@@ -140,6 +158,24 @@
                             </div>
                         </div>
                         <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Website URL</label>
+                                <input type="url" class="form-control @error('website_url') is-invalid @enderror" 
+                                       name="website_url" value="{{ old('website_url', $project->website_url) }}"
+                                       placeholder="https://example.com">
+                                @error('website_url')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Link website resmi project (opsional)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Files Section -->
+                    <div class="row">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label">Logo Project</label>
                                 @if($project->logo)
@@ -160,12 +196,155 @@
                                 <div class="mt-2" id="logo-preview"></div>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">File Brosur</label>
+                                @if($project->brochure_file)
+                                    <div class="mb-2">
+                                        <a href="{{ $project->brochure_file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="ti ti-file-text me-1"></i>Lihat File Saat Ini
+                                        </a>
+                                    </div>
+                                @endif
+                                <input type="file" class="form-control @error('brochure_file') is-invalid @enderror" 
+                                       name="brochure_file" accept=".pdf" id="brochure-input">
+                                @error('brochure_file')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Format: PDF. Maksimal 10MB. Kosongkan jika tidak ingin mengubah.
+                                </small>
+                                <div class="mt-2" id="brochure-preview"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">File Price List</label>
+                                @if($project->price_list_file)
+                                    <div class="mb-2">
+                                        <a href="{{ $project->price_list_file_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="ti ti-file-text me-1"></i>Lihat File Saat Ini
+                                        </a>
+                                    </div>
+                                @endif
+                                <input type="file" class="form-control @error('price_list_file') is-invalid @enderror" 
+                                       name="price_list_file" accept=".pdf" id="pricelist-input">
+                                @error('price_list_file')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Format: PDF. Maksimal 10MB. Kosongkan jika tidak ingin mengubah.
+                                </small>
+                                <div class="mt-2" id="pricelist-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Period -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal Mulai</label>
+                                <input type="date" class="form-control @error('start_date') is-invalid @enderror" 
+                                       name="start_date" value="{{ old('start_date', $project->start_date ? $project->start_date->format('Y-m-d') : '') }}" 
+                                       id="start-date-input">
+                                @error('start_date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Tanggal project mulai aktif
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal Berakhir</label>
+                                <input type="date" class="form-control @error('end_date') is-invalid @enderror" 
+                                       name="end_date" value="{{ old('end_date', $project->end_date ? $project->end_date->format('Y-m-d') : '') }}" 
+                                       id="end-date-input">
+                                @error('end_date')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Kosongkan jika project tidak memiliki batas waktu
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission Payment Trigger -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Komisi Dibayar Setelah</label>
+                                <select class="form-select @error('commission_payment_trigger') is-invalid @enderror" 
+                                        name="commission_payment_trigger">
+                                    <option value="">Pilih trigger pembayaran komisi</option>
+                                    <option value="booking_fee" {{ old('commission_payment_trigger', $project->commission_payment_trigger) == 'booking_fee' ? 'selected' : '' }}>Booking Fee</option>
+                                    <option value="akad_kredit" {{ old('commission_payment_trigger', $project->commission_payment_trigger) == 'akad_kredit' ? 'selected' : '' }}>Akad Kredit</option>
+                                    <option value="spk" {{ old('commission_payment_trigger', $project->commission_payment_trigger) == 'spk' ? 'selected' : '' }}>SPK (Surat Perjanjian Kerja)</option>
+                                </select>
+                                @error('commission_payment_trigger')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">
+                                    Kapan komisi akan dibayarkan kepada affiliator
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PIC Information -->
+                    <h5 class="mb-3">Informasi PIC (Person In Charge)</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Nama PIC</label>
+                                <input type="text" class="form-control @error('pic_name') is-invalid @enderror" 
+                                       name="pic_name" value="{{ old('pic_name', $project->pic_name) }}"
+                                       placeholder="Nama lengkap PIC">
+                                @error('pic_name')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                @if($project->picUser)
+                                    <small class="form-hint text-info">
+                                        <i class="ti ti-user-check me-1"></i>
+                                        Akun PIC sudah dibuat: {{ $project->picUser->email }}
+                                    </small>
+                                @else
+                                    <small class="form-hint">PIC akan dibuatkan akun admin jika belum ada</small>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Phone PIC</label>
+                                <input type="tel" class="form-control @error('pic_phone') is-invalid @enderror" 
+                                       name="pic_phone" value="{{ old('pic_phone', $project->pic_phone) }}"
+                                       placeholder="08123456789">
+                                @error('pic_phone')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Email PIC</label>
+                                <input type="email" class="form-control @error('pic_email') is-invalid @enderror" 
+                                       name="pic_email" value="{{ old('pic_email', $project->pic_email) }}"
+                                       placeholder="pic@example.com">
+                                @error('pic_email')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                                <small class="form-hint">Email ini akan digunakan untuk login sebagai admin project</small>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Deskripsi</label>
+                        <label class="form-label">Deskripsi Project</label>
                         <textarea class="form-control @error('description') is-invalid @enderror" 
-                                  name="description" id="description-editor" rows="4" 
+                                  name="description" id="description-editor" rows="6" 
                                   placeholder="Masukkan deskripsi project...">{{ old('description', $project->description) }}</textarea>
                         @error('description')
                             <small class="text-danger">{{ $message }}</small>
@@ -229,7 +408,7 @@
                 </div>
             </div>
 
-            <!-- Project Stats -->
+            <!-- Project Statistics -->
             <div class="card mt-3">
                 <div class="card-header">
                     <h3 class="card-title"><i class="ti ti-chart-bar me-2"></i>Statistik Project</h3>
@@ -263,8 +442,47 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="text-center">
+                                <div class="h3 mb-0 text-purple">{{ $project->units()->count() }}</div>
+                                <div class="text-secondary small">Total Unit</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Registration Info (untuk manual registration) -->
+            @if($project->is_manual_registration && $project->latestRegistration)
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-file-text me-2"></i>Info Registration</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Status:</strong>
+                        <span class="badge bg-{{ $project->registration_status_color }}-lt ms-1">
+                            {{ $project->registration_status_label }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Pendaftar:</strong>
+                        <div class="text-secondary">{{ $project->latestRegistration->submittedBy->name }}</div>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Tanggal Daftar:</strong>
+                        <div class="text-secondary">{{ $project->latestRegistration->created_at->format('d M Y') }}</div>
+                    </div>
+                    @if($project->latestRegistration->reviewed_at)
+                    <div class="mb-2">
+                        <strong>Direview:</strong>
+                        <div class="text-secondary">{{ $project->latestRegistration->reviewed_at->format('d M Y') }}</div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Submit Buttons -->
@@ -272,7 +490,7 @@
             <div class="card">
                 <div class="card-footer text-end">
                     <div class="d-flex">
-                        <a href="{{ route('superadmin.projects.index') }}" class="btn btn-link">
+                        <a href="{{ route('superadmin.projects.show', $project) }}" class="btn btn-link">
                             Batal
                         </a>
                         <button type="submit" class="btn btn-primary ms-auto" id="submit-btn">
@@ -336,11 +554,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle CRM project selection - hapus auto-fill behavior
-    crmProjectSelect.on('change', function(value) {
-        // Tidak perlu melakukan apa-apa, biarkan user input manual
-    });
-
     // Project source radio handlers
     const newProjectRadio = document.querySelector('input[name="project_source"][value="new"]');
     const existingProjectRadio = document.querySelector('input[name="project_source"][value="existing"]');
@@ -400,83 +613,77 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Commission type handler
-    // const commissionTypeSelect = document.getElementById('commission-type-select');
-    // const commissionPrefix = document.getElementById('commission-prefix');
-    
-    // function updateCommissionPrefix() {
-    //     const type = commissionTypeSelect.value;
-    //     if (type === 'percentage') {
-    //         commissionPrefix.textContent = '%';
-    //     } else if (type === 'fixed') {
-    //         commissionPrefix.textContent = 'Rp';
-    //     } else {
-    //         commissionPrefix.textContent = '';
-    //     }
-    // }
-    
-    // commissionTypeSelect.addEventListener('change', updateCommissionPrefix);
-    
-    // Logo preview functionality
-    const logoInput = document.getElementById('logo-input');
-    const logoPreview = document.getElementById('logo-preview');
-
-    logoInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Validate file size
-            const maxSize = 2 * 1024 * 1024; // 2MB
-            if (file.size > maxSize) {
-                showAlert(logoInput, 'danger', 'File terlalu besar. Maksimal 2MB.');
-                logoInput.value = '';
-                return;
-            }
-
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                showAlert(logoInput, 'danger', 'Pilih file gambar yang valid.');
-                logoInput.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                logoPreview.innerHTML = `
-                    <div class="card">
-                        <img src="${e.target.result}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h5 class="card-title h6 mb-1">${file.name}</h5>
-                                    <small class="text-secondary">
-                                        ${(file.size / 1024 / 1024).toFixed(2)} MB
+    // File preview functions
+    function setupFilePreview(inputId, previewId, isImage = false) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        
+        if (!input || !preview) return;
+        
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            preview.innerHTML = '';
+            
+            if (file) {
+                if (isImage) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.innerHTML = `
+                            <div class="mt-2">
+                                <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                                <div class="small text-muted mt-1">${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</div>
+                                <div class="mt-2">
+                                    <small class="text-warning">
+                                        <i class="ti ti-alert-triangle me-1"></i>
+                                        Akan mengganti file yang ada
                                     </small>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearLogoPreview()">
-                                    <i class="ti ti-x"></i>
-                                </button>
                             </div>
-                            <div class="mt-2">
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.innerHTML = `
+                        <div class="mt-2">
+                            <div class="d-flex align-items-center">
+                                <i class="ti ti-file-text me-2 text-danger"></i>
+                                <div>
+                                    <div class="small">${file.name}</div>
+                                    <div class="small text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                                </div>
+                            </div>
+                            <div class="mt-1">
                                 <small class="text-warning">
                                     <i class="ti ti-alert-triangle me-1"></i>
-                                    Akan mengganti logo yang ada
+                                    Akan mengganti file yang ada
                                 </small>
                             </div>
                         </div>
-                    </div>
-                `;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            logoPreview.innerHTML = '';
-        }
-    });
+                    `;
+                }
+            }
+        });
+    }
 
-    // Clear logo preview function
-    window.clearLogoPreview = function() {
-        logoInput.value = '';
-        logoPreview.innerHTML = '';
-    };
+    // Setup file previews
+    setupFilePreview('logo-input', 'logo-preview', true);
+    setupFilePreview('brochure-input', 'brochure-preview', false);
+    setupFilePreview('pricelist-input', 'pricelist-preview', false);
+
+    // Date validation
+    const startDateInput = document.getElementById('start-date-input');
+    const endDateInput = document.getElementById('end-date-input');
+    
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            endDateInput.setAttribute('min', this.value);
+        });
+        
+        // Set initial min date for end date
+        if (startDateInput.value) {
+            endDateInput.setAttribute('min', startDateInput.value);
+        }
+    }
 
     // Form submission
     const form = document.getElementById('edit-project-form');
