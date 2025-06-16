@@ -151,7 +151,7 @@ class ProjectRegistrationController extends Controller
                 'registration_type' => 'manual',
                 'registration_status' => 'pending',
                 'is_active' => false, // Will be activated after approval
-                'terms_and_conditions' => 'Syarat dan ketentuan akan diatur setelah project disetujui.',
+                'terms_and_conditions' => 'Dengan mendaftar, Anda dianggap telah menyetujui syarat & ketentuan ini.',
                 'require_digital_signature' => true,
             ]);
 

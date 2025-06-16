@@ -25,69 +25,134 @@
                 <div class="text-secondary mb-2">{{ $project->slug }}</div>
                 <div class="row">
                     <div class="col-auto">
+                        <!-- Registration Status (for manual registration) -->
+                        @if($project->is_manual_registration)
+                            <span class="badge bg-{{ $project->registration_status_color }}-lt me-2">
+                                <i class="ti ti-{{ $project->registration_status === 'approved' ? 'check' : ($project->registration_status === 'rejected' ? 'x' : 'clock') }} me-1"></i>
+                                {{ $project->registration_status_label }}
+                            </span>
+                        @endif
+                        
+                        <!-- Active Status -->
                         <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt me-2">
                             {{ $project->is_active ? 'Aktif' : 'Tidak Aktif' }}
                         </span>
+                        
                         @if($project->require_digital_signature)
-                            <span class="badge bg-blue-lt">Tanda Tangan Digital Wajib</span>
+                            <span class="badge bg-blue-lt me-2">Tanda Tangan Digital Wajib</span>
                         @endif
+                        
                         @if($project->crm_project_id)
-                            <span class="badge bg-info-lt ms-2">
+                            <span class="badge bg-info-lt">
                                 <i class="ti ti-link me-1"></i>
                                 Terhubung CRM
                             </span>
                         @endif
                     </div>
                 </div>
+                
+                <!-- Registration Status Messages -->
+                @if($project->is_manual_registration)
+                    @if($project->registration_status === 'pending')
+                        <div class="alert alert-warning mt-2 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="ti ti-clock me-2"></i>
+                                <div>
+                                    <strong>Menunggu Persetujuan</strong><br>
+                                    Project ini sedang menunggu persetujuan dari Super Admin. Beberapa fitur mungkin terbatas hingga project disetujui.
+                                </div>
+                            </div>
+                        </div>
+                    @elseif($project->registration_status === 'rejected')
+                        <div class="alert alert-danger mt-2 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="ti ti-alert-triangle me-2"></i>
+                                <div>
+                                    <strong>Project Ditolak</strong><br>
+                                    @if($project->latestRegistration && $project->latestRegistration->review_notes)
+                                        <em>Alasan penolakan:</em> {{ $project->latestRegistration->review_notes }}<br>
+                                    @endif
+                                    @if($isPic)
+                                        Anda dapat memperbaiki dan mengajukan ulang project ini.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
             <div class="col-auto">
                 <div class="btn-list">
-                    <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="btn btn-outline-primary">
-                        <i class="ti ti-users-group me-1"></i>
-                        Kelola Affiliator
-                        @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
-                        @if($pendingAff > 0)
-                            <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAff }}</span>
-                        @endif
-                    </a>
-                    <a href="{{ route('admin.projects.leads.index', $project) }}" class="btn btn-outline-primary">
-                        <i class="ti ti-users me-1"></i>
-                        Kelola Lead
-                        @php $pendingLeads = $project->leads()->pending()->count(); @endphp
-                        @if($pendingLeads > 0)
-                            <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
-                        @endif
-                    </a>
-                    @if ($isPic)
-                    <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-primary">
-                        <i class="ti ti-edit me-1"></i>
-                        Edit Project
-                    </a>
+                    @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                        <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="btn btn-outline-primary">
+                            <i class="ti ti-users-group me-1"></i>
+                            Kelola Affiliator
+                            @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
+                            @if($pendingAff > 0)
+                                <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAff }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.projects.leads.index', $project) }}" class="btn btn-outline-primary">
+                            <i class="ti ti-users me-1"></i>
+                            Kelola Lead
+                            @php $pendingLeads = $project->leads()->pending()->count(); @endphp
+                            @if($pendingLeads > 0)
+                                <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
+                            @endif
+                        </a>
                     @endif
+                    
+                    @if ($isPic)
+                        @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                            <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-primary">
+                                <i class="ti ti-edit me-1"></i>
+                                Edit Project
+                            </a>
+                        @elseif($project->registration_status === 'rejected')
+                            <a href="{{ route('admin.projects.resubmit', $project) }}" class="btn btn-warning">
+                                <i class="ti ti-refresh me-1"></i>
+                                Ajukan Ulang
+                            </a>
+                        @else
+                            <span class="btn btn-secondary disabled">
+                                <i class="ti ti-edit me-1"></i>
+                                Edit Project
+                            </span>
+                        @endif
+                    @endif
+                    
                     <div class="dropdown">
                         <button class="btn btn-icon" data-bs-toggle="dropdown">
                             <i class="ti ti-dots-vertical"></i>
                         </button>
                         <div class="dropdown-menu">
-                            <a href="{{ route('admin.projects.withdrawals.index', $project) }}" class="dropdown-item">
-                                <i class="ti ti-credit-card me-2"></i>
-                                Kelola Penarikan
-                                @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
-                                @if($pendingWith > 0)
-                                    <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWith }}</span>
+                            @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                                <a href="{{ route('admin.projects.withdrawals.index', $project) }}" class="dropdown-item">
+                                    <i class="ti ti-credit-card me-2"></i>
+                                    Kelola Penarikan
+                                    @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
+                                    @if($pendingWith > 0)
+                                        <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWith }}</span>
+                                    @endif
+                                </a>
+                                
+                                @if ($isPic)
+                                    <div class="dropdown-divider"></div>
+                                    <form action="{{ route('admin.projects.toggle-status', $project) }}" 
+                                            method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="ti ti-{{ $project->is_active ? 'eye-off' : 'eye' }} me-2"></i>
+                                            {{ $project->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                        </button>
+                                    </form>
                                 @endif
-                            </a>
-                            @if ($isPic)
-                            <div class="dropdown-divider"></div>
-                            <form action="{{ route('admin.projects.toggle-status', $project) }}" 
-                                    method="POST" class="d-inline">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="dropdown-item">
-                                    <i class="ti ti-{{ $project->is_active ? 'eye-off' : 'eye' }} me-2"></i>
-                                    {{ $project->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                </button>
-                            </form>
+                            @else
+                                <span class="dropdown-item text-muted">
+                                    <i class="ti ti-credit-card me-2"></i>
+                                    Kelola Penarikan
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -184,65 +249,109 @@
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush list-group-hoverable">
-                    <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="list-group-item list-group-item-action">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <i class="ti ti-users-group text-primary"></i>
-                            </div>
-                            <div class="col text-truncate">
-                                <div class="text-reset d-block">Kelola Affiliator</div>
-                                <div class="d-block text-secondary text-truncate mt-n1">
-                                    Verifikasi dan kelola affiliator project
+                    @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                        <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="list-group-item list-group-item-action">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-users-group text-primary"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-reset d-block">Kelola Affiliator</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Verifikasi dan kelola affiliator project
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
+                                    @if($pendingAff > 0)
+                                        <span class="badge bg-red">{{ $pendingAff }}</span>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
-                                @if($pendingAff > 0)
-                                    <span class="badge bg-red">{{ $pendingAff }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <a href="{{ route('admin.projects.leads.index', $project) }}" class="list-group-item list-group-item-action">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <i class="ti ti-users text-success"></i>
-                            </div>
-                            <div class="col text-truncate">
-                                <div class="text-reset d-block">Kelola Lead</div>
-                                <div class="d-block text-secondary text-truncate mt-n1">
-                                    Verifikasi dan kelola lead customer
+                        </a>
+                        
+                        <a href="{{ route('admin.projects.leads.index', $project) }}" class="list-group-item list-group-item-action">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-users text-success"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-reset d-block">Kelola Lead</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Verifikasi dan kelola lead customer
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    @php $pendingLeads = $project->leads()->pending()->count(); @endphp
+                                    @if($pendingLeads > 0)
+                                        <span class="badge bg-orange">{{ $pendingLeads }}</span>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                @php $pendingLeads = $project->leads()->pending()->count(); @endphp
-                                @if($pendingLeads > 0)
-                                    <span class="badge bg-orange">{{ $pendingLeads }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <a href="{{ route('admin.projects.withdrawals.index', $project) }}" class="list-group-item list-group-item-action">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <i class="ti ti-credit-card text-warning"></i>
-                            </div>
-                            <div class="col text-truncate">
-                                <div class="text-reset d-block">Kelola Penarikan</div>
-                                <div class="d-block text-secondary text-truncate mt-n1">
-                                    Proses permintaan penarikan komisi
+                        </a>
+                        
+                        <a href="{{ route('admin.projects.withdrawals.index', $project) }}" class="list-group-item list-group-item-action">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-credit-card text-warning"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-reset d-block">Kelola Penarikan</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Proses permintaan penarikan komisi
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
+                                    @if($pendingWith > 0)
+                                        <span class="badge bg-yellow">{{ $pendingWith }}</span>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
-                                @if($pendingWith > 0)
-                                    <span class="badge bg-yellow">{{ $pendingWith }}</span>
-                                @endif
+                        </a>
+                    @else
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-users-group text-muted"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-muted d-block">Kelola Affiliator</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Tersedia setelah project disetujui
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </a>
+                        
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-users text-muted"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-muted d-block">Kelola Lead</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Tersedia setelah project disetujui
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="list-group-item">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-credit-card text-muted"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-muted d-block">Kelola Penarikan</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Tersedia setelah project disetujui
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -266,6 +375,9 @@
                                     <div class="d-block text-secondary text-truncate mt-n1">
                                         {{ $admin->email }}
                                     </div>
+                                    @if($admin->id == $project->pic_user_id)
+                                        <span class="badge badge-sm bg-info-lt mt-1">PIC</span>
+                                    @endif
                                 </div>
                                 <div class="col-auto">
                                     @if($admin->id == Auth::id())
@@ -304,9 +416,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Lead Terbaru</h3>
-                <a href="{{ route('admin.projects.leads.index', $project) }}" class="btn btn-sm btn-outline-primary">
-                    Lihat Semua
-                </a>
+                @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                    <a href="{{ route('admin.projects.leads.index', $project) }}" class="btn btn-sm btn-outline-primary">
+                        Lihat Semua
+                    </a>
+                @endif
             </div>
             <div class="card-body p-0">
                 @if($recentLeads->count() > 0)
@@ -358,9 +472,13 @@
                                         <div class="text-secondary small">{{ $lead->created_at->diffForHumans() }}</div>
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.projects.leads.show', [$project, $lead]) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="ti ti-eye"></i>
-                                        </a>
+                                        @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                                            <a href="{{ route('admin.projects.leads.show', [$project, $lead]) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-eye"></i>
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">Tersedia setelah disetujui</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -372,7 +490,13 @@
                         <div class="text-secondary">
                             <i class="ti ti-file-off icon icon-xl mb-2"></i>
                             <div>Belum ada lead</div>
-                            <div class="small mt-1">Lead akan muncul setelah affiliator menambahkan customer</div>
+                            <div class="small mt-1">
+                                @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                                    Lead akan muncul setelah affiliator menambahkan customer
+                                @else
+                                    Lead akan tersedia setelah project disetujui
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -396,6 +520,11 @@
                     <li class="nav-item">
                         <a href="#additional-info" class="nav-link" data-bs-toggle="tab">Informasi Tambahan</a>
                     </li>
+                    @if($project->is_manual_registration)
+                    <li class="nav-item">
+                        <a href="#registration-info" class="nav-link" data-bs-toggle="tab">Info Registration</a>
+                    </li>
+                    @endif
                 </ul>
             </div>
             <div class="card-body">
@@ -409,9 +538,33 @@
                                         <td width="150">Nama Project:</td>
                                         <td><strong>{{ $project->name }}</strong></td>
                                     </tr>
+                                    @if($project->developer_name)
+                                    <tr>
+                                        <td>Developer:</td>
+                                        <td>{{ $project->developer_name }}</td>
+                                    </tr>
+                                    @endif
                                     <tr>
                                         <td>Lokasi:</td>
                                         <td>{{ $project->location ?: '-' }}</td>
+                                    </tr>
+                                    @if($project->website_url)
+                                    <tr>
+                                        <td>Website:</td>
+                                        <td><a href="{{ $project->website_url }}" target="_blank">{{ $project->website_url }}</a></td>
+                                    </tr>
+                                    @endif
+                                    <tr>
+                                        <td>Status Registration:</td>
+                                        <td>
+                                            @if($project->is_manual_registration)
+                                                <span class="badge bg-{{ $project->registration_status_color }}-lt">
+                                                    {{ $project->registration_status_label }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-success-lt">Auto Approved</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td>Status:</td>
@@ -429,6 +582,18 @@
                                             </span>
                                         </td>
                                     </tr>
+                                    @if($project->commission_payment_trigger)
+                                    <tr>
+                                        <td>Komisi Dibayar:</td>
+                                        <td>{{ $project->commission_payment_trigger_label }}</td>
+                                    </tr>
+                                    @endif
+                                    @if($project->project_period !== '-')
+                                    <tr>
+                                        <td>Periode Project:</td>
+                                        <td>{{ $project->project_period }}</td>
+                                    </tr>
+                                    @endif
                                     @if($project->crm_project_id)
                                     <tr>
                                         <td>CRM Project ID:</td>
@@ -441,7 +606,7 @@
                             </div>
                             <div class="col-md-6">
                                 <h4>Statistik</h4>
-                                <div class="row">
+                                <div class="row g-3">
                                     <div class="col-6">
                                         <div class="card bg-primary-lt">
                                             <div class="card-body text-center">
@@ -476,6 +641,38 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                @if($project->pic_name)
+                                <h4 class="mt-4">Informasi PIC</h4>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td width="100">Nama:</td>
+                                        <td><strong>{{ $project->pic_name }}</strong></td>
+                                    </tr>
+                                    @if($project->pic_phone)
+                                    <tr>
+                                        <td>Phone:</td>
+                                        <td>{{ $project->pic_phone }}</td>
+                                    </tr>
+                                    @endif
+                                    @if($project->pic_email)
+                                    <tr>
+                                        <td>Email:</td>
+                                        <td>{{ $project->pic_email }}</td>
+                                    </tr>
+                                    @endif
+                                    @if($project->picUser)
+                                    <tr>
+                                        <td>Status Akun:</td>
+                                        <td>
+                                            <span class="badge bg-{{ $project->picUser->is_active ? 'success' : 'secondary' }}-lt">
+                                                {{ $project->picUser->is_active ? 'Aktif' : 'Nonaktif' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endif
+                                </table>
+                                @endif
                             </div>
                         </div>
                         
@@ -507,6 +704,106 @@
                             </div>
                         @endif
                     </div>
+
+                    @if($project->is_manual_registration)
+                    <div class="tab-pane" id="registration-info">
+                        @if($project->latestRegistration)
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Informasi Pendaftaran</h4>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td width="150">Status:</td>
+                                            <td>
+                                                <span class="badge bg-{{ $project->registration_status_color }}-lt">
+                                                    {{ $project->registration_status_label }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Pendaftar:</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="avatar avatar-sm me-2">{{ $project->latestRegistration->submittedBy->initials }}</span>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $project->latestRegistration->submittedBy->name }}</div>
+                                                        <div class="text-secondary small">{{ $project->latestRegistration->submittedBy->email }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tanggal Daftar:</td>
+                                            <td>
+                                                {{ $project->latestRegistration->created_at->format('d F Y, H:i') }}
+                                                <div class="text-secondary small">{{ $project->latestRegistration->created_at->diffForHumans() }}</div>
+                                            </td>
+                                        </tr>
+                                        @if($project->latestRegistration->reviewed_at)
+                                        <tr>
+                                            <td>Tanggal Review:</td>
+                                            <td>
+                                                {{ $project->latestRegistration->reviewed_at->format('d F Y, H:i') }}
+                                                <div class="text-secondary small">{{ $project->latestRegistration->reviewed_at->diffForHumans() }}</div>
+                                            </td>
+                                        </tr>
+                                        @endif
+                                        {{-- @if($project->latestRegistration->reviewedBy)
+                                        <tr>
+                                            <td>Direview Oleh:</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="avatar avatar-sm me-2">{{ $project->latestRegistration->reviewedBy->initials }}</span>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $project->latestRegistration->reviewedBy->name }}</div>
+                                                        <div class="text-secondary small">{{ $project->latestRegistration->reviewedBy->email }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endif --}}
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    @if($project->latestRegistration->review_notes)
+                                        <h4>
+                                            {{ $project->registration_status === 'rejected' ? 'Alasan Penolakan' : 'Catatan Review' }}
+                                        </h4>
+                                        <div class="alert alert-{{ $project->registration_status === 'rejected' ? 'danger' : 'info' }} alert-important">
+                                            {{ $project->latestRegistration->review_notes }}
+                                        </div>
+                                    @endif
+
+                                    @if($project->registration_status === 'rejected' && $isPic)
+                                        <div class="mt-3">
+                                            <h5>Tindakan yang Dapat Dilakukan</h5>
+                                            <div class="alert alert-warning">
+                                                <i class="ti ti-bulb me-2"></i>
+                                                <strong>Tips:</strong> Perbaiki hal-hal yang disebutkan dalam alasan penolakan, kemudian ajukan ulang project ini.
+                                            </div>
+                                            <a href="{{ route('admin.projects.resubmit', $project) }}" class="btn btn-warning">
+                                                <i class="ti ti-refresh me-1"></i>
+                                                Ajukan Ulang untuk Persetujuan
+                                            </a>
+                                        </div>
+                                    @endif
+
+                                    @if($project->registration_status === 'pending')
+                                        <div class="alert alert-info">
+                                            <i class="ti ti-clock me-2"></i>
+                                            <strong>Sedang Diproses:</strong> Project Anda sedang ditinjau oleh Super Admin. Harap menunggu konfirmasi lebih lanjut.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center text-secondary">
+                                <i class="ti ti-file-off icon icon-xl mb-2"></i>
+                                <div>Tidak ada informasi registrasi</div>
+                            </div>
+                        @endif
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

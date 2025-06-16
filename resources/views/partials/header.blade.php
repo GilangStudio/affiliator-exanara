@@ -137,7 +137,7 @@
                     <span class="avatar avatar-sm" style="background-image: url({{ Auth::user()->profile_photo_url }})"> </span>
                     <div class="d-none d-xl-block ps-2">
                         <div>{{ Auth::user()->name }}</div>
-                        <div class="mt-1 small text-secondary">{{ Auth::user()->role }}</div>
+                        <div class="mt-1 small text-secondary">{{ Auth::user()->role }}@if (Auth::user()->is_pic == 1) PIC @endif</div>
                     </div>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">

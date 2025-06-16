@@ -196,6 +196,8 @@ Route::middleware(['web', 'auth'])->group(function () {
                 Route::get('/{project}/edit', [AdminProjectController::class, 'edit'])->name('edit');
                 Route::put('/{project}', [AdminProjectController::class, 'update'])->name('update');
                 Route::patch('/{project}/toggle-status', [AdminProjectController::class, 'toggleStatus'])->name('toggle-status');
+                Route::get('/{project}/resubmit', [AdminProjectController::class, 'showResubmitForm'])->name('resubmit');
+                Route::post('/{project}/resubmit', [AdminProjectController::class, 'resubmit'])->name('resubmit');
                 Route::get('/{project}/statistics', [AdminProjectController::class, 'statistics'])->name('statistics');
 
                 Route::prefix('{project}')->group(function () {

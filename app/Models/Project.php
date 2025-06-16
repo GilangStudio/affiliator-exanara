@@ -262,7 +262,7 @@ class Project extends Model
             return "{$start} - {$end}";
         }
 
-        return "{$start} - Tidak terbatas";
+        return "{$start} - Tidak ada batas akhir";
     }
 
     /**

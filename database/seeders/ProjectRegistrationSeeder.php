@@ -42,8 +42,8 @@ class ProjectRegistrationSeeder extends Seeder
             // Pastikan email unik dengan menambahkan nomor iterasi
             $picEmail = strtolower(str_replace(' ', '.', $picName)) . $i . '@example.com'; 
             $picPhone = $faker->unique()->numerify('081#########');
-            $startDate = now()->subDays(rand(10, 100));
-            $approvedAt = $startDate->copy()->subDays(rand(1, 5));
+            $startDate = now();
+            $approvedAt = $startDate->copy()->subDays(rand(2, 5));
 
             // --- Buat Project ---
             $project = Project::create([
@@ -58,7 +58,7 @@ class ProjectRegistrationSeeder extends Seeder
                 'pic_phone' => $picPhone,
                 'pic_email' => $picEmail,
                 'start_date' => $startDate,
-                'end_date' => now()->addYears(rand(1, 3)),
+                'end_date' => now()->addMonths(rand(3, 12)),
                 'registration_type' => 'manual',
                 'registration_status' => 'approved', // Status disetujui
                 'is_active' => true,                 // Project aktif

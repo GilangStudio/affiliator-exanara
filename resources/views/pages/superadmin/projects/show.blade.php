@@ -752,7 +752,7 @@
                         oleh {{ $project->latestRegistration->submittedBy->name }}.
                     </p>
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-info d-block">
                         <h4 class="alert-title">Yang akan terjadi setelah disetujui:</h4>
                         <ul class="mb-0">
                             <li>Project akan diaktifkan dan dapat dilihat oleh affiliator</li>

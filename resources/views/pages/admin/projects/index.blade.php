@@ -18,15 +18,23 @@
         <!-- Filters -->
         <div class="card-body border-bottom">
             <form method="GET" class="row g-2">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" class="form-control" name="search" placeholder="Cari project..." 
                            value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select class="form-select" name="status">
                         <option value="">Semua Status</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="registration_status">
+                        <option value="">Semua Approval</option>
+                        <option value="approved" {{ request('registration_status') == 'approved' ? 'selected' : '' }}>Disetujui</option>
+                        <option value="pending" {{ request('registration_status') == 'pending' ? 'selected' : '' }}>Menunggu Persetujuan</option>
+                        <option value="rejected" {{ request('registration_status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -58,6 +66,7 @@
                     <thead>
                         <tr>
                             <th>Project</th>
+                            <th>Status Approval</th>
                             <th>Status</th>
                             <th>Unit</th>
                             <th>Affiliator</th>
@@ -92,6 +101,29 @@
                                         @endif
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                @if($project->is_manual_registration)
+                                    <span class="badge bg-{{ $project->registration_status_color }}-lt">
+                                        {{ $project->registration_status_label }}
+                                    </span>
+                                    @if($project->registration_status === 'pending')
+                                        <div class="text-secondary small mt-1">
+                                            <i class="ti ti-clock me-1"></i>
+                                            Menunggu persetujuan
+                                        </div>
+                                    @elseif($project->registration_status === 'rejected')
+                                        <div class="text-danger small mt-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>
+                                            Dapat diajukan ulang
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="badge bg-success-lt">
+                                        <i class="ti ti-check me-1"></i>
+                                        Auto Approved
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge bg-{{ $project->is_active ? 'success' : 'secondary' }}-lt">
@@ -157,51 +189,85 @@
                                             <i class="ti ti-eye me-2"></i>
                                             Lihat Detail
                                         </a>
+                                        
                                         @if(Auth::user()->isPicOfProject($project->id))
-                                        <a href="{{ route('admin.projects.edit', $project) }}" 
-                                           class="dropdown-item">
-                                            <i class="ti ti-edit me-2"></i>
-                                            Edit Project
-                                        </a>
+                                            @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                                                <a href="{{ route('admin.projects.edit', $project) }}" 
+                                                   class="dropdown-item">
+                                                    <i class="ti ti-edit me-2"></i>
+                                                    Edit Project
+                                                </a>
+                                            @elseif($project->registration_status === 'rejected')
+                                                <a href="{{ route('admin.projects.resubmit', $project) }}" 
+                                                   class="dropdown-item text-warning">
+                                                    <i class="ti ti-refresh me-2"></i>
+                                                    Ajukan Ulang
+                                                </a>
+                                            @else
+                                                <span class="dropdown-item text-muted">
+                                                    <i class="ti ti-edit me-2"></i>
+                                                    Edit Project
+                                                </span>
+                                            @endif
                                         @endif
-                                        <div class="dropdown-divider"></div>
-                                        <a href="{{ route('admin.projects.affiliators.index', $project) }}"
-                                           class="dropdown-item">
-                                            <i class="ti ti-users-group me-2"></i>
-                                            Kelola Affiliator
-                                            @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
-                                            @if($pendingAff > 0)
-                                                <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAff }}</span>
+                                        
+                                        @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                                            <div class="dropdown-divider"></div>
+                                            <a href="{{ route('admin.projects.affiliators.index', $project) }}"
+                                               class="dropdown-item">
+                                                <i class="ti ti-users-group me-2"></i>
+                                                Kelola Affiliator
+                                                @php $pendingAff = $project->affiliatorProjects()->pending()->count(); @endphp
+                                                @if($pendingAff > 0)
+                                                    <span class="badge badge-sm bg-red text-white ms-1">{{ $pendingAff }}</span>
+                                                @endif
+                                            </a>
+                                            <a href="{{ route('admin.projects.leads.index', $project) }}"
+                                               class="dropdown-item">
+                                                <i class="ti ti-users me-2"></i>
+                                                Kelola Lead
+                                                @php $pendingLeads = $project->leads()->pending()->count(); @endphp
+                                                @if($pendingLeads > 0)
+                                                    <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
+                                                @endif
+                                            </a>
+                                            <a href="{{ route('admin.projects.withdrawals.index', $project) }}"
+                                               class="dropdown-item">
+                                                <i class="ti ti-credit-card me-2"></i>
+                                                Kelola Penarikan
+                                                @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
+                                                @if($pendingWith > 0)
+                                                    <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWith }}</span>
+                                                @endif
+                                            </a>
+                                            
+                                            @if(Auth::user()->isPicOfProject($project->id))
+                                                <div class="dropdown-divider"></div>
+                                                <form action="{{ route('admin.projects.toggle-status', $project) }}" 
+                                                      method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="ti ti-{{ $project->is_active ? 'eye-off' : 'eye' }} me-2"></i>
+                                                        {{ $project->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                    </button>
+                                                </form>
                                             @endif
-                                        </a>
-                                        <a href="{{ route('admin.projects.leads.index', $project) }}"
-                                           class="dropdown-item">
-                                            <i class="ti ti-users me-2"></i>
-                                            Kelola Lead
-                                            @php $pendingLeads = $project->leads()->pending()->count(); @endphp
-                                            @if($pendingLeads > 0)
-                                                <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
-                                            @endif
-                                        </a>
-                                        <a href="{{ route('admin.projects.withdrawals.index', $project) }}"
-                                           class="dropdown-item">
-                                            <i class="ti ti-credit-card me-2"></i>
-                                            Kelola Penarikan
-                                            @php $pendingWith = $project->commissionWithdrawals()->where('status', 'pending')->count(); @endphp
-                                            @if($pendingWith > 0)
-                                                <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWith }}</span>
-                                            @endif
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <form action="{{ route('admin.projects.toggle-status', $project) }}" 
-                                              method="POST" class="d-inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="ti ti-{{ $project->is_active ? 'eye-off' : 'eye' }} me-2"></i>
-                                                {{ $project->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                            </button>
-                                        </form>
+                                        @else
+                                            <div class="dropdown-divider"></div>
+                                            <span class="dropdown-item text-muted">
+                                                <i class="ti ti-users-group me-2"></i>
+                                                Kelola Affiliator
+                                            </span>
+                                            <span class="dropdown-item text-muted">
+                                                <i class="ti ti-users me-2"></i>
+                                                Kelola Lead
+                                            </span>
+                                            <span class="dropdown-item text-muted">
+                                                <i class="ti ti-credit-card me-2"></i>
+                                                Kelola Penarikan
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
