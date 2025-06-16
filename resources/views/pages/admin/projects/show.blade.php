@@ -3,6 +3,9 @@
 @section('title', 'Detail Project - ' . $project->name)
 
 @section('content')
+
+@include('components.alert')
+
 <!-- Project Header -->
 <div class="card mb-3">
     <div class="card-body">
@@ -55,10 +58,12 @@
                             <span class="badge badge-sm bg-orange text-white ms-1">{{ $pendingLeads }}</span>
                         @endif
                     </a>
+                    @if ($isPic)
                     <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-primary">
                         <i class="ti ti-edit me-1"></i>
                         Edit Project
                     </a>
+                    @endif
                     <div class="dropdown">
                         <button class="btn btn-icon" data-bs-toggle="dropdown">
                             <i class="ti ti-dots-vertical"></i>
@@ -72,6 +77,7 @@
                                     <span class="badge badge-sm bg-yellow text-white ms-1">{{ $pendingWith }}</span>
                                 @endif
                             </a>
+                            @if ($isPic)
                             <div class="dropdown-divider"></div>
                             <form action="{{ route('admin.projects.toggle-status', $project) }}" 
                                     method="POST" class="d-inline">
@@ -82,6 +88,7 @@
                                     {{ $project->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 </div>

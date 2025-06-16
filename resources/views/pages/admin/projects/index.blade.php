@@ -157,11 +157,13 @@
                                             <i class="ti ti-eye me-2"></i>
                                             Lihat Detail
                                         </a>
+                                        @if(Auth::user()->isPicOfProject($project->id))
                                         <a href="{{ route('admin.projects.edit', $project) }}" 
                                            class="dropdown-item">
                                             <i class="ti ti-edit me-2"></i>
                                             Edit Project
                                         </a>
+                                        @endif
                                         <div class="dropdown-divider"></div>
                                         <a href="{{ route('admin.projects.affiliators.index', $project) }}"
                                            class="dropdown-item">

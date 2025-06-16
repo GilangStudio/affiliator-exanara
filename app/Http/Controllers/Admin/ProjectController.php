@@ -71,8 +71,8 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        // Check if current user is admin of this project
-        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $project->id)->exists()) {
+        // Check if current user can view the project
+        if (!User::find(Auth::user()->id)->canViewProject($project->id)) {
             return redirect()->route('admin.projects.index')
                 ->with('error', 'Anda tidak memiliki akses untuk melihat project ini.');
         }
@@ -99,7 +99,10 @@ class ProjectController extends Controller
             ->limit(10)
             ->get();
 
-        return view('pages.admin.projects.show', compact('project', 'stats', 'recentLeads'));
+        // Check if current user is PIC of this project
+        $isPic = User::find(Auth::user()->id)->isPicOfProject($project->id);
+
+        return view('pages.admin.projects.show', compact('project', 'stats', 'recentLeads', 'isPic'));
     }
 
     /**
@@ -107,10 +110,16 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        // Check if current user is admin of this project
-        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $project->id)->exists()) {
+        // Check if current user can view the project
+        if (!User::find(Auth::user()->id)->canViewProject($project->id)) {
             return redirect()->route('admin.projects.index')
-                ->with('error', 'Anda tidak memiliki akses untuk mengedit project ini.');
+                ->with('error', 'Anda tidak memiliki akses untuk melihat project ini.');
+        }
+
+        // Check if current user can edit the project (only PIC)
+        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
+            return redirect()->route('admin.projects.show', $project)
+                ->with('error', 'Hanya admin PIC yang dapat mengedit project ini.');
         }
 
         return view('pages.admin.projects.edit', compact('project'));
@@ -121,10 +130,9 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        // Check if current user is admin of this project
-        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $project->id)->exists()) {
+        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
             return redirect()->route('admin.projects.index')
-                ->with('error', 'Anda tidak memiliki akses untuk mengedit project ini.');
+                ->with('error', 'Hanya admin PIC yang dapat mengedit project ini.');
         }
 
         $request->validate([
@@ -139,7 +147,7 @@ class ProjectController extends Controller
 
         DB::transaction(function () use ($request, $project) {
             $oldData = $project->only(['location', 'is_active']);
-
+    
             // Handle logo upload
             if ($request->hasFile('logo')) {
                 // Delete old logo
@@ -148,8 +156,8 @@ class ProjectController extends Controller
                 }
                 $project->logo = $request->file('logo')->store('projects/logos', 'public');
             }
-
-            // Update project (admin can't change name and CRM connection)
+    
+            // Update project (admin PIC can update these fields)
             $project->update([
                 'location' => $request->location,
                 'description' => $request->description,
@@ -158,12 +166,12 @@ class ProjectController extends Controller
                 'require_digital_signature' => $request->require_digital_signature == '1' ? true : false,
                 'is_active' => $request->boolean('is_active', true),
             ]);
-
+    
             // Log activity
             $this->activityLogService->log(
                 Auth::id(),
                 'update_project',
-                "Project diperbarui oleh admin: {$project->name}",
+                "Project diperbarui oleh admin PIC: {$project->name}",
                 $project->id,
                 ['old_data' => $oldData, 'new_data' => $project->only(['location', 'is_active'])]
             );
@@ -178,36 +186,29 @@ class ProjectController extends Controller
      */
     public function toggleStatus(Project $project)
     {
-        // Check if current user is admin of this project
-        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $project->id)->exists()) {
+        // Check if current user can edit the project (only PIC)
+        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
             return redirect()->route('admin.projects.index')
-                ->with('error', 'Anda tidak memiliki akses untuk mengubah status project ini.');
+                ->with('error', 'Hanya admin PIC yang dapat mengubah status project ini.');
         }
 
-        $newStatus = !$project->is_active;
-        $project->update(['is_active' => $newStatus]);
+        $project->update([
+            'is_active' => !$project->is_active
+        ]);
 
-        $statusText = $newStatus ? 'diaktifkan' : 'dinonaktifkan';
-
+        $status = $project->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        
+        // Log activity
         $this->activityLogService->log(
             Auth::id(),
             'toggle_project_status',
-            "Project {$project->name} {$statusText} oleh admin",
-            $project->id
+            "Project {$status} oleh admin PIC: {$project->name}",
+            $project->id,
+            ['new_status' => $project->is_active]
         );
 
-        // Notify other project admins
-        $adminIds = $project->admins()->where('users.id', '!=', Auth::id())->pluck('users.id')->toArray();
-        if (!empty($adminIds)) {
-            $this->notificationService->broadcast(
-                $adminIds,
-                "Project Status Update",
-                "Project {$project->name} telah {$statusText} oleh " . Auth::user()->name,
-                $newStatus ? 'success' : 'warning'
-            );
-        }
-
-        return back()->with('success', "Project berhasil {$statusText}!");
+        return redirect()->back()
+            ->with('success', "Project berhasil {$status}!");
     }
 
     /**

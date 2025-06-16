@@ -209,7 +209,7 @@
                         <i class="ti ti-user-check icon icon-1"></i>
                         <div>
                             <strong>Catatan:</strong><br>
-                            Sebagai admin project, Anda dapat mengubah informasi project kecuali nama project dan koneksi CRM yang hanya dapat diubah oleh Super Admin.
+                            Sebagai PIC project, Anda dapat mengubah informasi project kecuali nama project dan koneksi CRM yang hanya dapat diubah oleh Super Admin.
                         </div>
                     </div>
                 </div>
