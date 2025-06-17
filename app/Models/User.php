@@ -246,57 +246,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if admin user is PIC of specific project
-     */
-    public function isPicOfProject($projectId)
-    {
-        if ($this->role !== 'admin') {
-            return false;
-        }
-        
-        // Check if user is PIC of the project
-        return Project::where('id', $projectId)
-                    ->where('pic_user_id', $this->id)
-                    ->exists();
-    }
-
-    /**
-     * Check if user can edit specific project (only PIC admin can edit)
-     */
-    public function canEditProject($projectId)
-    {
-        // Superadmin can edit all projects
-        if ($this->role === 'superadmin') {
-            return true;
-        }
-        
-        // Admin can edit only if they are PIC of the project
-        if ($this->role === 'admin') {
-            return $this->isPicOfProject($projectId);
-        }
-        
-        return false;
-    }
-
-    /**
-     * Check if user can view specific project (all assigned admins can view)
-     */
-    public function canViewProject($projectId)
-    {
-        // Superadmin can view all projects
-        if ($this->role === 'superadmin') {
-            return true;
-        }
-        
-        // Admin can view if they are assigned to the project (PIC or regular admin)
-        if ($this->role === 'admin') {
-            return $this->canManageProject($projectId);
-        }
-        
-        return false;
-    }
-
-    /**
      * Get projects that user can manage
      */
     public function getManagedProjectsAttribute()
@@ -443,5 +392,56 @@ class User extends Authenticatable
         }
 
         return $query->get();
+    }
+
+    /**
+     * Check if admin user is PIC of specific project
+     */
+    public function isPicOfProject($projectId)
+    {
+        if ($this->role !== 'admin') {
+            return false;
+        }
+        
+        // Check if user is PIC of the project
+        return Project::where('id', $projectId)
+                    ->where('pic_user_id', $this->id)
+                    ->exists();
+    }
+
+    /**
+     * Check if user can edit specific project (only PIC admin can edit)
+     */
+    public function canEditProject($projectId)
+    {
+        // Superadmin can edit all projects
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+        
+        // Admin can edit only if they are PIC of the project
+        if ($this->role === 'admin') {
+            return $this->isPicOfProject($projectId);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if user can view specific project (all assigned admins can view)
+     */
+    public function canViewProject($projectId)
+    {
+        // Superadmin can view all projects
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+        
+        // Admin can view if they are assigned to the project (PIC or regular admin)
+        if ($this->role === 'admin') {
+            return $this->canManageProject($projectId);
+        }
+        
+        return false;
     }
 }

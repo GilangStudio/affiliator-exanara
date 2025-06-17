@@ -126,7 +126,8 @@
                             <i class="ti ti-dots-vertical"></i>
                         </button>
                         <div class="dropdown-menu">
-                            @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                            {{-- @if($project->registration_status === 'approved' || !$project->is_manual_registration) --}}
+                            @if($project->registration_status === 'approved')
                                 <a href="{{ route('admin.projects.withdrawals.index', $project) }}" class="dropdown-item">
                                     <i class="ti ti-credit-card me-2"></i>
                                     Kelola Penarikan
@@ -137,6 +138,16 @@
                                 </a>
                                 
                                 @if ($isPic)
+                                    <a href="{{ route('admin.projects.admins.index', $project) }}" class="dropdown-item">
+                                        <i class="ti ti-users me-2"></i>
+                                        Kelola Admin
+                                    </a>
+
+                                    <a href="{{ route('admin.projects.units.index', $project) }}" class="dropdown-item">
+                                        <i class="ti ti-home me-2"></i>
+                                        Kelola Unit
+                                    </a>
+                                    
                                     <div class="dropdown-divider"></div>
                                     <form action="{{ route('admin.projects.toggle-status', $project) }}" 
                                             method="POST" class="d-inline">
@@ -249,7 +260,8 @@
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush list-group-hoverable">
-                    @if($project->registration_status === 'approved' || !$project->is_manual_registration)
+                    {{-- @if($project->registration_status === 'approved' || !$project->is_manual_registration) --}}
+                    @if($project->registration_status === 'approved')
                         <a href="{{ route('admin.projects.affiliators.index', $project) }}" class="list-group-item list-group-item-action">
                             <div class="row align-items-center">
                                 <div class="col-auto">
@@ -309,6 +321,35 @@
                                 </div>
                             </div>
                         </a>
+
+                        @if ($isPic)
+                        <a href="{{ route('admin.projects.units.index', $project) }}" class="list-group-item list-group-item-action">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-building text-blue"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-reset d-block">Kelola Unit</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Tambah dan kelola unit project
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="{{ route('admin.projects.admins.index', $project) }}" class="list-group-item list-group-item-action">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="ti ti-user-check text-purple"></i>
+                                </div>
+                                <div class="col text-truncate">
+                                    <div class="text-reset d-block">Kelola Admin</div>
+                                    <div class="d-block text-secondary text-truncate mt-n1">
+                                        Tambah dan kelola admin project
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        @endif
                     @else
                         <div class="list-group-item">
                             <div class="row align-items-center">

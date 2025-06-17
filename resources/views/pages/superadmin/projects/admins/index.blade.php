@@ -71,7 +71,7 @@
                                             <img src="{{ $admin->profile_photo_url }}" alt="{{ $admin->name }}" 
                                                  class="avatar avatar-sm me-2">
                                             <div>
-                                                <div class="fw-bold">{{ $admin->name }}</div>
+                                                <div class="fw-bold">{{ $admin->name }} @if($admin->is_pic) <span class="badge bg-info-lt">PIC</span> @endif</div>
                                                 <div class="text-secondary small">{{ $admin->username }}</div>
                                             </div>
                                         </div>

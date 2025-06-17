@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'maintenance' => \App\Http\Middleware\MaintenanceMiddleware::class,
             'check.project.affiliator' => \App\Http\Middleware\CheckProjectAffiliatorMiddleware::class,
             'approved.project' => \App\Http\Middleware\EnsureProjectApproved::class,
+            'only.pic' => \App\Http\Middleware\OnlyPicMiddleware::class,
         ]);
 
         $middleware->group('affiliator', [

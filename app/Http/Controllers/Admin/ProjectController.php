@@ -76,12 +76,6 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        // Check if current user can view the project
-        if (!User::find(Auth::user()->id)->canViewProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Anda tidak memiliki akses untuk melihat project ini.');
-        }
-
         $project->load([
             'admins',
             'affiliatorProjects.user',
@@ -107,7 +101,8 @@ class ProjectController extends Controller
             ->get();
 
         // Check if current user is PIC of this project
-        $isPic = User::find(Auth::user()->id)->isPicOfProject($project->id);
+        // $isPic = Project::where('id', $project->id)->where('pic_user_id', $project->pic_user_id)->exists();
+        $isPic = $project->pic_user_id == Auth::user()->id;
 
         return view('pages.admin.projects.show', compact('project', 'stats', 'recentLeads', 'isPic'));
     }
@@ -117,18 +112,6 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        // Check if current user can view the project
-        if (!User::find(Auth::user()->id)->canViewProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Anda tidak memiliki akses untuk melihat project ini.');
-        }
-
-        // Check if current user can edit the project (only PIC)
-        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
-            return redirect()->route('admin.projects.show', $project)
-                ->with('error', 'Hanya admin PIC yang dapat mengedit project ini.');
-        }
-
         // Check if project can be edited based on registration status
         if ($project->is_manual_registration && $project->registration_status === 'pending') {
             return redirect()->route('admin.projects.show', $project)
@@ -148,11 +131,6 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Hanya admin PIC yang dapat mengedit project ini.');
-        }
-
         // Check if project can be edited based on registration status
         if ($project->is_manual_registration && $project->registration_status === 'pending') {
             return redirect()->route('admin.projects.show', $project)
@@ -173,16 +151,12 @@ class ProjectController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'commission_payment_trigger' => 'nullable|in:booking_fee,akad_kredit,spk',
-            'pic_name' => 'nullable|string|max:255',
-            'pic_phone' => 'nullable|string|max:20',
-            'pic_email' => 'nullable|email|max:255|unique:users,email,' . ($project->pic_user_id ?: 'NULL'),
             'require_digital_signature' => 'boolean',
             'is_active' => 'boolean'
         ], [
             'name.required' => 'Nama project wajib diisi.',
             'terms_and_conditions.required' => 'Syarat dan ketentuan wajib diisi.',
             'end_date.after' => 'Tanggal berakhir harus setelah tanggal mulai.',
-            'pic_email.unique' => 'Email PIC sudah digunakan oleh user lain.',
             'logo.max' => 'Ukuran logo maksimal 2MB.',
             'brochure_file.max' => 'Ukuran file brosur maksimal 10MB.',
             'price_list_file.max' => 'Ukuran file price list maksimal 10MB.',
@@ -340,12 +314,6 @@ class ProjectController extends Controller
      */
     public function toggleStatus(Project $project)
     {
-        // Check if current user can edit the project (only PIC)
-        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Hanya admin PIC yang dapat mengubah status project ini.');
-        }
-
         // Only allow toggle if project is approved
         if ($project->is_manual_registration && $project->registration_status !== 'approved') {
             return redirect()->route('admin.projects.index')
@@ -376,12 +344,6 @@ class ProjectController extends Controller
      */
     public function showResubmitForm(Project $project)
     {
-        // Check if current user can edit the project (only PIC)
-        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Hanya admin PIC yang dapat mengajukan ulang project ini.');
-        }
-
         // Only allow resubmit if project is rejected
         if ($project->registration_status !== 'rejected') {
             return redirect()->route('admin.projects.index')
@@ -407,12 +369,6 @@ class ProjectController extends Controller
      */
     public function resubmit(Project $project)
     {
-        // Check if current user can edit the project (only PIC)
-        if (!User::find(Auth::user()->id)->canEditProject($project->id)) {
-            return redirect()->route('admin.projects.index')
-                ->with('error', 'Hanya admin PIC yang dapat mengajukan ulang project ini.');
-        }
-
         // Only allow resubmit if project is rejected
         if ($project->registration_status !== 'rejected') {
             return redirect()->route('admin.projects.index')
@@ -466,11 +422,6 @@ class ProjectController extends Controller
      */
     public function statistics(Project $project)
     {
-        // Check if current user is admin of this project
-        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $project->id)->exists()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $stats = [
             'total_affiliators' => $project->affiliatorProjects()->count(),
             'active_affiliators' => $project->affiliatorProjects()->where('status', 'active')->count(),

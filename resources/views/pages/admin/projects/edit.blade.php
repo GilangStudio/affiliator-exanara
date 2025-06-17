@@ -258,53 +258,6 @@
                         </div>
                     </div>
 
-                    <!-- PIC Information -->
-                    <h5 class="mb-3">Informasi PIC (Person In Charge)</h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Nama PIC</label>
-                                <input type="text" class="form-control @error('pic_name') is-invalid @enderror" 
-                                       name="pic_name" value="{{ old('pic_name', $project->pic_name) }}"
-                                       placeholder="Nama lengkap PIC">
-                                @error('pic_name')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                                @if($project->picUser)
-                                    <small class="form-hint text-info">
-                                        <i class="ti ti-user-check me-1"></i>
-                                        Akun PIC sudah dibuat: {{ $project->picUser->email }}
-                                    </small>
-                                @else
-                                    <small class="form-hint">PIC akan dibuatkan akun admin jika belum ada</small>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Phone PIC</label>
-                                <input type="tel" class="form-control @error('pic_phone') is-invalid @enderror" 
-                                       name="pic_phone" value="{{ old('pic_phone', $project->pic_phone) }}"
-                                       placeholder="08123456789">
-                                @error('pic_phone')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Email PIC</label>
-                                <input type="email" class="form-control @error('pic_email') is-invalid @enderror" 
-                                       name="pic_email" value="{{ old('pic_email', $project->pic_email) }}"
-                                       placeholder="pic@example.com">
-                                @error('pic_email')
-                                    <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                                <small class="form-hint">Email ini akan digunakan untuk login sebagai admin project</small>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="mb-3">
                         <label class="form-label">Deskripsi Project</label>
                         <textarea class="form-control @error('description') is-invalid @enderror" 
@@ -434,6 +387,7 @@
                 <div class="card-body">
                     <div class="mb-2">
                         <strong>Status:</strong>
+                        <br>
                         <span class="badge bg-{{ $project->registration_status_color }}-lt ms-1">
                             {{ $project->registration_status_label }}
                         </span>
@@ -450,12 +404,6 @@
                     <div class="mb-2">
                         <strong>Direview:</strong>
                         <div class="text-secondary">{{ $project->latestRegistration->reviewed_at->format('d M Y') }}</div>
-                    </div>
-                    @endif
-                    @if($project->latestRegistration->reviewedBy)
-                    <div class="mb-2">
-                        <strong>Direview Oleh:</strong>
-                        <div class="text-secondary">{{ $project->latestRegistration->reviewedBy->name }}</div>
                     </div>
                     @endif
                 </div>

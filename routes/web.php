@@ -11,18 +11,20 @@ use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\Admin\ProjectAdminController;
 use App\Http\Controllers\ProjectRegistrationController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Affiliator\JoinProjectController;
 use App\Http\Controllers\Admin\ProjectManagementController;
 use App\Http\Controllers\Admin\WithdrawalManagementController;
-use App\Http\Controllers\Affiliator\ProjectController as AffiliatorProjectController;
+use App\Http\Controllers\Admin\UnitController as AdminUnitController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\SuperAdmin\FaqController as SuperAdminFaqController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\Admin\AffiliatorController as AdminAffiliatorController;
+use App\Http\Controllers\Affiliator\ProjectController as AffiliatorProjectController;
 use App\Http\Controllers\SuperAdmin\ProjectController as SuperAdminProjectController;
 use App\Http\Controllers\SuperAdmin\SettingsController as SuperAdminSettingsController;
 use App\Http\Controllers\Affiliator\DashboardController as AffiliatorDashboardController;
@@ -193,12 +195,40 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::prefix('projects')->name('projects.')->group(function () {
                 Route::get('/', [AdminProjectController::class, 'index'])->name('index');
                 Route::get('/{project}', [AdminProjectController::class, 'show'])->name('show');
-                Route::get('/{project}/edit', [AdminProjectController::class, 'edit'])->name('edit');
                 Route::put('/{project}', [AdminProjectController::class, 'update'])->name('update');
-                Route::patch('/{project}/toggle-status', [AdminProjectController::class, 'toggleStatus'])->name('toggle-status');
-                Route::get('/{project}/resubmit', [AdminProjectController::class, 'showResubmitForm'])->name('resubmit');
-                Route::post('/{project}/resubmit', [AdminProjectController::class, 'resubmit'])->name('resubmit');
                 Route::get('/{project}/statistics', [AdminProjectController::class, 'statistics'])->name('statistics');
+
+                Route::middleware('only.pic')->group(function () {
+                    Route::get('/{project}/edit', [AdminProjectController::class, 'edit'])->name('edit');
+                    Route::patch('/{project}/toggle-status', [AdminProjectController::class, 'toggleStatus'])->name('toggle-status');
+                    Route::get('/{project}/resubmit', [AdminProjectController::class, 'showResubmitForm'])->name('resubmit');
+                    Route::post('/{project}/resubmit', [AdminProjectController::class, 'resubmit'])->name('resubmit');
+
+                    Route::prefix('{project}')->group(function () {
+                        // Unit Management Routes
+                        Route::prefix('units')->name('units.')->group(function () {
+                            Route::get('/', [AdminUnitController::class, 'index'])->name('index');
+                            Route::get('/create', [AdminUnitController::class, 'create'])->name('create');
+                            Route::post('/', [AdminUnitController::class, 'store'])->name('store');
+                            Route::get('/{unit}/edit', [AdminUnitController::class, 'edit'])->name('edit');
+                            Route::put('/{unit}', [AdminUnitController::class, 'update'])->name('update');
+                            Route::delete('/{unit}', [AdminUnitController::class, 'destroy'])->name('destroy');
+                            Route::patch('/{unit}/toggle-status', [AdminUnitController::class, 'toggleStatus'])->name('toggle-status');
+                        });
+                        
+                        // Admin Management Routes
+                        Route::prefix('admins')->name('admins.')->group(function () {
+                            Route::get('/', [ProjectAdminController::class, 'index'])->name('index');
+                            Route::get('/create', [ProjectAdminController::class, 'create'])->name('create');
+                            Route::post('/', [ProjectAdminController::class, 'store'])->name('store');
+                            Route::get('/{admin}/edit', [ProjectAdminController::class, 'edit'])->name('edit');
+                            Route::put('/{admin}', [ProjectAdminController::class, 'update'])->name('update');
+                            Route::delete('/{admin}', [ProjectAdminController::class, 'destroy'])->name('destroy');
+                            Route::patch('/{admin}/toggle-status', [ProjectAdminController::class, 'toggleStatus'])->name('toggle-status');
+                            Route::post('/{admin}/reset-password', [ProjectAdminController::class, 'resetPassword'])->name('reset-password');
+                        });
+                    });
+                });
 
                 Route::prefix('{project}')->group(function () {
                     // Affiliator Management per Project
