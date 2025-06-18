@@ -82,7 +82,7 @@ class AffiliatorProject extends Model
                          $this->verification_status === 'verified' && 
                          $this->terms_accepted;
 
-        if ($this->project && $this->project->require_digital_signature == 1) {
+        if ($this->project && $this->project->require_digital_signature) {
             return $baseConditions && $this->digital_signature;
         }
 
@@ -97,7 +97,7 @@ class AffiliatorProject extends Model
             'terms_accepted' => $this->terms_accepted
         ];
 
-        if ($this->project && $this->project->require_digital_signature == 1) {
+        if ($this->project && $this->project->require_digital_signature) {
             $steps['digital_signature'] = !empty($this->digital_signature);
         }
 
@@ -115,5 +115,22 @@ class AffiliatorProject extends Model
             'suspended' => 'Disuspend',
             default => 'Tidak Diketahui'
         };
+    }
+
+    public function getDigitalSignatureUrlAttribute()
+    {
+        return $this->digital_signature ? asset('storage/' . $this->digital_signature) : null;
+    }
+
+    // Methods
+    public function canResubmit()
+    {
+        return $this->verification_status === 'rejected';
+    }
+
+    public function canCancel()
+    {
+        return in_array($this->verification_status, ['pending', 'rejected']) && 
+            $this->leads()->where('verification_status', 'pending')->count() === 0;
     }
 }

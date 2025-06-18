@@ -136,7 +136,7 @@
                 <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
                     <span class="avatar avatar-sm" style="background-image: url({{ Auth::user()->profile_photo_url }})"> </span>
                     <div class="d-none d-xl-block ps-2">
-                        <div>{{ Auth::user()->name }}</div>
+                        <div>{{ Str::limit(Auth::user()->name, 10) }}</div>
                         <div class="mt-1 small text-secondary">{{ Auth::user()->role }}@if (Auth::user()->is_pic == 1) PIC @endif</div>
                     </div>
                 </a>

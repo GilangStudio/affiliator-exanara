@@ -369,4 +369,37 @@ class AffiliatorController extends Controller
 
         return response()->json($stats);
     }
+
+    public function getAffiliatorData(AffiliatorProject $affiliator)
+    {
+        // Check if current admin manages this project
+        if (!User::find(Auth::user()->id)->adminProjects()->where('projects.id', $affiliator->project_id)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $affiliator->load(['user', 'project', 'verifiedBy']);
+
+        return response()->json([
+            'success' => true,
+            'affiliatorProject' => [
+                'id' => $affiliator->id,
+                'ktp_number' => $affiliator->ktp_number,
+                'ktp_photo_url' => $affiliator->ktp_photo_url,
+                'verification_status' => $affiliator->verification_status,
+                'verification_notes' => $affiliator->verification_notes,
+                'terms_accepted' => $affiliator->terms_accepted,
+                'terms_accepted_at' => $affiliator->terms_accepted_at,
+                'digital_signature' => $affiliator->digital_signature,
+                'digital_signature_at' => $affiliator->digital_signature_at,
+                'project' => [
+                    'require_digital_signature' => $affiliator->project->require_digital_signature
+                ]
+            ],
+            'user' => [
+                'name' => $affiliator->user->name,
+                'email' => $affiliator->user->email,
+                'phone' => $affiliator->user->phone_number
+            ]
+        ]);
+    }
 }

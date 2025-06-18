@@ -126,6 +126,39 @@
                 <div class="mt-3">
                     <div class="alert alert-{{ $userProject->verification_status == 'rejected' ? 'danger' : 'info' }}">
                         <strong>Catatan Admin:</strong> {{ $userProject->verification_notes }}
+                        @if($userProject->verified_at)
+                            <div class="text-secondary small mt-1">
+                                {{ $userProject->verified_at->format('d F Y, H:i') }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                @if($userProject->verification_status == 'rejected')
+                <div class="mt-3">
+                    <div class="alert alert-warning d-block">
+                        <h4 class="alert-title">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            Persyaratan Verifikasi
+                        </h4>
+                        <ul class="mb-2">
+                            <li class="{{ $userProject->ktp_number && $userProject->ktp_photo ? 'text-success' : 'text-danger' }}">
+                                <i class="ti ti-{{ $userProject->ktp_number && $userProject->ktp_photo ? 'check' : 'x' }} me-1"></i>
+                                Data KTP (Nomor & Foto)
+                            </li>
+                            <li class="{{ $userProject->terms_accepted ? 'text-success' : 'text-danger' }}">
+                                <i class="ti ti-{{ $userProject->terms_accepted ? 'check' : 'x' }} me-1"></i>
+                                Persetujuan Syarat & Ketentuan
+                            </li>
+                            @if($project->require_digital_signature)
+                            <li class="{{ $userProject->digital_signature ? 'text-success' : 'text-danger' }}">
+                                <i class="ti ti-{{ $userProject->digital_signature ? 'check' : 'x' }} me-1"></i>
+                                Tanda Tangan Digital
+                            </li>
+                            @endif
+                        </ul>
+                        <small class="text-muted">Lengkapi semua persyaratan di atas sebelum submit ulang verifikasi.</small>
                     </div>
                 </div>
                 @endif
@@ -144,21 +177,43 @@
                         </div>
                     </div>
                     <div class="btn-list justify-content-center">
-                        @if($userProject->can_add_leads)
+                        @if($userProject->verification_status == 'verified' && $userProject->can_add_leads)
                             <a href="{{ route('affiliator.leads.project.create', $project->slug) }}" class="btn btn-success">
                                 <i class="ti ti-plus me-1"></i>
                                 Tambah Lead
                             </a>
+                            <a href="{{ route('affiliator.leads.project', $project->slug) }}" class="btn btn-outline-primary">
+                                <i class="ti ti-users me-1"></i>
+                                Lihat Lead Saya
+                            </a>
+                        @elseif($userProject->verification_status == 'rejected')
+                            <a href="{{ route('affiliator.project.resubmit', $project) }}" class="btn btn-warning">
+                                <i class="ti ti-refresh me-1"></i>
+                                Submit Ulang Verifikasi
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="cancelProject('{{ $project->slug }}', '{{ $project->name }}')">
+                                <i class="ti ti-x me-1"></i>
+                                Batalkan Partisipasi
+                            </button>
+                        @elseif($userProject->verification_status == 'pending')
+                            @if($userProject->completion_progress < 100)
+                                <a href="{{ route('affiliator.project.join.index') }}?project={{ $project->slug }}" class="btn btn-primary">
+                                    <i class="ti ti-edit me-1"></i>
+                                    Lengkapi Data
+                                </a>
+                            @endif
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="cancelProject('{{ $project->slug }}', '{{ $project->name }}')">
+                                <i class="ti ti-x me-1"></i>
+                                Batalkan Partisipasi
+                            </button>
                         @else
                             <span class="btn btn-outline-secondary disabled">
                                 <i class="ti ti-lock me-1"></i>
-                                Perlu Verifikasi
+                                Menunggu Verifikasi
                             </span>
                         @endif
-                        <a href="{{ route('affiliator.leads.project', $project->slug) }}" class="btn btn-outline-primary">
-                            <i class="ti ti-users me-1"></i>
-                            Lihat Lead Saya
-                        </a>
                     </div>
                 </div>
             </div>
@@ -614,6 +669,40 @@
     </div>
 </div>
 
+<!-- Cancel Project Modal -->
+<div class="modal modal-blur fade" id="cancel-project-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Batalkan Partisipasi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="ti ti-alert-triangle icon icon-2"></i>
+                    <strong>Peringatan:</strong> Tindakan ini tidak dapat dibatalkan!
+                </div>
+                <p>Apakah Anda yakin ingin membatalkan partisipasi di project <strong id="cancel-project-name"></strong>?</p>
+                <div class="alert alert-info d-block">
+                    <h4>Yang akan terjadi:</h4>
+                    <ul class="mb-0">
+                        <li>Data verifikasi Anda akan dihapus</li>
+                        <li>Anda akan keluar dari project ini</li>
+                        <li>Jika ingin bergabung lagi, harus mendaftar ulang dari awal</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirm-cancel-btn">
+                    <i class="ti ti-x me-1"></i>
+                    Ya, Batalkan Partisipasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @include('components.toast')
 
 @endsection
@@ -624,6 +713,64 @@ let currentProjectSlug = null;
 let currentProjectStatus = null;
 let toggleStatusModal = null;
 let joinProjectModal = null;
+let currentCancelProjectSlug = null;
+
+function cancelProject(projectSlug, projectName) {
+    currentCancelProjectSlug = projectSlug;
+    document.getElementById('cancel-project-name').textContent = projectName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cancel-project-modal'));
+    modal.show();
+}
+
+// Confirm cancel project
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+    if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', function() {
+            if (!currentCancelProjectSlug) return;
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Membatalkan...';
+            btn.disabled = true;
+            
+            fetch(`/project/${currentCancelProjectSlug}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 1500);
+                } else {
+                    showToast(data.message, 'error');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Terjadi kesalahan jaringan', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            })
+            .finally(() => {
+                bootstrap.Modal.getInstance(document.getElementById('cancel-project-modal')).hide();
+            });
+        });
+    }
+});
 
 function joinProject(projectSlug, projectName) {
     currentProjectSlug = projectSlug;

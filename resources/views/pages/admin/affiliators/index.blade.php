@@ -8,7 +8,7 @@
 @include('components.toast')
 
 <!-- Stats Cards -->
-<div class="row mb-3">
+<div class="row g-2 mb-3">
     <div class="col-sm-6 col-lg-2">
         <div class="card">
             <div class="card-body">
@@ -308,7 +308,7 @@
 </div>
 
 <!-- KTP Verification Modal -->
-<div class="modal modal-blur fade" id="ktp-verification-modal" tabindex="-1" role="dialog" aria-hidden="true">
+{{-- <div class="modal modal-blur fade" id="ktp-verification-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -355,6 +355,71 @@
             </div>
         </div>
     </div>
+</div> --}}
+
+<div class="modal modal-blur fade" id="ktp-verification-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verifikasi Data Affiliator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Foto KTP</label>
+                        <img id="ktp-image" src="" alt="KTP" class="img-fluid rounded border">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Informasi</label>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td>Nama:</td>
+                                <td><strong id="affiliator-name"></strong></td>
+                            </tr>
+                            <tr>
+                                <td>No. KTP:</td>
+                                <td><strong id="ktp-number"></strong></td>
+                            </tr>
+                            <tr>
+                                <td>Status Syarat & Ketentuan:</td>
+                                <td>
+                                    <span id="terms-status" class="badge"></span>
+                                    <div id="terms-date" class="text-secondary small"></div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        {{-- Tampilkan Tanda Tangan Digital jika wajib --}}
+                        <div id="digital-signature-section" style="display: none;">
+                            <label class="form-label">Tanda Tangan Digital</label>
+                            <div id="signature-container" class="border rounded p-3 mb-3" style="background: #f8f9fa;">
+                                <div id="signature-display" class="text-center"></div>
+                                <div id="signature-date" class="text-secondary small mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Catatan Verifikasi</label>
+                            <textarea class="form-control" id="verification-notes" rows="3" 
+                                      placeholder="Masukkan catatan verifikasi (opsional)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="verifyKtp('reject')">
+                    <i class="ti ti-x me-1"></i>
+                    Tolak
+                </button>
+                <button type="button" class="btn btn-success" onclick="verifyKtp('verify')">
+                    <i class="ti ti-check me-1"></i>
+                    Verifikasi
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @endsection
@@ -362,17 +427,77 @@
 @push('scripts')
 <script>
 let currentAffiliatorId = null;
+let currentAffiliatorData = null;
 
 function showKtpVerificationModal(affiliatorId, name, ktpPhotoUrl, ktpNumber) {
     currentAffiliatorId = affiliatorId;
     
-    document.getElementById('affiliator-name').textContent = name;
-    document.getElementById('ktp-number').textContent = ktpNumber;
-    document.getElementById('ktp-image').src = ktpPhotoUrl;
-    document.getElementById('verification-notes').value = '';
-    
-    const modal = new bootstrap.Modal(document.getElementById('ktp-verification-modal'));
-    modal.show();
+    // Load affiliator data via AJAX untuk mendapatkan data lengkap
+    fetch(`{{ route('admin.affiliators.show', ':id') }}`.replace(':id', affiliatorId) + '/data', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        currentAffiliatorData = data.affiliatorProject;
+        
+        // Set basic info
+        document.getElementById('affiliator-name').textContent = name;
+        document.getElementById('ktp-number').textContent = ktpNumber;
+        document.getElementById('ktp-image').src = ktpPhotoUrl;
+        document.getElementById('verification-notes').value = '';
+        
+        // Set terms status
+        const termsStatus = document.getElementById('terms-status');
+        const termsDate = document.getElementById('terms-date');
+        
+        if (data.affiliatorProject.terms_accepted) {
+            termsStatus.className = 'badge bg-success-lt';
+            termsStatus.textContent = 'Disetujui';
+            if (data.affiliatorProject.terms_accepted_at) {
+                termsDate.textContent = 'Pada ' + new Date(data.affiliatorProject.terms_accepted_at).toLocaleDateString('id-ID');
+            }
+        } else {
+            termsStatus.className = 'badge bg-danger-lt';
+            termsStatus.textContent = 'Belum Disetujui';
+            termsDate.textContent = '';
+        }
+
+        // Show digital signature if required and exists
+        const signatureSection = document.getElementById('digital-signature-section');
+        if (currentAffiliatorData.project.require_digital_signature) {
+            signatureSection.style.display = 'block';
+            
+            const signatureDisplay = document.getElementById('signature-display');
+            const signatureDate = document.getElementById('signature-date');
+            
+            if (data.affiliatorProject.digital_signature) {
+
+                signatureDisplay.innerHTML = currentAffiliatorData.digital_signature;
+
+                if (data.affiliatorProject.digital_signature_at) {
+                    signatureDate.textContent = 'Ditandatangani pada ' + 
+                        new Date(data.affiliatorProject.digital_signature_at).toLocaleDateString('id-ID', {
+                            year: 'numeric', month: 'long', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                }
+            }
+        } else {
+            signatureSection.style.display = 'none';
+        }
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('ktp-verification-modal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Gagal memuat data affiliator', 'error');
+    });
 }
 
 function verifyKtp(action) {
@@ -381,17 +506,37 @@ function verifyKtp(action) {
     const notes = document.getElementById('verification-notes').value;
     
     if (action === 'reject' && !notes.trim()) {
-        alert('Catatan wajib diisi untuk penolakan KTP');
+        alert('Catatan wajib diisi untuk penolakan verifikasi');
         return;
     }
     
+    // Check completion requirements
+    if (action === 'verify' && currentAffiliatorData) {
+        const missingRequirements = [];
+        
+        // Check terms acceptance
+        if (!currentAffiliatorData.terms_accepted) {
+            missingRequirements.push('Persetujuan Syarat & Ketentuan');
+        }
+        
+        // Check digital signature if required
+        if (currentAffiliatorData.project && currentAffiliatorData.project.require_digital_signature && !currentAffiliatorData.digital_signature) {
+            missingRequirements.push('Tanda Tangan Digital');
+        }
+        
+        if (missingRequirements.length > 0) {
+            alert('Tidak dapat memverifikasi karena affiliator belum melengkapi:\n- ' + missingRequirements.join('\n- ') + 
+                  '\n\nSilakan minta affiliator untuk melengkapi data terlebih dahulu.');
+            return;
+        }
+    }
+    
     const confirmMessage = action === 'verify' 
-        ? 'Apakah Anda yakin ingin memverifikasi KTP ini?' 
-        : 'Apakah Anda yakin ingin menolak KTP ini?';
+        ? 'Apakah Anda yakin ingin memverifikasi affiliator ini?' 
+        : 'Apakah Anda yakin ingin menolak verifikasi affiliator ini?';
     
     if (!confirm(confirmMessage)) return;
     
-    // Show loading
     const modal = bootstrap.Modal.getInstance(document.getElementById('ktp-verification-modal'));
     
     fetch(`{{ route('admin.affiliators.verify-ktp', ':id') }}`.replace(':id', currentAffiliatorId), {
@@ -410,6 +555,7 @@ function verifyKtp(action) {
         if (data.success) {
             modal.hide();
             showToast(data.message, 'success');
+            
             location.reload();
         } else {
             showToast(data.message || 'Terjadi kesalahan', 'error');

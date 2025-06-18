@@ -127,6 +127,11 @@ Route::middleware(['web', 'auth'])->group(function () {
                     Route::get('/{project}', [AffiliatorProjectController::class, 'show'])->name('show');
                     Route::post('/{project}/toggle-status', [AffiliatorProjectController::class, 'toggleStatus'])->name('toggle-status');
 
+                    // Resubmit and cancel routes
+                    Route::get('/{project}/resubmit', [AffiliatorProjectController::class, 'showResubmitForm'])->name('resubmit');
+                    Route::post('/{project}/resubmit', [AffiliatorProjectController::class, 'resubmit'])->name('resubmit.process');
+                    Route::post('/{project}/cancel', [AffiliatorProjectController::class, 'cancelProject'])->name('cancel');
+
                     // AJAX Routes
                     Route::prefix('ajax')->name('ajax.')->group(function () {
                         
@@ -276,6 +281,9 @@ Route::middleware(['web', 'auth'])->group(function () {
                 
                 // Statistics
                 Route::get('/affiliators/statistics', [AdminAffiliatorController::class, 'statistics'])->name('statistics');
+
+                // Get affiliator data for verification modal
+                Route::get('/{affiliator}/data', [AdminAffiliatorController::class, 'getAffiliatorData'])->name('data');
             });
             
             // Commission Withdrawal Management
